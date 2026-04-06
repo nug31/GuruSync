@@ -1,4 +1,4 @@
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate, useParams } from 'react-router-dom';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { LoginForm } from './components/Auth/LoginForm';
 import { Dashboard } from './components/Dashboard/Dashboard';
@@ -21,10 +21,9 @@ function PrivateRoute({ children }: { children: React.ReactNode }) {
   return user ? <>{children}</> : <Navigate to="/login" />;
 }
 
-function ProfileRoute() {
-  const pathParts = window.location.pathname.split('/');
-  const teacherId = pathParts[pathParts.length - 1];
-  return <TeacherProfile teacherId={teacherId} />;
+function TeacherProfileWrapper() {
+  const { teacherId } = useParams<{ teacherId: string }>();
+  return <TeacherProfile teacherId={teacherId || ''} />;
 }
 
 function App() {
@@ -33,7 +32,7 @@ function App() {
       <BrowserRouter>
         <Routes>
           <Route path="/login" element={<LoginForm />} />
-          <Route path="/profile/:teacherId" element={<ProfileRoute />} />
+          <Route path="/profile/:teacherId" element={<TeacherProfileWrapper />} />
           <Route
             path="/"
             element={
