@@ -1,0 +1,377 @@
+import { useState, useMemo, useRef } from 'react';
+import { QRCodeSVG } from 'qrcode.react';
+import { supabase } from '../../lib/supabase';
+import { Search, Download, Edit, Trash2, QrCode, FileSpreadsheet, Eye } from 'lucide-react';
+import { differenceInDays, parseISO, format } from 'date-fns';
+import * as XLSX from 'xlsx';
+import type { Teacher, Leave } from '../../types';
+
+interface TeacherListProps {
+  teachers: Teacher[];
+  leaves: Leave[];
+  onEdit?: (teacher: Teacher) => void;
+  onDelete?: () => void;
+  onRefresh?: () => void;
+}
+
+export function TeacherList({ teachers, leaves, onEdit, onDelete, onRefresh }: TeacherListProps) {
+  const [searchTerm, setSearchTerm] = useState('');
+  const [subjectFilter, setSubjectFilter] = useState('');
+  const [showQRModal, setShowQRModal] = useState<Teacher | null>(null);
+  const [importing, setImporting] = useState(false);
+  const qrRef = useRef<HTMLDivElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const subjects = useMemo(() => {
+    return Array.from(new Set(teachers.map((t) => t.subject))).sort();
+  }, [teachers]);
+
+  const filteredTeachers = useMemo(() => {
+    return teachers.filter((teacher) => {
+      const matchesSearch =
+        teacher.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        teacher.nik.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        teacher.email.toLowerCase().includes(searchTerm.toLowerCase());
+
+      const matchesSubject = !subjectFilter || teacher.subject === subjectFilter;
+
+      return matchesSearch && matchesSubject;
+    });
+  }, [teachers, searchTerm, subjectFilter]);
+
+  const getWorkDuration = (joinDate: string) => {
+    const days = differenceInDays(new Date(), parseISO(joinDate));
+    const years = Math.floor(days / 365);
+    const months = Math.floor((days % 365) / 30);
+
+    if (years > 0) {
+      return `${years} tahun ${months} bulan`;
+    }
+    return `${months} bulan`;
+  };
+
+  const getTeacherLeaves = (teacherId: string) => {
+    return leaves.filter((leave) => leave.teacher_id === teacherId);
+  };
+
+  const getActiveLeaves = (teacherId: string) => {
+    return leaves.filter(
+      (leave) =>
+        leave.teacher_id === teacherId &&
+        leave.status === 'approved' &&
+        new Date(leave.start_date) <= new Date() &&
+        new Date(leave.end_date) >= new Date()
+    );
+  };
+
+  const handleDelete = async (teacher: Teacher) => {
+    if (!confirm(`Apakah Anda yakin ingin menghapus data ${teacher.name}?`)) {
+      return;
+    }
+
+    try {
+      const { error } = await supabase
+        .from('teachers')
+        .delete()
+        .eq('id', teacher.id);
+
+      if (error) throw error;
+
+      alert('Data guru berhasil dihapus');
+      onDelete?.();
+    } catch (error) {
+      alert('Gagal menghapus data guru');
+      console.error(error);
+    }
+  };
+
+  const handleDownloadQR = (teacher: Teacher) => {
+    const svg = qrRef.current?.querySelector('svg');
+    if (!svg) return;
+
+    const svgData = new XMLSerializer().serializeToString(svg);
+    const canvas = document.createElement('canvas');
+    const ctx = canvas.getContext('2d');
+    const img = new Image();
+
+    img.onload = () => {
+      canvas.width = img.width;
+      canvas.height = img.height;
+      ctx?.drawImage(img, 0, 0);
+
+      canvas.toBlob((blob) => {
+        if (blob) {
+          const url = URL.createObjectURL(blob);
+          const link = document.createElement('a');
+          link.href = url;
+          link.download = `qr-${teacher.nik}.png`;
+          link.click();
+          URL.revokeObjectURL(url);
+        }
+      });
+    };
+
+    img.src = 'data:image/svg+xml;base64,' + btoa(unescape(encodeURIComponent(svgData)));
+  };
+
+  const handleExportExcel = () => {
+    const exportData = filteredTeachers.map((teacher) => {
+      return {
+        Nama: teacher.name,
+        NIK: teacher.nik,
+        'Mata Pelajaran': teacher.subject,
+        Email: teacher.email,
+        Telepon: teacher.phone,
+        'Tanggal Bergabung': teacher.join_date,
+      };
+    });
+
+    const ws = XLSX.utils.json_to_sheet(exportData);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'Data Guru');
+
+    XLSX.writeFile(wb, `data-guru-${format(new Date(), 'yyyy-MM-dd')}.xlsx`);
+  };
+
+  const handleImportExcel = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setImporting(true);
+    const reader = new FileReader();
+    reader.onload = async (evt) => {
+      try {
+        const bstr = evt.target?.result;
+        const wb = XLSX.read(bstr, { type: 'binary', cellDates: true });
+        const wsname = wb.SheetNames[0];
+        const ws = wb.Sheets[wsname];
+        const data = XLSX.utils.sheet_to_json(ws) as any[];
+
+        const teachersToUpsert = data.map((row) => ({
+          name: row['Nama'] || row['name'],
+          nik: String(row['NIK'] || row['nik']),
+          subject: row['Mata Pelajaran'] || row['subject'] || 'Lainnya',
+          email: row['Email'] || row['email'] || '',
+          phone: row['Telepon'] || row['phone'] || '',
+          join_date: row['Tanggal Bergabung'] || row['join_date'] || new Date().toISOString().split('T')[0],
+        })).filter(t => t.name && t.nik);
+
+        if (teachersToUpsert.length === 0) {
+          alert('Tidak ada data valid untuk diimport');
+          return;
+        }
+
+        const { error } = await (supabase
+          .from('teachers') as any)
+          .upsert(teachersToUpsert, { onConflict: 'nik' });
+
+        if (error) throw error;
+
+        alert(`Berhasil mengimport ${teachersToUpsert.length} data guru`);
+        onRefresh?.();
+      } catch (err) {
+        console.error('Error importing excel:', err);
+        alert('Gagal mengimport data. Pastikan format file benar.');
+      } finally {
+        setImporting(false);
+        if (fileInputRef.current) fileInputRef.current.value = '';
+      }
+    };
+    reader.readAsBinaryString(file);
+  };
+
+  const getProfileUrl = (teacherId: string) => {
+    return `${window.location.origin}/profile/${teacherId}`;
+  };
+
+  return (
+    <div className="space-y-6">
+      <div className="bg-white rounded-xl shadow-sm p-4 border border-gray-100">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="md:col-span-2">
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+              <input
+                type="text"
+                placeholder="Cari nama, NIK, atau email..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              />
+            </div>
+          </div>
+
+          <div>
+            <select
+              value={subjectFilter}
+              onChange={(e) => setSubjectFilter(e.target.value)}
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            >
+              <option value="">Semua Mata Pelajaran</option>
+              {subjects.map((subject) => (
+                <option key={subject} value={subject}>
+                  {subject}
+                </option>
+              ))}
+            </select>
+          </div>
+        </div>
+
+        <div className="flex justify-between items-center mt-4 pt-4 border-t">
+          <p className="text-sm text-gray-600">
+            Menampilkan {filteredTeachers.length} dari {teachers.length} guru
+          </p>
+          <div className="flex items-center space-x-2">
+            <input
+              type="file"
+              ref={fileInputRef}
+              onChange={handleImportExcel}
+              accept=".xlsx, .xls"
+              className="hidden"
+            />
+            {onRefresh && (
+              <button
+                onClick={() => fileInputRef.current?.click()}
+                disabled={importing}
+                className="flex items-center space-x-2 px-4 py-2 bg-blue-100 text-blue-600 rounded-lg hover:bg-blue-200 transition-colors disabled:opacity-50"
+              >
+                <FileSpreadsheet className="w-4 h-4" />
+                <span>{importing ? 'Importing...' : 'Import Excel'}</span>
+              </button>
+            )}
+            <button
+              onClick={handleExportExcel}
+              className="flex items-center space-x-2 px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors"
+            >
+              <FileSpreadsheet className="w-4 h-4" />
+              <span>Export Excel</span>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {filteredTeachers.map((teacher) => {
+          const activeLeaves = getActiveLeaves(teacher.id);
+          const totalLeaves = getTeacherLeaves(teacher.id);
+
+          return (
+            <div
+              key={teacher.id}
+              className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden hover:shadow-md transition-shadow"
+            >
+              <div className="p-6">
+                <div className="flex justify-between items-start mb-4">
+                  <div>
+                    <h3 className="font-bold text-lg text-gray-800 mb-1">
+                      {teacher.name}
+                    </h3>
+                    <p className="text-sm text-gray-600">NIK: {teacher.nik}</p>
+                  </div>
+                  {activeLeaves.length > 0 && (
+                    <span className="px-2 py-1 bg-orange-100 text-orange-700 text-xs font-medium rounded-full">
+                      Cuti
+                    </span>
+                  )}
+                </div>
+
+                <div className="space-y-2 mb-4">
+                  <div className="flex items-center text-sm text-gray-600">
+                    <span className="font-medium w-24">Mapel:</span>
+                    <span>{teacher.subject}</span>
+                  </div>
+                  <div className="flex items-center text-sm text-gray-600">
+                    <span className="font-medium w-24">Email:</span>
+                    <span className="truncate">{teacher.email}</span>
+                  </div>
+                  <div className="flex items-center text-sm text-gray-600">
+                    <span className="font-medium w-24">Telepon:</span>
+                    <span>{teacher.phone}</span>
+                  </div>
+                  <div className="flex items-center text-sm text-gray-600">
+                    <span className="font-medium w-24">Masa Kerja:</span>
+                    <span>{getWorkDuration(teacher.join_date)}</span>
+                  </div>
+                  <div className="flex items-center text-sm text-gray-600">
+                    <span className="font-medium w-24">Total Cuti:</span>
+                    <span>{totalLeaves.length} kali</span>
+                  </div>
+                </div>
+
+                <div className="flex space-x-2">
+                  <a
+                    href={`/profile/${teacher.id}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex-1 flex items-center justify-center space-x-1 px-3 py-2 bg-blue-50 text-blue-600 rounded-lg hover:bg-blue-100 transition-colors text-sm"
+                  >
+                    <Eye className="w-4 h-4" />
+                    <span>Profil</span>
+                  </a>
+                  <button
+                    onClick={() => setShowQRModal(teacher)}
+                    className="flex-1 flex items-center justify-center space-x-1 px-3 py-2 bg-gray-50 text-gray-700 rounded-lg hover:bg-gray-100 transition-colors text-sm"
+                  >
+                    <QrCode className="w-4 h-4" />
+                    <span>QR</span>
+                  </button>
+                  {onEdit && (
+                    <button
+                      onClick={() => onEdit(teacher)}
+                      className="px-3 py-2 bg-yellow-50 text-yellow-600 rounded-lg hover:bg-yellow-100 transition-colors"
+                    >
+                      <Edit className="w-4 h-4" />
+                    </button>
+                  )}
+                  {onDelete && (
+                    <button
+                      onClick={() => handleDelete(teacher)}
+                      className="px-3 py-2 bg-red-50 text-red-600 rounded-lg hover:bg-red-100 transition-colors"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  )}
+                </div>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+
+      {showQRModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-xl shadow-xl max-w-md w-full p-6">
+            <div className="flex justify-between items-center mb-6">
+              <h3 className="text-xl font-bold text-gray-800">QR Code</h3>
+              <button
+                onClick={() => setShowQRModal(null)}
+                className="text-gray-400 hover:text-gray-600"
+              >
+                <span className="text-2xl">&times;</span>
+              </button>
+            </div>
+
+            <div className="text-center space-y-4">
+              <p className="text-gray-600">{showQRModal.name}</p>
+              <div ref={qrRef} className="flex justify-center bg-white p-4">
+                <QRCodeSVG
+                  value={getProfileUrl(showQRModal.id)}
+                  size={256}
+                  level="H"
+                  includeMargin
+                />
+              </div>
+              <button
+                onClick={() => handleDownloadQR(showQRModal)}
+                className="w-full flex items-center justify-center space-x-2 px-4 py-3 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
+              >
+                <Download className="w-5 h-5" />
+                <span>Download QR Code</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
