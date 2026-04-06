@@ -133,6 +133,28 @@ export function TeacherList({ teachers, leaves, onEdit, onDelete, onRefresh }: T
     XLSX.writeFile(wb, `data-guru-${format(new Date(), 'yyyy-MM-dd')}.xlsx`);
   };
 
+  const handleDownloadTemplate = () => {
+    const templateData = [
+      {
+        'Nama': 'Joko Setyo Nugroho, S.T',
+        'NIK': '940866',
+        'Mata Pelajaran': 'TKR',
+        'Email': 'joko@example.com',
+        'Telepon': '08123456789',
+        'Tanggal Bergabung': '2022-03-01',
+        'Tanggal Lahir': '1994-08-31',
+        'Jenis Kelamin': 'Laki-laki',
+        'Pendidikan': 'S1',
+        'Alamat': 'Jl. Contoh No. 123, Kota Bandung'
+      }
+    ];
+
+    const ws = XLSX.utils.json_to_sheet(templateData);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'Template Guru');
+    XLSX.writeFile(wb, 'template-guru-sync.xlsx');
+  };
+
   const handleImportExcel = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -154,6 +176,10 @@ export function TeacherList({ teachers, leaves, onEdit, onDelete, onRefresh }: T
           email: row['Email'] || row['email'] || '',
           phone: row['Telepon'] || row['phone'] || '',
           join_date: row['Tanggal Bergabung'] || row['join_date'] || new Date().toISOString().split('T')[0],
+          birth_date: row['Tanggal Lahir'] || row['birth_date'] || null,
+          gender: row['Jenis Kelamin'] || row['gender'] || 'Laki-laki',
+          education: row['Pendidikan'] || row['education'] || '',
+          address: row['Alamat'] || row['address'] || '',
         })).filter(t => t.name && t.nik);
 
         if (teachersToUpsert.length === 0) {
@@ -167,7 +193,7 @@ export function TeacherList({ teachers, leaves, onEdit, onDelete, onRefresh }: T
 
         if (error) throw error;
 
-        alert(`Berhasil mengimport ${teachersToUpsert.length} data guru`);
+        alert(`Berhasil mengimport ${teachersToUpsert.length} data guru. Silakan jalankan sinkronisasi akun untuk mengaktifkan login.`);
         onRefresh?.();
       } catch (err) {
         console.error('Error importing excel:', err);
@@ -217,11 +243,11 @@ export function TeacherList({ teachers, leaves, onEdit, onDelete, onRefresh }: T
           </div>
         </div>
 
-        <div className="flex justify-between items-center mt-4 pt-4 border-t">
+        <div className="flex justify-between items-center mt-4 pt-4 border-t flex-wrap gap-2">
           <p className="text-sm text-gray-600">
             Menampilkan {filteredTeachers.length} dari {teachers.length} guru
           </p>
-          <div className="flex items-center space-x-2">
+          <div className="flex items-center space-x-2 flex-wrap sm:flex-nowrap">
             <input
               type="file"
               ref={fileInputRef}
@@ -230,14 +256,23 @@ export function TeacherList({ teachers, leaves, onEdit, onDelete, onRefresh }: T
               className="hidden"
             />
             {onRefresh && (
-              <button
-                onClick={() => fileInputRef.current?.click()}
-                disabled={importing}
-                className="flex items-center space-x-2 px-4 py-2 bg-blue-100 text-blue-600 rounded-lg hover:bg-blue-200 transition-colors disabled:opacity-50"
-              >
-                <FileSpreadsheet className="w-4 h-4" />
-                <span>{importing ? 'Importing...' : 'Import Excel'}</span>
-              </button>
+              <>
+                <button
+                  onClick={handleDownloadTemplate}
+                  className="flex items-center space-x-2 px-4 py-2 bg-gray-100 text-gray-600 rounded-lg hover:bg-gray-200 transition-colors"
+                >
+                  <Download className="w-4 h-4" />
+                  <span>Template</span>
+                </button>
+                <button
+                  onClick={() => fileInputRef.current?.click()}
+                  disabled={importing}
+                  className="flex items-center space-x-2 px-4 py-2 bg-blue-100 text-blue-600 rounded-lg hover:bg-blue-200 transition-colors disabled:opacity-50"
+                >
+                  <FileSpreadsheet className="w-4 h-4" />
+                  <span>{importing ? 'Importing...' : 'Import Excel'}</span>
+                </button>
+              </>
             )}
             <button
               onClick={handleExportExcel}
