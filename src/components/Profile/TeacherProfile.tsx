@@ -1,6 +1,10 @@
 import { useEffect, useState } from 'react';
 import { supabase } from '../../lib/supabase';
-import { User, Mail, Phone, Calendar, Briefcase, Clock, MapPin, GraduationCap, CalendarDays, Contact, Info } from 'lucide-react';
+import { 
+  User, Mail, Phone, Calendar, Briefcase, 
+  MapPin, GraduationCap, CalendarDays, 
+  Contact, Info, ShieldCheck, ChevronRight
+} from 'lucide-react';
 import { format, parseISO, differenceInDays } from 'date-fns';
 import { id } from 'date-fns/locale';
 import type { Teacher, Leave } from '../../types';
@@ -25,16 +29,9 @@ export function TeacherProfile({ teacherId }: TeacherProfileProps) {
       const file = event.target.files?.[0];
       if (!file) return;
 
-      // 1. Validate File Size (Max 2MB)
       const maxSize = 2 * 1024 * 1024;
       if (file.size > maxSize) {
         alert('Ukuran file terlalu besar. Maksimal 2MB.');
-        return;
-      }
-
-      // 2. Validate File Type
-      if (!file.type.startsWith('image/')) {
-        alert('Hanya diperbolehkan mengupload file gambar.');
         return;
       }
 
@@ -42,30 +39,16 @@ export function TeacherProfile({ teacherId }: TeacherProfileProps) {
       const fileName = `${teacherId}-${Math.random()}.${fileExt}`;
       const filePath = `${fileName}`;
 
-      // 3. Upload to Supabase Storage
-      const { error: uploadError } = await supabase.storage
-        .from('avatars')
-        .upload(filePath, file);
+      await supabase.storage.from('avatars').upload(filePath, file);
+      const { data: { publicUrl } } = supabase.storage.from('avatars').getPublicUrl(filePath);
 
-      if (uploadError) throw uploadError;
-
-      // 4. Get Public URL
-      const { data: { publicUrl } } = supabase.storage
-        .from('avatars')
-        .getPublicUrl(filePath);
-
-      // 5. Update Database
-      const { error: updateError } = await (supabase
-        .from('teachers') as any)
+      const { error: updateError } = await (supabase.from('teachers') as any)
         .update({ avatar_url: publicUrl })
         .eq('id', teacherId);
 
       if (updateError) throw updateError;
-
-      // 6. Refresh Local State
       setTeacher(prev => prev ? { ...prev, avatar_url: publicUrl } : null);
-      
-      alert('Foto profil berhasil diperbarui!');
+      alert('Foto profil diperbarui!');
     } catch (error) {
       console.error('Error uploading avatar:', error);
       alert('Gagal mengupload foto profil');
@@ -78,22 +61,13 @@ export function TeacherProfile({ teacherId }: TeacherProfileProps) {
     setLoading(true);
     try {
       const [teacherRes, leavesRes] = await Promise.all([
-        supabase
-          .from('teachers')
-          .select('*')
-          .eq('id', teacherId)
-          .maybeSingle(),
-        supabase
-          .from('leaves')
-          .select('*')
-          .eq('teacher_id', teacherId)
-          .order('start_date', { ascending: false }),
+        supabase.from('teachers').select('*').eq('id', teacherId).maybeSingle(),
+        supabase.from('leaves').select('*').eq('teacher_id', teacherId).order('start_date', { ascending: false }),
       ]);
-
       if (teacherRes.data) setTeacher(teacherRes.data as any);
       if (leavesRes.data) setLeaves(leavesRes.data as any);
     } catch (error) {
-      console.error('Error loading teacher data:', error);
+      console.error('Error loading data:', error);
     } finally {
       setLoading(false);
     }
@@ -101,25 +75,15 @@ export function TeacherProfile({ teacherId }: TeacherProfileProps) {
 
   const getWorkDuration = (joinDate: string) => {
     const days = differenceInDays(new Date(), parseISO(joinDate));
-    const years = Math.floor(days / 365);
-    const months = Math.floor((days % 365) / 30);
-
-    if (years > 0) {
-      return `${years} tahun ${months} bulan`;
-    }
-    return `${months} bulan`;
-  };
-
-  const getLeaveDuration = (startDate: string, endDate: string) => {
-    return differenceInDays(parseISO(endDate), parseISO(startDate)) + 1;
+    return `${Math.floor(days / 365)} thn ${Math.floor((days % 365) / 30)} bln`;
   };
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-blue-100 flex items-center justify-center p-4">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto"></div>
-          <p className="mt-4 text-gray-600">Memuat profil...</p>
+      <div className="min-h-screen bg-white flex items-center justify-center">
+        <div className="animate-pulse flex flex-col items-center">
+          <div className="w-16 h-16 bg-slate-100 rounded-full mb-4"></div>
+          <div className="h-4 w-32 bg-slate-50 rounded"></div>
         </div>
       </div>
     );
@@ -127,274 +91,198 @@ export function TeacherProfile({ teacherId }: TeacherProfileProps) {
 
   if (!teacher) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-blue-100 flex items-center justify-center p-4">
-        <div className="bg-white rounded-2xl shadow-xl p-8 text-center">
-          <p className="text-gray-600">Data guru tidak ditemukan</p>
+      <div className="min-h-screen bg-slate-50 flex items-center justify-center p-6">
+        <div className="text-center max-w-sm">
+          <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
+            <Info className="w-12 h-12 text-slate-300 mx-auto mb-4" />
+            <h2 className="text-xl font-bold text-slate-800">Profil Tidak Tersedia</h2>
+            <p className="text-slate-500 mt-2">ID Guru tidak valid atau datanya telah dihapus.</p>
+          </div>
         </div>
       </div>
     );
   }
 
-  const activeLeave = leaves.find(
-    (leave) =>
-      leave.status === 'approved' &&
-      new Date(leave.start_date) <= new Date() &&
-      new Date(leave.end_date) >= new Date()
+  const activeLeave = leaves.find(l => 
+    l.status === 'approved' && new Date(l.start_date) <= new Date() && new Date(l.end_date) >= new Date()
   );
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 p-4 py-12">
-      <div className="max-w-5xl mx-auto space-y-8 animate-in fade-in duration-700">
-        {/* Header Section */}
-        <div className="relative bg-white rounded-3xl shadow-2xl overflow-hidden border border-white/40">
-          <div className="absolute top-0 left-0 w-full h-32 bg-gradient-to-r from-blue-600 via-indigo-600 to-blue-700 opacity-90 backdrop-blur-sm">
-            <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-10"></div>
-          </div>
-          
-          <div className="relative px-8 pt-16 pb-6 flex flex-col items-center">
-            <div className="relative mb-4">
-              <div className="bg-white p-1 rounded-full shadow-2xl ring-4 ring-blue-500 ring-opacity-10">
-                <div className="relative w-32 h-32 rounded-full overflow-hidden bg-slate-100 border-2 border-white group">
+    <div className="min-h-screen bg-[#FDFDFE] selection:bg-blue-100 selection:text-blue-700 pb-20">
+      {/* Visual Top Bar */}
+      <div className="h-1.5 w-full bg-gradient-to-r from-blue-500 to-indigo-600"></div>
+
+      <div className="max-w-4xl mx-auto px-4 sm:px-6">
+        {/* Profile Card Main */}
+        <div className="mt-12 group">
+          <div className="bg-white rounded-[2.5rem] shadow-[0_20px_50px_rgba(8,_112,_184,_0.07)] border border-slate-50 overflow-hidden">
+            
+            {/* Header Content */}
+            <div className="pt-12 pb-10 px-8 text-center sm:text-left flex flex-col sm:flex-row items-center sm:items-end gap-8">
+              <div className="relative">
+                <div className="w-36 h-36 rounded-[2rem] overflow-hidden bg-slate-50 ring-8 ring-slate-50/50 shadow-inner group-hover:ring-blue-50 transition-all duration-500">
                   {teacher.avatar_url ? (
-                    <img src={teacher.avatar_url} alt="" className="w-full h-full object-cover transition-transform group-hover:scale-110 duration-500" />
+                    <img src={teacher.avatar_url} alt="" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" />
                   ) : (
-                    <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-slate-100 to-slate-200">
-                      <User className="w-20 h-20 text-slate-400" />
-                    </div>
+                    <div className="w-full h-full flex items-center justify-center"><User className="w-16 h-16 text-slate-200" /></div>
                   )}
-                  
-                  {/* Upload Overlay */}
-                  <label className="absolute inset-0 flex flex-col items-center justify-center bg-black/60 opacity-0 group-hover:opacity-100 transition-all duration-300 cursor-pointer">
-                    <input
-                      type="file"
-                      className="hidden"
-                      accept="image/*"
-                      onChange={handleAvatarUpload}
-                      disabled={uploading}
-                    />
-                    <Clock className="w-6 h-6 text-white mb-1 animate-bounce" />
-                    <span className="text-white text-[10px] font-bold uppercase tracking-widest text-center px-4">
-                      {uploading ? 'Mengupload...' : 'Ubah Foto'}
-                    </span>
+                  <label className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-all flex items-center justify-center cursor-pointer backdrop-blur-[2px]">
+                    <input type="file" className="hidden" accept="image/*" onChange={handleAvatarUpload} disabled={uploading} />
+                    <span className="text-white text-[10px] font-black tracking-widest uppercase">{uploading ? '...' : 'Upload'}</span>
                   </label>
                 </div>
-              </div>
-              
-              {activeLeave && (
-                <div className="absolute -bottom-2 -right-2 bg-rose-500 text-white rounded-full p-2 shadow-lg border-2 border-white animate-pulse">
-                  <Calendar className="w-5 h-5" />
-                </div>
-              )}
-            </div>
-
-            <div className="text-center space-y-2">
-              <h1 className="text-3xl font-extrabold text-slate-900 tracking-tight leading-tight">
-                {teacher.name}
-              </h1>
-              <div className="flex items-center justify-center space-x-3">
-                <span className="px-3 py-1 bg-blue-50 text-blue-700 rounded-full text-xs font-bold border border-blue-100 shadow-sm">
-                  {teacher.subject}
-                </span>
                 {activeLeave && (
-                  <span className="px-3 py-1 bg-rose-50 text-rose-700 rounded-full text-xs font-bold border border-rose-100 shadow-sm flex items-center gap-2">
-                    <div className="w-2 h-2 bg-rose-500 rounded-full"></div>
-                    Sedang Cuti
-                  </span>
+                  <div className="absolute -top-2 -right-2 bg-rose-500 w-8 h-8 rounded-full border-4 border-white flex items-center justify-center animate-bounce shadow-md">
+                    <div className="w-2 h-2 bg-white rounded-full"></div>
+                  </div>
                 )}
               </div>
-            </div>
-          </div>
-        </div>
 
-        {/* Info Grid */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* Main Info Column */}
-          <div className="lg:col-span-2 space-y-8">
-            {/* Personal Details Card */}
-            <div className="bg-white rounded-3xl shadow-xl p-8 border border-slate-100 hover:shadow-2xl transition-shadow duration-300">
-              <div className="flex items-center gap-3 mb-8">
-                <div className="bg-blue-600 p-2.5 rounded-xl shadow-lg shadow-blue-200">
-                  <User className="w-6 h-6 text-white" />
+              <div className="flex-1 space-y-3">
+                <div className="inline-flex items-center gap-2 px-3 py-1 bg-blue-50 text-blue-600 rounded-full text-[10px] font-black uppercase tracking-widest border border-blue-100">
+                  <ShieldCheck className="w-3 h-3" />
+                  {teacher.subject}
                 </div>
-                <h2 className="text-2xl font-bold text-slate-800">Data Pribadi</h2>
+                <h1 className="text-4xl font-extrabold text-slate-800 tracking-tight leading-tight">
+                  {teacher.name}
+                </h1>
+                <p className="text-slate-500 font-medium flex items-center justify-center sm:justify-start gap-2 text-sm italic">
+                  Member of GuruSync Network
+                </p>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                {[
-                  { label: 'NIK', value: teacher.nik, icon: Contact },
-                  { label: 'Tanggal Lahir', value: teacher.birth_date ? format(parseISO(teacher.birth_date), 'dd MMMM yyyy', { locale: id }) : '-', icon: CalendarDays },
-                  { label: 'Jenis Kelamin', value: teacher.gender || '-', icon: Contact },
-                  { label: 'Pendidikan', value: teacher.education || '-', icon: GraduationCap },
-                ].map((item, idx) => (
-                  <div key={idx} className="group hover:bg-slate-50 p-4 rounded-2xl transition-colors duration-300 border border-transparent hover:border-slate-100">
-                    <div className="flex items-start gap-4">
-                      <div className="bg-slate-100 p-2.5 rounded-xl text-slate-500 group-hover:bg-white group-hover:text-blue-600 group-hover:shadow-md transition-all">
-                        <item.icon className="w-5 h-5" />
+              <div className="hidden sm:block pb-2">
+                 <div className={`px-4 py-3 rounded-2xl border text-center transition-all ${activeLeave ? 'bg-rose-50 border-rose-100' : 'bg-emerald-50 border-emerald-100'}`}>
+                    <p className={`text-[10px] font-black uppercase tracking-[0.2em] mb-1 ${activeLeave ? 'text-rose-500' : 'text-emerald-500'}`}>
+                      STATUS
+                    </p>
+                    <p className={`text-sm font-bold ${activeLeave ? 'text-rose-700' : 'text-emerald-700'}`}>
+                      {activeLeave ? 'Sedang Cuti' : 'Aktif Bekerja'}
+                    </p>
+                 </div>
+              </div>
+            </div>
+
+            {/* Info Grid Split */}
+            <div className="grid grid-cols-1 md:grid-cols-12 border-t border-slate-50/80">
+              {/* Personal Data Column */}
+              <div className="md:col-span-8 p-10 space-y-12">
+                <section>
+                  <div className="flex items-center justify-between mb-8">
+                    <h2 className="text-lg font-bold text-slate-800 flex items-center gap-3">
+                      Data Pribadi
+                    </h2>
+                    <div className="h-px flex-1 bg-slate-50 ml-6"></div>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-y-10 gap-x-12">
+                    {[
+                      { label: 'NIK', value: teacher.nik, icon: Contact },
+                      { label: 'Tgl Lahir', value: teacher.birth_date ? format(parseISO(teacher.birth_date), 'dd MMM yyyy', { locale: id }) : '-', icon: CalendarDays },
+                      { label: 'Kelamin', value: teacher.gender || '-', icon: Contact },
+                      { label: 'Pendidikan', value: teacher.education || '-', icon: GraduationCap },
+                    ].map((item, i) => (
+                      <div key={i} className="flex gap-4 group/item">
+                        <div className="w-10 h-10 rounded-xl bg-slate-50 flex items-center justify-center text-slate-400 group-hover/item:text-blue-500 group-hover/item:bg-blue-50 transition-all">
+                          <item.icon className="w-5 h-5" />
+                        </div>
+                        <div>
+                          <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">{item.label}</p>
+                          <p className="text-sm font-bold text-slate-700">{item.value}</p>
+                        </div>
                       </div>
+                    ))}
+                    <div className="sm:col-span-2 flex gap-4 pr-10">
+                      <div className="w-10 h-10 rounded-xl bg-slate-50 flex items-center justify-center text-slate-400 shrink-0"><MapPin className="w-5 h-5" /></div>
                       <div>
-                        <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-1">{item.label}</p>
-                        <p className="text-lg font-semibold text-slate-700">{item.value}</p>
+                        <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Alamat</p>
+                        <p className="text-sm font-bold text-slate-700 leading-relaxed">{teacher.address || '-'}</p>
                       </div>
                     </div>
                   </div>
-                ))}
-                
-                <div className="group hover:bg-slate-50 p-4 rounded-2xl transition-colors duration-300 border border-transparent hover:border-slate-100 col-span-full">
-                  <div className="flex items-start gap-4">
-                    <div className="bg-slate-100 p-2.5 rounded-xl text-slate-500 group-hover:bg-white group-hover:text-blue-600 group-hover:shadow-md transition-all">
-                      <MapPin className="w-5 h-5" />
-                    </div>
-                    <div>
-                      <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-1">Alamat Lengkap</p>
-                      <p className="text-lg font-semibold text-slate-700 leading-relaxed">{teacher.address || '-'}</p>
-                    </div>
+                </section>
+
+                <section>
+                  <div className="flex items-center justify-between mb-8">
+                    <h2 className="text-lg font-bold text-slate-800 flex items-center gap-3">
+                      Riwayat Cuti
+                    </h2>
+                    <div className="h-px flex-1 bg-slate-50 ml-6"></div>
                   </div>
-                </div>
-              </div>
-            </div>
 
-            {/* Leave History Card */}
-            <div className="bg-white rounded-3xl shadow-xl p-8 border border-slate-100">
-              <div className="flex items-center gap-3 mb-8">
-                <div className="bg-indigo-600 p-2.5 rounded-xl shadow-lg shadow-indigo-200">
-                  <Clock className="w-6 h-6 text-white" />
-                </div>
-                <h2 className="text-2xl font-bold text-slate-800">Riwayat Cuti</h2>
+                  {leaves.length === 0 ? (
+                    <div className="bg-slate-50/50 rounded-[1.5rem] p-10 text-center border border-dashed border-slate-100">
+                      <p className="text-slate-400 font-medium text-sm">Tidak ada catatan riwayat cuti</p>
+                    </div>
+                  ) : (
+                    <div className="space-y-4">
+                      {leaves.slice(0, 3).map((leave) => (
+                        <div key={leave.id} className="flex items-center justify-between bg-white border border-slate-100 p-4 rounded-2xl hover:border-blue-100 hover:shadow-sm transition-all group/leave">
+                           <div className="flex items-center gap-4">
+                              <div className={`w-2 h-2 rounded-full ${
+                                leave.status === 'approved' ? 'bg-emerald-400' : leave.status === 'rejected' ? 'bg-rose-400' : 'bg-amber-400'
+                              }`} />
+                              <div>
+                                <p className="text-sm font-bold text-slate-700">{leave.leave_type}</p>
+                                <p className="text-[10px] font-medium text-slate-400 tracking-wide">
+                                  {format(parseISO(leave.start_date), 'dd MMM')} - {format(parseISO(leave.end_date), 'dd MMM yyyy')}
+                                </p>
+                              </div>
+                           </div>
+                           <ChevronRight className="w-4 h-4 text-slate-200 group-hover/leave:text-blue-300 transition-colors" />
+                        </div>
+                      ))}
+                      {leaves.length > 3 && (
+                        <p className="text-center text-[10px] font-bold text-slate-300 uppercase tracking-widest pt-2">
+                          + {leaves.length - 3} riwayat lainnya
+                        </p>
+                      )}
+                    </div>
+                  )}
+                </section>
               </div>
 
-              {leaves.length === 0 ? (
-                <div className="text-center py-16 bg-slate-50 rounded-3xl border-2 border-dashed border-slate-200">
-                  <Calendar className="w-16 h-16 text-slate-200 mx-auto mb-4" />
-                  <p className="text-slate-400 font-medium tracking-wide">Belum ada catatan riwayat cuti</p>
-                </div>
-              ) : (
-                <div className="space-y-6">
-                  {leaves.map((leave) => (
-                    <div
-                      key={leave.id}
-                      className="group bg-white rounded-3xl p-6 border border-slate-100 hover:border-blue-200 hover:shadow-xl hover:shadow-blue-500/5 transition-all duration-300"
-                    >
-                      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
-                        <div className="flex items-start gap-4">
-                          <div className={`p-3 rounded-2xl shadow-sm ${
-                            leave.status === 'approved' ? 'bg-emerald-50 text-emerald-600' :
-                            leave.status === 'rejected' ? 'bg-rose-50 text-rose-600' : 'bg-amber-50 text-amber-600'
-                          }`}>
-                            <Calendar className="w-6 h-6" />
-                          </div>
-                          <div>
-                            <h3 className="text-xl font-bold text-slate-800 group-hover:text-blue-700 transition-colors">
-                              {leave.leave_type}
-                            </h3>
-                            <div className="flex items-center gap-2 text-slate-500 mt-1">
-                              <CalendarDays className="w-4 h-4" />
-                              <span className="text-sm font-medium">
-                                {format(parseISO(leave.start_date), 'dd MMM', { locale: id })} - {format(parseISO(leave.end_date), 'dd MMM yyyy', { locale: id })}
-                              </span>
-                              <span className="text-slate-300 mx-1">•</span>
-                              <Clock className="w-4 h-4" />
-                              <span className="text-sm font-medium">{getLeaveDuration(leave.start_date, leave.end_date)} Hari</span>
-                            </div>
-                          </div>
-                        </div>
-                        <div className={`px-5 py-2 rounded-2xl text-xs font-black uppercase tracking-[0.2em] shadow-sm border ${
-                          leave.status === 'approved' ? 'bg-emerald-500 text-white border-emerald-400' :
-                          leave.status === 'rejected' ? 'bg-rose-500 text-white border-rose-400' : 'bg-amber-400 text-slate-900 border-amber-300'
-                        }`}>
-                          {leave.status === 'pending' ? 'Menunggu' : leave.status === 'approved' ? 'Disetujui' : 'Ditolak'}
-                        </div>
+              {/* Sidebar Stats Column */}
+              <div className="md:col-span-4 bg-slate-50/50 p-10 space-y-10 border-l border-slate-50/80">
+                <div className="space-y-8">
+                   <div className="space-y-1">
+                      <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Bergabung Sejak</p>
+                      <p className="text-md font-bold text-slate-700">{format(parseISO(teacher.join_date), 'dd MMMM yyyy')}</p>
+                   </div>
+                   <div className="space-y-1">
+                      <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Masa Kerja</p>
+                      <p className="text-md font-bold text-slate-700">{getWorkDuration(teacher.join_date)}</p>
+                   </div>
+                   <div className="pt-4 space-y-4">
+                      <div className="h-px w-12 bg-slate-200"></div>
+                      <div className="flex flex-col gap-4">
+                        <a href={`mailto:${teacher.email}`} className="flex items-center gap-3 text-slate-600 hover:text-blue-600 transition-colors group/link text-sm font-medium">
+                           <div className="w-8 h-8 rounded-lg bg-white flex items-center justify-center shadow-sm border border-slate-100 group-hover/link:border-blue-200 transition-all"><Mail className="w-4 h-4" /></div>
+                           {teacher.email}
+                        </a>
+                        <a href={`tel:${teacher.phone}`} className="flex items-center gap-3 text-slate-600 hover:text-emerald-600 transition-colors group/link text-sm font-medium">
+                           <div className="w-8 h-8 rounded-lg bg-white flex items-center justify-center shadow-sm border border-slate-100 group-hover/link:border-emerald-200 transition-all"><Phone className="w-4 h-4" /></div>
+                           {teacher.phone}
+                        </a>
                       </div>
-                      <div className="bg-slate-50 rounded-2xl p-5 border border-slate-100 group-hover:bg-slate-100/50 transition-colors">
-                        <div className="flex items-start gap-3">
-                          <Info className="w-5 h-5 text-slate-400 mt-1 shrink-0" />
-                          <p className="text-slate-600 font-medium italic leading-relaxed">
-                            "{leave.reason}"
-                          </p>
-                        </div>
-                      </div>
-                    </div>
-                  ))}
+                   </div>
                 </div>
-              )}
-            </div>
-          </div>
 
-          {/* Sidebar Column */}
-          <div className="space-y-8">
-            {/* Professional Info Card */}
-            <div className="bg-white rounded-3xl shadow-xl p-8 border border-slate-100 hover:shadow-2xl transition-all duration-300 group">
-              <div className="flex items-center gap-3 mb-8">
-                <div className="bg-emerald-600 p-2.5 rounded-xl shadow-lg shadow-emerald-200">
-                  <Briefcase className="w-6 h-6 text-white" />
+                <div className="pt-10">
+                   <button className="w-full py-4 bg-slate-900 text-white rounded-2xl font-bold text-sm shadow-xl shadow-slate-200 hover:bg-blue-600 transition-all hover:scale-[1.02] active:scale-[0.98]">
+                      Hubungi Guru
+                   </button>
                 </div>
-                <h2 className="text-2xl font-bold text-slate-800">Status Kerja</h2>
-              </div>
-              
-              <div className="space-y-6">
-                {[
-                  { label: 'Bergabung Sejak', value: format(parseISO(teacher.join_date), 'dd MMMM yyyy', { locale: id }), icon: Calendar, color: 'text-emerald-500' },
-                  { label: 'Masa Kerja', value: getWorkDuration(teacher.join_date), icon: Clock, color: 'text-amber-500' },
-                  { label: 'Status', value: 'Aktif Bekerja', icon: Briefcase, color: 'text-blue-500' },
-                ].map((item, idx) => (
-                  <div key={idx} className="flex items-center gap-5 p-4 rounded-2xl hover:bg-slate-50 transition-colors">
-                    <div className="bg-slate-50 p-3 rounded-2xl shadow-inner group-hover:bg-white group-hover:shadow-md transition-all">
-                      <item.icon className={`w-5 h-5 ${item.color}`} />
-                    </div>
-                    <div>
-                      <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{item.label}</p>
-                      <p className="text-md font-bold text-slate-700">{item.value}</p>
-                    </div>
-                  </div>
-                ))}
               </div>
             </div>
 
-            {/* Contact Card */}
-            <div className="bg-slate-900 rounded-4xl shadow-2xl p-8 border border-slate-800 hover:shadow-blue-900/40 hover:-translate-y-1 transition-all duration-300">
-              <div className="flex items-center gap-3 mb-8">
-                <div className="bg-blue-500 p-2.5 rounded-xl shadow-lg shadow-blue-500/20">
-                  <Mail className="w-6 h-6 text-white" />
-                </div>
-                <h2 className="text-2xl font-bold text-white">Hubungi Guru</h2>
-              </div>
-              
-              <div className="space-y-6">
-                <div className="p-4 rounded-2xl bg-slate-800/50 border border-slate-700 hover:border-blue-500/50 transition-colors group">
-                  <div className="flex items-center gap-4">
-                    <Mail className="w-6 h-6 text-blue-400 group-hover:scale-110 transition-transform" />
-                    <div>
-                      <p className="text-xs font-bold text-slate-500 uppercase tracking-tighter mb-0.5">Email Kantor</p>
-                      <p className="text-sm font-semibold text-slate-200 truncate w-full max-w-[180px]">{teacher.email}</p>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="p-4 rounded-2xl bg-slate-800/50 border border-slate-700 hover:border-emerald-500/50 transition-colors group">
-                  <div className="flex items-center gap-4">
-                    <Phone className="w-6 h-6 text-emerald-400 group-hover:scale-110 transition-transform" />
-                    <div>
-                      <p className="text-xs font-bold text-slate-500 uppercase tracking-tighter mb-0.5">Nomer Telepon</p>
-                      <p className="text-sm font-semibold text-slate-200">{teacher.phone}</p>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              <div className="mt-8 pt-8 border-t border-slate-800">
-                <button className="w-full py-4 bg-gradient-to-r from-blue-500 to-indigo-600 text-white rounded-2xl font-bold shadow-lg shadow-blue-500/30 hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center justify-center gap-2">
-                  <Mail className="w-5 h-5" />
-                  Kirim Pesan
-                </button>
-              </div>
-            </div>
           </div>
         </div>
 
-        {/* Footer */}
-        <div className="text-center py-12">
-          <p className="text-slate-400 text-xs font-bold uppercase tracking-[0.3em]">
-            Sistem Manajemen Guru &bull; {new Date().getFullYear()}
-          </p>
+        {/* Footer Minimalist */}
+        <div className="mt-16 text-center space-y-2 opacity-30 group-hover:opacity-100 transition-opacity duration-700">
+           <p className="text-[10px] font-black tracking-[0.4em] text-slate-400 uppercase">GuruSync Official Profile</p>
+           <p className="text-[9px] font-medium text-slate-300">Generated for Digital Identity Verification System</p>
         </div>
       </div>
     </div>
