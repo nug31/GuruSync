@@ -2,7 +2,8 @@ import { useState, useMemo, useRef } from 'react';
 import { QRCodeSVG } from 'qrcode.react';
 import { supabase } from '../../lib/supabase';
 import { Search, Download, Edit, Trash2, QrCode, FileSpreadsheet, Eye } from 'lucide-react';
-import { differenceInDays, parseISO, format } from 'date-fns';
+import { differenceInDays, parseISO, format, parse, isValid } from 'date-fns';
+import { id } from 'date-fns/locale';
 import * as XLSX from 'xlsx';
 import type { Teacher, Leave } from '../../types';
 
@@ -178,14 +179,51 @@ export function TeacherList({ teachers, leaves, onEdit, onDelete, onRefresh }: T
         const ws = wb.Sheets[wsname];
         const data = XLSX.utils.sheet_to_json(ws) as any[];
 
+        const parseExcelDate = (val: any): string | null => {
+          if (!val) return null;
+          
+          // If it's already a JS Date object (xlsx cellDates: true)
+          if (val instanceof Date && !isNaN(val.getTime())) {
+            return format(val, 'yyyy-MM-dd');
+          }
+
+          if (typeof val === 'number') {
+            // Excel serial date to JS Date
+            const date = XLSX.SSF.parse_date_code(val);
+            return format(new Date(date.y, date.m - 1, date.d), 'yyyy-MM-dd');
+          }
+
+          if (typeof val === 'string') {
+            const dateStr = val.trim();
+            if (!dateStr) return null;
+
+            // Try common formats
+            const formats = ['yyyy-MM-dd', 'dd-MM-yyyy', 'dd/MM/yyyy', 'd-MMM-yy', 'd-MMM-yyyy'];
+            for (const f of formats) {
+              const parsed = parse(dateStr, f, new Date(), { locale: id });
+              if (isValid(parsed)) {
+                return format(parsed, 'yyyy-MM-dd');
+              }
+            }
+            
+            // Try parseISO as last resort
+            const isoParsed = parseISO(dateStr);
+            if (isValid(isoParsed)) {
+              return format(isoParsed, 'yyyy-MM-dd');
+            }
+          }
+
+          return null;
+        };
+
         const teachersToUpsert = data.map((row: any) => ({
           name: row['Nama'] || row['name'],
           nik: String(row['NIK'] || row['nik']),
           birth_place: row['Tempat Lahir'] || row['birth_place'] || '',
-          birth_date: row['Tanggal Lahir'] || row['birth_date'] || null,
+          birth_date: parseExcelDate(row['Tanggal Lahir'] || row['birth_date']),
           gender: row['Jenis Kelamin'] || row['gender'] || 'Laki-laki',
           subject: row['Mata Pelajaran'] || row['subject'] || 'Lainnya',
-          join_date: row['Tanggal Bergabung'] || row['join_date'] || new Date().toISOString().split('T')[0],
+          join_date: parseExcelDate(row['Tanggal Bergabung'] || row['join_date']) || new Date().toISOString().split('T')[0],
           education: row['Pendidikan'] || row['education'] || '',
           work_unit: row['Sekolah Bertugas'] || row['work_unit'] || '',
           email: row['Email'] || row['email'] || '',
