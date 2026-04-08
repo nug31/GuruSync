@@ -3,7 +3,7 @@ import { QRCodeSVG } from 'qrcode.react';
 import { supabase } from '../../lib/supabase';
 import { Search, Download, Edit, Trash2, QrCode, FileSpreadsheet, Eye } from 'lucide-react';
 import { differenceInDays, parseISO, format, parse, isValid } from 'date-fns';
-import { id } from 'date-fns/locale';
+import { id, enUS } from 'date-fns/locale';
 import * as XLSX from 'xlsx';
 import type { Teacher, Leave } from '../../types';
 
@@ -182,13 +182,11 @@ export function TeacherList({ teachers, leaves, onEdit, onDelete, onRefresh }: T
         const parseExcelDate = (val: any): string | null => {
           if (!val) return null;
           
-          // If it's already a JS Date object (xlsx cellDates: true)
           if (val instanceof Date && !isNaN(val.getTime())) {
             return format(val, 'yyyy-MM-dd');
           }
 
           if (typeof val === 'number') {
-            // Excel serial date to JS Date
             const date = XLSX.SSF.parse_date_code(val);
             return format(new Date(date.y, date.m - 1, date.d), 'yyyy-MM-dd');
           }
@@ -197,56 +195,73 @@ export function TeacherList({ teachers, leaves, onEdit, onDelete, onRefresh }: T
             const dateStr = val.trim();
             if (!dateStr) return null;
 
-            // Try common formats
-            const formats = ['yyyy-MM-dd', 'dd-MM-yyyy', 'dd/MM/yyyy', 'd-MMM-yy', 'd-MMM-yyyy'];
+            const formats = ['yyyy-MM-dd', 'dd-MM-yyyy', 'dd/MM/yyyy', 'd-MMM-yy', 'd-MMM-yyyy', 'MMM d, yyyy', 'MMMM d, yyyy'];
+            const locales = [id, enUS];
+
             for (const f of formats) {
-              const parsed = parse(dateStr, f, new Date(), { locale: id });
-              if (isValid(parsed)) {
-                return format(parsed, 'yyyy-MM-dd');
+              for (const locale of locales) {
+                try {
+                  const parsed = parse(dateStr, f, new Date(), { locale });
+                  if (isValid(parsed)) return format(parsed, 'yyyy-MM-dd');
+                } catch (e) { /* ignore */ }
               }
             }
             
-            // Try parseISO as last resort
             const isoParsed = parseISO(dateStr);
-            if (isValid(isoParsed)) {
-              return format(isoParsed, 'yyyy-MM-dd');
-            }
+            if (isValid(isoParsed)) return format(isoParsed, 'yyyy-MM-dd');
           }
-
           return null;
         };
 
-        const teachersToUpsert = data.map((row: any) => ({
-          name: row['Nama'] || row['name'],
-          nik: String(row['NIK'] || row['nik']),
-          birth_place: row['Tempat Lahir'] || row['birth_place'] || '',
-          birth_date: parseExcelDate(row['Tanggal Lahir'] || row['birth_date']),
-          gender: row['Jenis Kelamin'] || row['gender'] || 'Laki-laki',
-          subject: row['Mata Pelajaran'] || row['subject'] || 'Lainnya',
-          join_date: parseExcelDate(row['Tanggal Bergabung'] || row['join_date']) || new Date().toISOString().split('T')[0],
-          education: row['Pendidikan'] || row['education'] || '',
-          work_unit: row['Sekolah Bertugas'] || row['work_unit'] || '',
-          email: row['Email'] || row['email'] || '',
-          phone: row['Telepon'] || row['phone'] || '',
-          address: row['Alamat'] || row['address'] || '',
-        })).filter(t => t.name && t.nik);
+        const getRowVal = (row: any, possibleKeys: string[]) => {
+          const key = Object.keys(row).find(k => 
+            possibleKeys.some(pk => k.toLowerCase().trim() === pk.toLowerCase().trim())
+          );
+          return key ? row[key] : undefined;
+        };
+
+        const teachersToUpsert = data.map((row: any) => {
+          const name = getRowVal(row, ['Nama', 'name', 'Full Name']);
+          const nikRaw = getRowVal(row, ['NIK', 'nik', 'Identity Number']);
+          const email = getRowVal(row, ['Email', 'email']) || '';
+          
+          if (!name || !nikRaw) return null;
+
+          const nik = String(nikRaw).trim();
+          if (nik === 'undefined' || !nik) return null;
+
+          return {
+            name,
+            nik,
+            birth_place: getRowVal(row, ['Tempat Lahir', 'birth_place', 'Place of Birth']) || '',
+            birth_date: parseExcelDate(getRowVal(row, ['Tanggal Lahir', 'birth_date', 'Date of Birth'])),
+            gender: getRowVal(row, ['Jenis Kelamin', 'gender', 'Sex']) || 'Laki-laki',
+            subject: getRowVal(row, ['Mata Pelajaran', 'subject', 'Subject']) || 'Lainnya',
+            join_date: parseExcelDate(getRowVal(row, ['Tanggal Bergabung', 'join_date', 'Join Date'])) || new Date().toISOString().split('T')[0],
+            education: getRowVal(row, ['Pendidikan', 'education', 'Education']) || '',
+            work_unit: getRowVal(row, ['Sekolah Bertugas', 'work_unit', 'Work Unit', 'Kampus']) || '',
+            email,
+            phone: getRowVal(row, ['Telepon', 'phone', 'Phone', 'Mobile']) || '',
+            address: getRowVal(row, ['Alamat', 'address', 'Address']) || '',
+          };
+        }).filter((t): t is any => t !== null);
 
         if (teachersToUpsert.length === 0) {
-          alert('Tidak ada data valid untuk diimport');
-          return;
+          throw new Error('Tidak ada data valid untuk diimport. Pastikan kolom Nama dan NIK terisi.');
         }
 
-        const { error } = await (supabase
+        const { error: upsertError } = await (supabase
           .from('teachers') as any)
           .upsert(teachersToUpsert, { onConflict: 'nik' });
 
-        if (error) throw error;
+        if (upsertError) throw upsertError;
 
         alert(`Berhasil mengimport ${teachersToUpsert.length} data guru. Silakan jalankan sinkronisasi akun untuk mengaktifkan login.`);
         onRefresh?.();
       } catch (err) {
         console.error('Error importing excel:', err);
-        alert('Gagal mengimport data. Pastikan format file benar.');
+        const errMsg = err instanceof Error ? err.message : 'Format file salah atau kolom tidak sesuai';
+        alert(`Gagal mengimport data: ${errMsg}`);
       } finally {
         setImporting(false);
         if (fileInputRef.current) fileInputRef.current.value = '';
