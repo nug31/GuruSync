@@ -3,6 +3,7 @@ import { supabase } from '../../lib/supabase';
 import { useAuth } from '../../contexts/AuthContext';
 import { TeacherList } from './TeacherList';
 import { TeacherForm } from './TeacherForm';
+import { TeacherProfile } from '../Profile/TeacherProfile';
 import { LeaveManagement } from './LeaveManagement';
 import { Statistics } from './Statistics';
 import { AdminManagement } from './AdminManagement';
@@ -29,9 +30,20 @@ export function Dashboard() {
   const loadData = async () => {
     setLoading(true);
     try {
+      let teachersQuery = supabase.from('teachers').select('*');
+      let leavesQuery = supabase.from('leaves').select('*');
+
+      if (!isAdmin && profile?.id) {
+        teachersQuery = teachersQuery.eq('user_id', profile.id);
+        // For leaves, we still want to fetch all IF the teacher is an approver, 
+        // but for now let's focus on user identity.
+        // Actually, if they are just a teacher, they only see their own leaves.
+        leavesQuery = leavesQuery.eq('user_id', profile.id);
+      }
+
       const [teachersRes, leavesRes] = await Promise.all([
-        supabase.from('teachers').select('*').order('name'),
-        supabase.from('leaves').select('*').order('created_at', { ascending: false }),
+        teachersQuery.order('name'),
+        leavesQuery.order('created_at', { ascending: false }),
       ]);
 
       if (teachersRes.data) setTeachers(teachersRes.data);
@@ -112,47 +124,58 @@ export function Dashboard() {
             <span>Dashboard</span>
           </button>
 
-          <button
-            onClick={() => setView('teachers')}
-            className={`flex items-center space-x-2 px-4 py-2 rounded-lg transition-colors ${
-              view === 'teachers'
-                ? 'bg-blue-500 text-white'
-                : 'text-gray-600 hover:bg-gray-100'
-            }`}
-          >
-            <Users className="w-5 h-5" />
-            <span>Data Guru</span>
-          </button>
-
-          {isAdmin && (
+          {isAdmin ? (
             <button
-              onClick={() => setView('leaves')}
+              onClick={() => setView('teachers')}
               className={`flex items-center space-x-2 px-4 py-2 rounded-lg transition-colors ${
-                view === 'leaves'
+                view === 'teachers'
                   ? 'bg-blue-500 text-white'
                   : 'text-gray-600 hover:bg-gray-100'
               }`}
             >
-              <Calendar className="w-5 h-5" />
-              <span>Manajemen Cuti</span>
+              <Users className="w-5 h-5" />
+              <span>Data Guru</span>
             </button>
-          )}
-
-          {isAdmin && (
+          ) : (
             <button
-              onClick={() => setView('admins')}
+              onClick={() => setView('teachers')}
               className={`flex items-center space-x-2 px-4 py-2 rounded-lg transition-colors ${
-                view === 'admins'
+                view === 'teachers'
                   ? 'bg-blue-500 text-white'
                   : 'text-gray-600 hover:bg-gray-100'
               }`}
             >
               <ShieldCheck className="w-5 h-5" />
-              <span>Manajemen Admin</span>
+              <span>Profil Saya</span>
             </button>
           )}
 
-          {!isAdmin && (
+          {isAdmin ? (
+            <>
+              <button
+                onClick={() => setView('leaves')}
+                className={`flex items-center space-x-2 px-4 py-2 rounded-lg transition-colors ${
+                  view === 'leaves'
+                    ? 'bg-blue-500 text-white'
+                    : 'text-gray-600 hover:bg-gray-100'
+                }`}
+              >
+                <Calendar className="w-5 h-5" />
+                <span>Manajemen Cuti</span>
+              </button>
+              <button
+                onClick={() => setView('admins')}
+                className={`flex items-center space-x-2 px-4 py-2 rounded-lg transition-colors ${
+                  view === 'admins'
+                    ? 'bg-blue-500 text-white'
+                    : 'text-gray-600 hover:bg-gray-100'
+                }`}
+              >
+                <ShieldCheck className="w-5 h-5" />
+                <span>Manajemen Admin</span>
+              </button>
+            </>
+          ) : (
             <button
               onClick={() => setView('leaves')}
               className={`flex items-center space-x-2 px-4 py-2 rounded-lg transition-colors ${
@@ -174,7 +197,9 @@ export function Dashboard() {
         {view === 'teachers' && (
           <div>
             <div className="flex justify-between items-center mb-6">
-              <h2 className="text-2xl font-bold text-gray-800">Data Guru</h2>
+              <h2 className="text-2xl font-bold text-gray-800">
+                {isAdmin ? 'Data Guru' : 'Profil Saya'}
+              </h2>
               {isAdmin && (
                 <button
                   onClick={handleAddTeacher}
@@ -186,13 +211,25 @@ export function Dashboard() {
               )}
             </div>
 
-            <TeacherList
-              teachers={teachers}
-              leaves={leaves}
-              onEdit={isAdmin ? handleEditTeacher : undefined}
-              onDelete={isAdmin ? loadData : undefined}
-              onRefresh={isAdmin ? loadData : undefined}
-            />
+            {isAdmin ? (
+              <TeacherList
+                teachers={teachers}
+                leaves={leaves}
+                onEdit={handleEditTeacher}
+                onDelete={loadData}
+                onRefresh={loadData}
+              />
+            ) : (
+              <div className="bg-white rounded-xl shadow-sm overflow-hidden">
+                {teachers[0] ? (
+                  <TeacherProfile teacherId={teachers[0].id} />
+                ) : (
+                  <div className="p-8 text-center text-gray-500">
+                    Data profil tidak ditemukan.
+                  </div>
+                )}
+              </div>
+            )}
           </div>
         )}
 
