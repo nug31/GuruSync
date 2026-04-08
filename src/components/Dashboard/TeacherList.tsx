@@ -215,39 +215,46 @@ export function TeacherList({ teachers, leaves, onEdit, onDelete, onRefresh }: T
 
         const getRowVal = (row: any, possibleKeys: string[]) => {
           const key = Object.keys(row).find(k => 
-            possibleKeys.some(pk => k.toLowerCase().trim() === pk.toLowerCase().trim())
+            possibleKeys.some(pk => k.toLowerCase().replace(/[^a-z0-9]/g, '').trim() === pk.toLowerCase().replace(/[^a-z0-9]/g, '').trim())
           );
           return key ? row[key] : undefined;
         };
 
+        const foundColumns = data.length > 0 ? Object.keys(data[0]) : [];
+
         const teachersToUpsert = data.map((row: any) => {
-          const name = getRowVal(row, ['Nama', 'name', 'Full Name']);
-          const nikRaw = getRowVal(row, ['NIK', 'nik', 'Identity Number']);
-          const email = getRowVal(row, ['Email', 'email']) || '';
+          const name = getRowVal(row, ['Nama', 'Nama Guru', 'Name', 'Full Name', 'Nama Lengkap']);
+          const nikRaw = getRowVal(row, ['NIK', 'N.I.K', 'No NIK', 'Nomor NIK', 'Identity Number', 'nik']);
           
-          if (!name || !nikRaw) return null;
+          if (!name || (!nikRaw && nikRaw !== 0)) return null;
 
           const nik = String(nikRaw).trim();
-          if (nik === 'undefined' || !nik) return null;
+          if (nik === 'undefined' || !nik || nik === '-') return null;
+
+          const sanitizeField = (val: any) => {
+            if (val === undefined || val === null) return '';
+            const str = String(val).trim();
+            return (str === '-' || str === 'strip') ? '' : str;
+          };
 
           return {
-            name,
-            nik,
-            birth_place: getRowVal(row, ['Tempat Lahir', 'birth_place', 'Place of Birth']) || '',
-            birth_date: parseExcelDate(getRowVal(row, ['Tanggal Lahir', 'birth_date', 'Date of Birth'])),
-            gender: getRowVal(row, ['Jenis Kelamin', 'gender', 'Sex']) || 'Laki-laki',
-            subject: getRowVal(row, ['Mata Pelajaran', 'subject', 'Subject']) || 'Lainnya',
-            join_date: parseExcelDate(getRowVal(row, ['Tanggal Bergabung', 'join_date', 'Join Date'])) || new Date().toISOString().split('T')[0],
-            education: getRowVal(row, ['Pendidikan', 'education', 'Education']) || '',
-            work_unit: getRowVal(row, ['Sekolah Bertugas', 'work_unit', 'Work Unit', 'Kampus']) || '',
-            email,
-            phone: getRowVal(row, ['Telepon', 'phone', 'Phone', 'Mobile']) || '',
-            address: getRowVal(row, ['Alamat', 'address', 'Address']) || '',
+            name: String(name).trim(),
+            nik: nik,
+            birth_place: sanitizeField(getRowVal(row, ['Tempat Lahir', 'birth_place', 'Place of Birth', 'Kota Lahir'])),
+            birth_date: parseExcelDate(getRowVal(row, ['Tanggal Lahir', 'birth_date', 'Date of Birth', 'Tgl Lahir'])),
+            gender: sanitizeField(getRowVal(row, ['Jenis Kelamin', 'gender', 'Sex', 'Gender', 'Kelamin', 'L/P'])) || 'Laki-laki',
+            subject: sanitizeField(getRowVal(row, ['Mata Pelajaran', 'subject', 'Subject', 'Mapel'])) || 'Lainnya',
+            join_date: parseExcelDate(getRowVal(row, ['Tanggal Bergabung', 'join_date', 'Join Date', 'Tgl Bergabung', 'Tgl Masuk'])) || new Date().toISOString().split('T')[0],
+            education: sanitizeField(getRowVal(row, ['Pendidikan', 'education', 'Education', 'Pendidikan Terakhir'])),
+            work_unit: sanitizeField(getRowVal(row, ['Sekolah Bertugas', 'work_unit', 'Work Unit', 'Kampus', 'Unit Kerja', 'Sekolah'])),
+            email: sanitizeField(getRowVal(row, ['Email', 'email'])),
+            phone: sanitizeField(getRowVal(row, ['Telepon', 'phone', 'Phone', 'Mobile', 'No HP', 'No Telp'])),
+            address: sanitizeField(getRowVal(row, ['Alamat', 'address', 'Address', 'Alamat Lengkap'])),
           };
         }).filter((t): t is any => t !== null);
 
         if (teachersToUpsert.length === 0) {
-          throw new Error('Tidak ada data valid untuk diimport. Pastikan kolom Nama dan NIK terisi.');
+          throw new Error(`Tidak ada data valid. Pastikan kolom Nama dan NIK ada.\n\nKolom yang ditemukan di file Anda: \n${foundColumns.join(', ')}`);
         }
 
         const { error: upsertError } = await (supabase
@@ -258,9 +265,9 @@ export function TeacherList({ teachers, leaves, onEdit, onDelete, onRefresh }: T
 
         alert(`Berhasil mengimport ${teachersToUpsert.length} data guru. Silakan jalankan sinkronisasi akun untuk mengaktifkan login.`);
         onRefresh?.();
-      } catch (err) {
+      } catch (err: any) {
         console.error('Error importing excel:', err);
-        const errMsg = err instanceof Error ? err.message : 'Format file salah atau kolom tidak sesuai';
+        const errMsg = err?.message || (typeof err === 'string' ? err : 'Format file salah atau kolom tidak sesuai');
         alert(`Gagal mengimport data: ${errMsg}`);
       } finally {
         setImporting(false);
