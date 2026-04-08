@@ -31,27 +31,37 @@ async function syncAccounts() {
     let updatedCount = 0;
 
     for (const teacher of teachers) {
-      const existingUser = authUsers.find(u => u.email === teacher.email);
+      let email = teacher.email;
+      let needsEmailUpdate = false;
+
+      // Fallback if email is missing
+      if (!email || email.trim() === '') {
+        email = `${teacher.nik}@gurusync.net`;
+        needsEmailUpdate = true;
+        console.log(`📧 Menghasilkan email fallback untuk ${teacher.name}: ${email}`);
+      }
+
+      const existingUser = authUsers.find(u => u.email === email);
       let userId;
 
       if (!existingUser) {
-        console.log(`➕ Membuat akun baru untuk: ${teacher.name} (${teacher.email})`);
+        console.log(`➕ Membuat akun baru untuk: ${teacher.name} (${email})`);
         const { data: newUser, error: createError } = await supabase.auth.admin.createUser({
-          email: teacher.email,
+          email: email,
           password: teacher.nik, // default password is NIK
           email_confirm: true,
           user_metadata: { name: teacher.name, nik: teacher.nik }
         });
 
         if (createError) {
-          console.error(`❌ Gagal membuat akun ${teacher.email}:`, createError.message);
+          console.error(`❌ Gagal membuat akun ${email}:`, createError.message);
           continue;
         }
         userId = newUser.user.id;
         createdCount++;
       } else {
         userId = existingUser.id;
-        // Optionally update password to NIK if requested, or just sync metadata
+        console.log(`🔄 Memperbarui akun: ${teacher.name} (${email})`);
         await supabase.auth.admin.updateUserById(userId, {
           user_metadata: { name: teacher.name, nik: teacher.nik }
         });
@@ -61,13 +71,18 @@ async function syncAccounts() {
       // 3. Ensure profile and link user_id in teachers table
       await supabase.from('profiles').upsert({
         id: userId,
-        email: teacher.email,
+        email: email,
         name: teacher.name,
         nik: teacher.nik,
         role: 'teacher'
       });
 
-      await supabase.from('teachers').update({ user_id: userId }).eq('id', teacher.id);
+      const updateData = { user_id: userId };
+      if (needsEmailUpdate) {
+        updateData.email = email;
+      }
+
+      await supabase.from('teachers').update(updateData).eq('id', teacher.id);
     }
 
     console.log('\n✅ Sinkronisasi selesai!');

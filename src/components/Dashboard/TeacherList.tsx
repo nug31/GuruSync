@@ -220,7 +220,8 @@ export function TeacherList({ teachers, leaves, onEdit, onDelete, onRefresh }: T
           return key ? row[key] : undefined;
         };
 
-        const foundColumns = data.length > 0 ? Object.keys(data[0]) : [];
+        const totalRows = data.length;
+        const foundColumns = totalRows > 0 ? Object.keys(data[0]) : [];
 
         const teachersToUpsert = data.map((row: any) => {
           const name = getRowVal(row, ['Nama', 'Nama Guru', 'Name', 'Full Name', 'Nama Lengkap']);
@@ -253,7 +254,10 @@ export function TeacherList({ teachers, leaves, onEdit, onDelete, onRefresh }: T
           };
         }).filter((t): t is any => t !== null);
 
-        if (teachersToUpsert.length === 0) {
+        const processedCount = teachersToUpsert.length;
+        const skippedCount = totalRows - processedCount;
+
+        if (processedCount === 0) {
           throw new Error(`Tidak ada data valid. Pastikan kolom Nama dan NIK ada.\n\nKolom yang ditemukan di file Anda: \n${foundColumns.join(', ')}`);
         }
 
@@ -263,7 +267,13 @@ export function TeacherList({ teachers, leaves, onEdit, onDelete, onRefresh }: T
 
         if (upsertError) throw upsertError;
 
-        alert(`Berhasil mengimport ${teachersToUpsert.length} data guru. Silakan jalankan sinkronisasi akun untuk mengaktifkan login.`);
+        let summaryMsg = `Berhasil memproses ${processedCount} data guru.`;
+        if (skippedCount > 0) {
+          summaryMsg += `\n\n${skippedCount} baris dilewati (karena Nama atau NIK kosong).`;
+        }
+        summaryMsg += `\n\nSilakan jalankan sinkronisasi akun untuk mengaktifkan login.`;
+        
+        alert(summaryMsg);
         onRefresh?.();
       } catch (err: any) {
         console.error('Error importing excel:', err);
