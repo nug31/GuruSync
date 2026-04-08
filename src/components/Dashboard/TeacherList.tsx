@@ -115,14 +115,21 @@ export function TeacherList({ teachers, leaves, onEdit, onDelete, onRefresh }: T
   };
 
   const handleExportExcel = () => {
-    const exportData = filteredTeachers.map((teacher) => {
+    const exportData = filteredTeachers.map((t) => {
       return {
-        Nama: teacher.name,
-        NIK: teacher.nik,
-        'Mata Pelajaran': teacher.subject,
-        Email: teacher.email,
-        Telepon: teacher.phone,
-        'Tanggal Bergabung': teacher.join_date,
+        'Nama': t.name,
+        'NIK': t.nik,
+        'Tempat Lahir': t.birth_place || '',
+        'Tanggal Lahir': t.birth_date || '',
+        'Jenis Kelamin': t.gender || '',
+        'Mata Pelajaran': t.subject,
+        'Tanggal Bergabung': t.join_date,
+        'Pendidikan': t.education || '',
+        'Sekolah Bertugas': t.work_unit || '',
+        'Email': t.email,
+        'Telepon': t.phone,
+        'Alamat': t.address || '',
+        'Total Cuti': (t as any).leaves?.length || 0
       };
     });
 
@@ -138,13 +145,15 @@ export function TeacherList({ teachers, leaves, onEdit, onDelete, onRefresh }: T
       {
         'Nama': 'Joko Setyo Nugroho, S.T',
         'NIK': '940866',
-        'Mata Pelajaran': 'TKR',
-        'Email': 'joko@example.com',
-        'Telepon': '08123456789',
-        'Tanggal Bergabung': '2022-03-01',
+        'Tempat Lahir': 'Jakarta',
         'Tanggal Lahir': '1994-08-31',
         'Jenis Kelamin': 'Laki-laki',
+        'Mata Pelajaran': 'TKR',
+        'Tanggal Bergabung': '2022-03-01',
         'Pendidikan': 'S1',
+        'Sekolah Bertugas': 'SMKN 1 Jakarta',
+        'Email': 'joko@example.com',
+        'Telepon': '08123456789',
         'Alamat': 'Jl. Contoh No. 123, Kota Bandung'
       }
     ];
@@ -169,16 +178,18 @@ export function TeacherList({ teachers, leaves, onEdit, onDelete, onRefresh }: T
         const ws = wb.Sheets[wsname];
         const data = XLSX.utils.sheet_to_json(ws) as any[];
 
-        const teachersToUpsert = data.map((row) => ({
+        const teachersToUpsert = data.map((row: any) => ({
           name: row['Nama'] || row['name'],
           nik: String(row['NIK'] || row['nik']),
-          subject: row['Mata Pelajaran'] || row['subject'] || 'Lainnya',
-          email: row['Email'] || row['email'] || '',
-          phone: row['Telepon'] || row['phone'] || '',
-          join_date: row['Tanggal Bergabung'] || row['join_date'] || new Date().toISOString().split('T')[0],
+          birth_place: row['Tempat Lahir'] || row['birth_place'] || '',
           birth_date: row['Tanggal Lahir'] || row['birth_date'] || null,
           gender: row['Jenis Kelamin'] || row['gender'] || 'Laki-laki',
+          subject: row['Mata Pelajaran'] || row['subject'] || 'Lainnya',
+          join_date: row['Tanggal Bergabung'] || row['join_date'] || new Date().toISOString().split('T')[0],
           education: row['Pendidikan'] || row['education'] || '',
+          work_unit: row['Sekolah Bertugas'] || row['work_unit'] || '',
+          email: row['Email'] || row['email'] || '',
+          phone: row['Telepon'] || row['phone'] || '',
           address: row['Alamat'] || row['address'] || '',
         })).filter(t => t.name && t.nik);
 

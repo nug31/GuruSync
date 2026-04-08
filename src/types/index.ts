@@ -9,9 +9,11 @@ export interface Teacher {
   join_date: string;
   avatar_url?: string;
   birth_date?: string;
+  birth_place?: string;
   gender?: string;
   address?: string;
   education?: string;
+  work_unit?: string;
   created_at: string;
   updated_at: string;
 }

@@ -17,9 +17,11 @@ export function TeacherForm({ teacher, onClose }: TeacherFormProps) {
     phone: '',
     join_date: '',
     birth_date: '',
+    birth_place: '',
     gender: 'Laki-laki',
     address: '',
     education: '',
+    work_unit: '',
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -34,9 +36,11 @@ export function TeacherForm({ teacher, onClose }: TeacherFormProps) {
         phone: teacher.phone,
         join_date: teacher.join_date,
         birth_date: teacher.birth_date || '',
+        birth_place: teacher.birth_place || '',
         gender: teacher.gender || 'Laki-laki',
         address: teacher.address || '',
         education: teacher.education || '',
+        work_unit: teacher.work_unit || '',
       });
     }
   }, [teacher]);
@@ -173,6 +177,20 @@ export function TeacherForm({ teacher, onClose }: TeacherFormProps) {
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
+              Tempat Lahir
+            </label>
+            <input
+              type="text"
+              value={formData.birth_place}
+              onChange={(e) => setFormData({ ...formData, birth_place: e.target.value })}
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              placeholder="Contoh: Jakarta"
+              required
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
               Tanggal Lahir
             </label>
             <input
@@ -216,6 +234,20 @@ export function TeacherForm({ teacher, onClose }: TeacherFormProps) {
               <option value="S2">S2</option>
               <option value="S3">S3</option>
             </select>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Sekolah Bertugas
+            </label>
+            <input
+              type="text"
+              value={formData.work_unit}
+              onChange={(e) => setFormData({ ...formData, work_unit: e.target.value })}
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              placeholder="Contoh: SMKN 1 Jakarta"
+              required
+            />
           </div>
 
           <div>

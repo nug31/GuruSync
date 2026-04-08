@@ -147,7 +147,7 @@ export function TeacherProfile({ teacherId }: TeacherProfileProps) {
                   {teacher.name}
                 </h1>
                 <p className="text-slate-500 font-medium flex items-center justify-center sm:justify-start gap-2 text-sm italic">
-                  Member of GuruSync Network
+                  {teacher.work_unit || 'Guru Sync Network'}
                 </p>
               </div>
 
@@ -178,7 +178,11 @@ export function TeacherProfile({ teacherId }: TeacherProfileProps) {
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-y-10 gap-x-12">
                     {[
                       { label: 'NIK', value: teacher.nik, icon: Contact },
-                      { label: 'Tgl Lahir', value: teacher.birth_date ? format(parseISO(teacher.birth_date), 'dd MMM yyyy', { locale: id }) : '-', icon: CalendarDays },
+                      { 
+                        label: 'TTL', 
+                        value: `${teacher.birth_place ? `${teacher.birth_place}, ` : ''}${teacher.birth_date ? format(parseISO(teacher.birth_date), 'dd MMM yyyy', { locale: id }) : '-'}`, 
+                        icon: CalendarDays 
+                      },
                       { label: 'Kelamin', value: teacher.gender || '-', icon: Contact },
                       { label: 'Pendidikan', value: teacher.education || '-', icon: GraduationCap },
                     ].map((item, i) => (
