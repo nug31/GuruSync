@@ -24,8 +24,10 @@ export function Dashboard() {
   const isAdmin = profile?.role === 'admin';
 
   useEffect(() => {
-    loadData();
-  }, []);
+    if (profile) {
+      loadData();
+    }
+  }, [profile]);
 
   const loadData = async () => {
     setLoading(true);
