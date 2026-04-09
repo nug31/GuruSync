@@ -13,7 +13,7 @@ import type { Teacher, Leave } from '../../types';
 type View = 'dashboard' | 'teachers' | 'leaves' | 'admins';
 
 export function Dashboard() {
-  const { profile, signOut } = useAuth();
+  const { profile, loading: authLoading, signOut } = useAuth();
   const [view, setView] = useState<View>('dashboard');
   const [teachers, setTeachers] = useState<Teacher[]>([]);
   const [leaves, setLeaves] = useState<Leave[]>([]);
@@ -24,10 +24,10 @@ export function Dashboard() {
   const isAdmin = profile?.role === 'admin';
 
   useEffect(() => {
-    if (profile) {
+    if (!authLoading) {
       loadData();
     }
-  }, [profile]);
+  }, [authLoading, profile?.id]);
 
   const loadData = async () => {
     setLoading(true);
