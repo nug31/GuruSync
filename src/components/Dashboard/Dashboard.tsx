@@ -96,7 +96,7 @@ export function Dashboard() {
 
             <div className="flex items-center space-x-4">
               <span className="text-sm text-gray-600">
-                {profile?.email} ({profile?.name || (isAdmin ? 'Admin' : 'Guru')})
+                {profile?.email} ({(isAdmin ? profile?.name : (teachers[0]?.name || profile?.name)) || (isAdmin ? 'Admin' : 'Guru')})
               </span>
               <button
                 onClick={() => signOut()}
