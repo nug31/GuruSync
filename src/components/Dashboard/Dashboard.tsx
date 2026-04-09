@@ -13,7 +13,7 @@ import type { Teacher, Leave } from '../../types';
 type View = 'dashboard' | 'teachers' | 'leaves' | 'admins';
 
 export function Dashboard() {
-  const { profile, loading: authLoading, signOut } = useAuth();
+  const { user, profile, loading: authLoading, signOut } = useAuth();
   const [view, setView] = useState<View>('dashboard');
   const [teachers, setTeachers] = useState<Teacher[]>([]);
   const [leaves, setLeaves] = useState<Leave[]>([]);
@@ -27,7 +27,7 @@ export function Dashboard() {
     if (!authLoading) {
       loadData();
     }
-  }, [authLoading, profile?.id]);
+  }, [authLoading, user?.id, profile?.role]);
 
   const loadData = async () => {
     setLoading(true);
@@ -35,12 +35,10 @@ export function Dashboard() {
       let teachersQuery = supabase.from('teachers').select('*');
       let leavesQuery = supabase.from('leaves').select('*');
 
-      if (!isAdmin && profile?.id) {
-        teachersQuery = teachersQuery.eq('user_id', profile.id);
-        // For leaves, we still want to fetch all IF the teacher is an approver, 
-        // but for now let's focus on user identity.
-        // Actually, if they are just a teacher, they only see their own leaves.
-        leavesQuery = leavesQuery.eq('user_id', profile.id);
+      // Crucial: Use user.id from session for foolproof filtering if not admin
+      if (!isAdmin && user?.id) {
+        teachersQuery = teachersQuery.eq('user_id', user.id);
+        leavesQuery = leavesQuery.eq('user_id', user.id);
       }
 
       const [teachersRes, leavesRes] = await Promise.all([

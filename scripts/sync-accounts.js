@@ -31,12 +31,18 @@ async function syncAccounts() {
     let updatedCount = 0;
 
     for (const teacher of teachers) {
+      // CRITICAL: Skip if NIK is missing (to avoid collision on dummy email)
+      if (!teacher.nik || teacher.nik.trim() === '' || teacher.nik === '-') {
+        console.warn(`⚠️ Melewati ${teacher.name} karena NIK kosong.`);
+        continue;
+      }
+
       let email = teacher.email;
       let needsEmailUpdate = false;
 
       // Fallback if email is missing
       if (!email || email.trim() === '') {
-        email = `${teacher.nik}@gurusync.net`;
+        email = `${teacher.nik.trim()}@gurusync.net`;
         needsEmailUpdate = true;
         console.log(`📧 Menghasilkan email fallback untuk ${teacher.name}: ${email}`);
       }
@@ -48,7 +54,7 @@ async function syncAccounts() {
         console.log(`➕ Membuat akun baru untuk: ${teacher.name} (${email})`);
         const { data: newUser, error: createError } = await supabase.auth.admin.createUser({
           email: email,
-          password: teacher.nik, // default password is NIK
+          password: teacher.nik.trim(), // default password is NIK
           email_confirm: true,
           user_metadata: { name: teacher.name, nik: teacher.nik }
         });
@@ -69,7 +75,7 @@ async function syncAccounts() {
       }
 
       // 3. Ensure profile and link user_id in teachers table
-      await supabase.from('profiles').upsert({
+      const { error: profileError } = await supabase.from('profiles').upsert({
         id: userId,
         email: email,
         name: teacher.name,
@@ -77,11 +83,11 @@ async function syncAccounts() {
         role: 'teacher'
       });
 
-      const updateData = { user_id: userId };
-      if (needsEmailUpdate) {
-        updateData.email = email;
+      if (profileError) {
+        console.error(`❌ Gagal memperbarui profil untuk ${teacher.name}:`, profileError.message);
       }
 
+      const updateData = { user_id: userId, email: email };
       await supabase.from('teachers').update(updateData).eq('id', teacher.id);
     }
 
