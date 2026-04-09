@@ -183,12 +183,19 @@ export function TeacherList({ teachers, leaves, onEdit, onDelete, onRefresh }: T
           if (!val) return null;
           
           if (val instanceof Date && !isNaN(val.getTime())) {
-            return format(val, 'yyyy-MM-dd');
+            // Use manual date components to avoid timezone shift
+            const year = val.getFullYear();
+            const month = String(val.getMonth() + 1).padStart(2, '0');
+            const day = String(val.getDate()).padStart(2, '0');
+            return `${year}-${month}-${day}`;
           }
 
           if (typeof val === 'number') {
             const date = XLSX.SSF.parse_date_code(val);
-            return format(new Date(date.y, date.m - 1, date.d), 'yyyy-MM-dd');
+            // date object from SSF has y, m, d
+            const month = String(date.m).padStart(2, '0');
+            const day = String(date.d).padStart(2, '0');
+            return `${date.y}-${month}-${day}`;
           }
 
           if (typeof val === 'string') {
