@@ -4,8 +4,10 @@ import { supabase } from '../../lib/supabase';
 import { Search, Download, Edit, Trash2, QrCode, FileSpreadsheet, Eye } from 'lucide-react';
 import { differenceInDays, parseISO, format, parse, isValid } from 'date-fns';
 import { id, enUS } from 'date-fns/locale';
+import { Printer, X as CloseIcon } from 'lucide-react';
 import * as XLSX from 'xlsx';
 import type { Teacher, Leave } from '../../types';
+import { TeacherCardBack } from './TeacherCardBack';
 
 interface TeacherListProps {
   teachers: Teacher[];
@@ -19,6 +21,7 @@ export function TeacherList({ teachers, leaves, onEdit, onDelete, onRefresh }: T
   const [searchTerm, setSearchTerm] = useState('');
   const [subjectFilter, setSubjectFilter] = useState('');
   const [showQRModal, setShowQRModal] = useState<Teacher | null>(null);
+  const [showPrintModal, setShowPrintModal] = useState<Teacher | null>(null);
   const [importing, setImporting] = useState(false);
   const qrRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -439,6 +442,13 @@ export function TeacherList({ teachers, leaves, onEdit, onDelete, onRefresh }: T
                     <span>Profil</span>
                   </a>
                   <button
+                    onClick={() => setShowPrintModal(teacher)}
+                    className="flex-1 flex items-center justify-center space-x-1 px-3 py-2 bg-indigo-50 text-indigo-600 rounded-lg hover:bg-indigo-100 transition-colors text-sm"
+                  >
+                    <Printer className="w-4 h-4" />
+                    <span>Card</span>
+                  </button>
+                  <button
                     onClick={() => setShowQRModal(teacher)}
                     className="flex-1 flex items-center justify-center space-x-1 px-3 py-2 bg-gray-50 text-gray-700 rounded-lg hover:bg-gray-100 transition-colors text-sm"
                   >
@@ -477,7 +487,7 @@ export function TeacherList({ teachers, leaves, onEdit, onDelete, onRefresh }: T
                 onClick={() => setShowQRModal(null)}
                 className="text-gray-400 hover:text-gray-600"
               >
-                <span className="text-2xl">&times;</span>
+                <CloseIcon className="w-6 h-6" />
               </button>
             </div>
 
@@ -497,6 +507,44 @@ export function TeacherList({ teachers, leaves, onEdit, onDelete, onRefresh }: T
               >
                 <Download className="w-5 h-5" />
                 <span>Download QR Code</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {showPrintModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50 overflow-y-auto">
+          <div className="bg-white rounded-xl shadow-xl max-w-2xl w-full p-8 my-auto relative">
+            <button
+              onClick={() => setShowPrintModal(null)}
+              className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 print:hidden"
+            >
+              <CloseIcon className="w-6 h-6" />
+            </button>
+
+            <div className="text-center mb-8 print:hidden">
+              <h3 className="text-2xl font-bold text-gray-800">Cetak Sisi Belakang Kartu</h3>
+              <p className="text-gray-500 mt-2">Pastikan pengaturan printer menggunakan "No Margins" dan ukuran kertas "CR80" atau sesuai ukuran ID Card.</p>
+            </div>
+
+            <div className="flex justify-center mb-8">
+              <TeacherCardBack teacher={showPrintModal} />
+            </div>
+
+            <div className="flex justify-center space-x-3 print:hidden">
+              <button
+                onClick={() => setShowPrintModal(null)}
+                className="px-6 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
+              >
+                Tutup
+              </button>
+              <button
+                onClick={() => window.print()}
+                className="flex items-center space-x-2 px-6 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors"
+              >
+                <Printer className="w-5 h-5" />
+                <span>Cetak Sekarang</span>
               </button>
             </div>
           </div>
