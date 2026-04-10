@@ -250,7 +250,14 @@ export function TeacherList({ teachers, leaves, onEdit, onDelete, onRefresh }: T
             nik: nik,
             birth_place: sanitizeField(getRowVal(row, ['Tempat Lahir', 'birth_place', 'Place of Birth', 'Kota Lahir'])),
             birth_date: parseExcelDate(getRowVal(row, ['Tanggal Lahir', 'birth_date', 'Date of Birth', 'Tgl Lahir'])),
-            gender: sanitizeField(getRowVal(row, ['Jenis Kelamin', 'gender', 'Sex', 'Gender', 'Kelamin', 'L/P'])) || 'Laki-laki',
+            gender: (() => {
+              const val = sanitizeField(getRowVal(row, ['Jenis Kelamin', 'gender', 'Sex', 'Gender', 'Kelamin', 'L/P']));
+              if (!val) return 'Laki-laki';
+              const normalized = val.toLowerCase();
+              if (normalized === 'l' || normalized === 'laki-laki') return 'Laki-laki';
+              if (normalized === 'p' || normalized === 'perempuan') return 'Perempuan';
+              return val;
+            })(),
             subject: sanitizeField(getRowVal(row, ['Mata Pelajaran', 'subject', 'Subject', 'Mapel'])) || 'Lainnya',
             join_date: parseExcelDate(getRowVal(row, ['Tanggal Bergabung', 'join_date', 'Join Date', 'Tgl Bergabung', 'Tgl Masuk'])) || new Date().toISOString().split('T')[0],
             education: sanitizeField(getRowVal(row, ['Pendidikan', 'education', 'Education', 'Pendidikan Terakhir'])),

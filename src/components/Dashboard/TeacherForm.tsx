@@ -37,7 +37,7 @@ export function TeacherForm({ teacher, onClose }: TeacherFormProps) {
         join_date: teacher.join_date,
         birth_date: teacher.birth_date || '',
         birth_place: teacher.birth_place || '',
-        gender: teacher.gender || 'Laki-laki',
+        gender: teacher.gender === 'L' ? 'Laki-laki' : teacher.gender === 'P' ? 'Perempuan' : (teacher.gender || 'Laki-laki'),
         address: teacher.address || '',
         education: teacher.education || '',
         work_unit: teacher.work_unit || '',

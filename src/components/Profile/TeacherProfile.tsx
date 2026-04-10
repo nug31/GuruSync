@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { supabase } from '../../lib/supabase';
+import { useAuth } from '../../contexts/AuthContext';
 import { 
   User, Mail, Phone, Calendar, Briefcase, 
   MapPin, GraduationCap, CalendarDays, 
@@ -18,6 +19,9 @@ export function TeacherProfile({ teacherId }: TeacherProfileProps) {
   const [leaves, setLeaves] = useState<Leave[]>([]);
   const [loading, setLoading] = useState(true);
   const [uploading, setUploading] = useState(false);
+  const { user, profile } = useAuth();
+
+  const canEdit = profile?.role === 'admin' || (user && teacher && user.id === teacher.user_id);
 
   useEffect(() => {
     loadTeacherData();
@@ -126,10 +130,12 @@ export function TeacherProfile({ teacherId }: TeacherProfileProps) {
                   ) : (
                     <div className="w-full h-full flex items-center justify-center"><User className="w-16 h-16 text-slate-200" /></div>
                   )}
-                  <label className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-all flex items-center justify-center cursor-pointer backdrop-blur-[2px]">
-                    <input type="file" className="hidden" accept="image/*" onChange={handleAvatarUpload} disabled={uploading} />
-                    <span className="text-white text-[10px] font-black tracking-widest uppercase">{uploading ? '...' : 'Upload'}</span>
-                  </label>
+                  {canEdit && (
+                    <label className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-all flex items-center justify-center cursor-pointer backdrop-blur-[2px]">
+                      <input type="file" className="hidden" accept="image/*" onChange={handleAvatarUpload} disabled={uploading} />
+                      <span className="text-white text-[10px] font-black tracking-widest uppercase">{uploading ? '...' : 'Upload'}</span>
+                    </label>
+                  )}
                 </div>
                 {activeLeave && (
                   <div className="absolute -top-2 -right-2 bg-rose-500 w-8 h-8 rounded-full border-4 border-white flex items-center justify-center animate-bounce shadow-md">
@@ -183,7 +189,11 @@ export function TeacherProfile({ teacherId }: TeacherProfileProps) {
                         value: `${teacher.birth_place ? `${teacher.birth_place}, ` : ''}${teacher.birth_date ? format(parseISO(teacher.birth_date), 'dd MMM yyyy', { locale: id }) : '-'}`, 
                         icon: CalendarDays 
                       },
-                      { label: 'Kelamin', value: teacher.gender || '-', icon: Contact },
+                      { 
+                        label: 'Kelamin', 
+                        value: teacher.gender === 'L' ? 'Laki-laki' : teacher.gender === 'P' ? 'Perempuan' : (teacher.gender || '-'),
+                        icon: Contact 
+                      },
                       { label: 'Pendidikan', value: teacher.education || '-', icon: GraduationCap },
                     ].map((item, i) => (
                       <div key={i} className="flex gap-4 group/item">
