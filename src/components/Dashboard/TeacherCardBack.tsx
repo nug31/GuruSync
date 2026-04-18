@@ -62,8 +62,8 @@ export function TeacherCardBack({ teacher }: TeacherCardBackProps) {
 
         .qr-area {
           background: white;
-          padding: 8px;
-          border-radius: 12px;
+          padding: 6px;
+          border-radius: 10px;
           box-shadow: 0 4px 15px rgba(0,0,0,0.2);
           display: flex;
           align-items: center;
@@ -82,12 +82,12 @@ export function TeacherCardBack({ teacher }: TeacherCardBackProps) {
 
         .card-footer {
           position: absolute;
-          bottom: 12px;
+          bottom: 8px;
           left: 0;
           right: 0;
           display: flex;
           justify-content: space-between;
-          padding: 0 20px;
+          padding: 0 16px;
           opacity: 0.8;
         }
       `}} />
@@ -96,9 +96,9 @@ export function TeacherCardBack({ teacher }: TeacherCardBackProps) {
         <div className="id-card-back">
           <div className="card-bg-pattern" />
           
-          <div className="flex items-center space-x-2 mb-4">
-            <ShieldCheck className="w-5 h-5 text-blue-400" />
-            <span className="text-sm font-black tracking-widest uppercase">
+          <div className="flex items-center space-x-2 mb-2">
+            <ShieldCheck className="w-4 h-4 text-blue-400" />
+            <span className="text-xs font-black tracking-widest uppercase">
               GuruSync ID
             </span>
           </div>
@@ -106,17 +106,17 @@ export function TeacherCardBack({ teacher }: TeacherCardBackProps) {
           <div className="qr-area">
             <QRCodeSVG
               value={profileUrl}
-              size={120}
+              size={100}
               level="H"
               marginSize={1}
             />
           </div>
 
-          <div className="mt-4 text-center">
-            <p className="text-[8px] font-black uppercase tracking-[0.2em] text-blue-400 mb-1">
+          <div className="mt-2 text-center">
+            <p className="text-[7px] font-black uppercase tracking-[0.2em] text-blue-400 mb-1">
               Verify Identity
             </p>
-            <p className="text-[10px] font-medium text-slate-300 italic">
+            <p className="text-[9px] font-medium text-slate-300 italic">
               Scan for Digital Profile
             </p>
           </div>
