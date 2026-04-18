@@ -30,6 +30,11 @@ export function TeacherCardBack({ teacher }: TeacherCardBackProps) {
             size: 85.6mm 54mm;
             margin: 0;
           }
+          * {
+            -webkit-print-color-adjust: exact !important;
+            print-color-adjust: exact !important;
+            color-adjust: exact !important;
+          }
           body {
             margin: 0;
             padding: 0;
