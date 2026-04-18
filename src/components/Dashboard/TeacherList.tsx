@@ -540,7 +540,33 @@ export function TeacherList({ teachers, leaves, onEdit, onDelete, onRefresh }: T
                 Tutup
               </button>
               <button
-                onClick={() => window.print()}
+                onClick={() => {
+                  const printArea = document.querySelector('.id-card-print-area');
+                  if (!printArea) return window.print();
+                  
+                  const root = document.getElementById('root');
+                  const origDisplay = root ? root.style.display : '';
+                  if (root) root.style.display = 'none';
+                  
+                  const printContainer = document.createElement('div');
+                  printContainer.id = 'temp-print-container';
+                  printContainer.style.position = 'fixed';
+                  printContainer.style.left = '0';
+                  printContainer.style.top = '0';
+                  printContainer.style.width = '100%';
+                  printContainer.style.height = '100%';
+                  printContainer.style.background = 'white';
+                  printContainer.style.zIndex = '99999';
+                  
+                  const clone = printArea.cloneNode(true) as HTMLElement;
+                  printContainer.appendChild(clone);
+                  document.body.appendChild(printContainer);
+                  
+                  window.print();
+                  
+                  document.body.removeChild(printContainer);
+                  if (root) root.style.display = origDisplay;
+                }}
                 className="flex items-center space-x-2 px-6 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors"
               >
                 <Printer className="w-5 h-5" />

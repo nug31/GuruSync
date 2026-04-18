@@ -30,19 +30,12 @@ export function TeacherCardBack({ teacher }: TeacherCardBackProps) {
             size: 85.6mm 54mm;
             margin: 0;
           }
-          body * {
-            visibility: hidden;
+          body {
+            margin: 0;
+            padding: 0;
+            background: white;
           }
-          .id-card-print-area, .id-card-print-area * {
-            visibility: visible;
-          }
-          .id-card-print-area {
-            position: absolute;
-            left: 0;
-            top: 0;
-            width: 85.6mm;
-            height: 54mm;
-          }
+          /* We will hide #root when printing the card using JS */
         }
         
         .id-card-back {
