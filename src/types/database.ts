@@ -49,6 +49,7 @@ export interface Database {
           phone: string
           join_date: string
           avatar_url: string | null
+          annual_leave_quota: number | null
           created_at: string
           updated_at: string
         }
@@ -62,6 +63,7 @@ export interface Database {
           phone: string
           join_date: string
           avatar_url?: string | null
+          annual_leave_quota?: number | null
           created_at?: string
           updated_at?: string
         }
@@ -75,6 +77,7 @@ export interface Database {
           phone?: string
           join_date?: string
           avatar_url?: string | null
+          annual_leave_quota?: number | null
           created_at?: string
           updated_at?: string
         }

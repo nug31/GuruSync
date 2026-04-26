@@ -22,6 +22,7 @@ export function TeacherForm({ teacher, onClose }: TeacherFormProps) {
     address: '',
     education: '',
     work_unit: '',
+    annual_leave_quota: 12,
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -41,6 +42,7 @@ export function TeacherForm({ teacher, onClose }: TeacherFormProps) {
         address: teacher.address || '',
         education: teacher.education || '',
         work_unit: teacher.work_unit || '',
+        annual_leave_quota: teacher.annual_leave_quota ?? 12,
       });
     }
   }, [teacher]);
@@ -246,6 +248,20 @@ export function TeacherForm({ teacher, onClose }: TeacherFormProps) {
               onChange={(e) => setFormData({ ...formData, work_unit: e.target.value })}
               className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               placeholder="Contoh: SMKN 1 Jakarta"
+              required
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Kuota Cuti Tahunan
+            </label>
+            <input
+              type="number"
+              min="0"
+              value={formData.annual_leave_quota}
+              onChange={(e) => setFormData({ ...formData, annual_leave_quota: parseInt(e.target.value) || 0 })}
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               required
             />
           </div>

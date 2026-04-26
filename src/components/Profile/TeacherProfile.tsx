@@ -111,6 +111,17 @@ export function TeacherProfile({ teacherId }: TeacherProfileProps) {
     l.status === 'approved' && new Date(l.start_date) <= new Date() && new Date(l.end_date) >= new Date()
   );
 
+  const annualLeaveQuota = teacher.annual_leave_quota ?? 12;
+  const currentYear = new Date().getFullYear();
+  const usedAnnualLeaves = leaves
+    .filter(l => 
+      l.leave_type === 'Cuti Tahunan' && 
+      l.status === 'approved' &&
+      new Date(l.start_date).getFullYear() === currentYear
+    )
+    .reduce((total, l) => total + (differenceInDays(parseISO(l.end_date), parseISO(l.start_date)) + 1), 0);
+  const remainingAnnualLeaves = Math.max(0, annualLeaveQuota - usedAnnualLeaves);
+
   return (
     <div className="min-h-screen bg-[#FDFDFE] selection:bg-blue-100 selection:text-blue-700 pb-20">
       {/* Visual Top Bar */}
@@ -266,6 +277,13 @@ export function TeacherProfile({ teacherId }: TeacherProfileProps) {
                    <div className="space-y-1">
                       <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Masa Kerja</p>
                       <p className="text-md font-bold text-slate-700">{getWorkDuration(teacher.join_date)}</p>
+                   </div>
+                   <div className="space-y-1">
+                      <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Sisa Cuti Tahunan ({currentYear})</p>
+                      <div className="flex items-center gap-2">
+                        <p className="text-md font-bold text-slate-700">{remainingAnnualLeaves} Hari</p>
+                        <span className="text-[10px] font-bold text-slate-400 bg-slate-100 px-2 py-0.5 rounded-md">dari {annualLeaveQuota}</span>
+                      </div>
                    </div>
                    <div className="pt-4 space-y-4">
                       <div className="h-px w-12 bg-slate-200"></div>

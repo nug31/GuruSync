@@ -220,6 +220,21 @@ export function LeaveManagement({ teachers, leaves, onUpdate, currentTeacherId }
     XLSX.writeFile(wb, `data-cuti-${format(new Date(), 'yyyy-MM-dd')}.xlsx`);
   };
 
+  const currentTeacher = teachers.find(t => t.id === currentTeacherId);
+  const annualLeaveQuota = currentTeacher?.annual_leave_quota ?? 12;
+  const currentYear = new Date().getFullYear();
+  
+  const usedAnnualLeaves = leaves
+    .filter(l => 
+      l.teacher_id === currentTeacherId && 
+      l.leave_type === 'Cuti Tahunan' && 
+      l.status === 'approved' &&
+      new Date(l.start_date).getFullYear() === currentYear
+    )
+    .reduce((total, l) => total + getLeaveDuration(l.start_date, l.end_date), 0);
+  
+  const remainingAnnualLeaves = Math.max(0, annualLeaveQuota - usedAnnualLeaves);
+
   return (
     <div className="space-y-6">
       {/* Header section */}
@@ -257,6 +272,39 @@ export function LeaveManagement({ teachers, leaves, onUpdate, currentTeacherId }
           </button>
         </div>
       </div>
+
+      {/* Quota Summary for Current Teacher */}
+      {currentTeacherId && (
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          <div className="bg-white rounded-xl p-4 border border-gray-100 shadow-sm flex items-center space-x-4">
+            <div className="p-3 bg-blue-50 text-blue-600 rounded-lg">
+              <Calendar className="w-6 h-6" />
+            </div>
+            <div>
+              <p className="text-sm font-medium text-gray-500">Total Kuota Cuti Tahunan</p>
+              <p className="text-2xl font-bold text-gray-800">{annualLeaveQuota} Hari</p>
+            </div>
+          </div>
+          <div className="bg-white rounded-xl p-4 border border-gray-100 shadow-sm flex items-center space-x-4">
+            <div className="p-3 bg-orange-50 text-orange-600 rounded-lg">
+              <Clock className="w-6 h-6" />
+            </div>
+            <div>
+              <p className="text-sm font-medium text-gray-500">Cuti Terpakai</p>
+              <p className="text-2xl font-bold text-gray-800">{usedAnnualLeaves} Hari</p>
+            </div>
+          </div>
+          <div className="bg-white rounded-xl p-4 border border-gray-100 shadow-sm flex items-center space-x-4">
+            <div className="p-3 bg-green-50 text-green-600 rounded-lg">
+              <CheckCircle className="w-6 h-6" />
+            </div>
+            <div>
+              <p className="text-sm font-medium text-gray-500">Sisa Cuti</p>
+              <p className="text-2xl font-bold text-gray-800">{remainingAnnualLeaves} Hari</p>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Responsive list/table for Leaves */}
       <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
