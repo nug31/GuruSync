@@ -35,12 +35,7 @@ export function Dashboard() {
       let teachersQuery = supabase.from('teachers').select('*');
       let leavesQuery = supabase.from('leaves').select('*');
 
-      // Crucial: Use user.id from session for foolproof filtering if not admin
-      if (!isAdmin && user?.id) {
-        teachersQuery = teachersQuery.eq('user_id', user.id);
-        leavesQuery = leavesQuery.eq('user_id', user.id);
-      }
-
+      // Remove manual filtering since RLS handles leaves correctly and we need all teachers for global stats
       const [teachersRes, leavesRes] = await Promise.all([
         teachersQuery.order('name'),
         leavesQuery.order('created_at', { ascending: false }),
@@ -96,7 +91,7 @@ export function Dashboard() {
 
             <div className="flex items-center space-x-4">
               <span className="text-sm text-gray-600">
-                {profile?.email} ({(isAdmin ? profile?.name : (teachers[0]?.name || profile?.name)) || (isAdmin ? 'Admin' : 'Guru')})
+                {profile?.email} ({(isAdmin ? profile?.name : (teachers.find(t => t.user_id === user?.id)?.name || profile?.name)) || (isAdmin ? 'Admin' : 'Guru')})
               </span>
               <button
                 onClick={() => signOut()}
@@ -221,8 +216,8 @@ export function Dashboard() {
               />
             ) : (
               <div className="bg-white rounded-xl shadow-sm overflow-hidden">
-                {teachers[0] ? (
-                  <TeacherProfile teacherId={teachers[0].id} />
+                {teachers.find(t => t.user_id === user?.id) ? (
+                  <TeacherProfile teacherId={teachers.find(t => t.user_id === user?.id)!.id} />
                 ) : (
                   <div className="p-8 text-center text-gray-500">
                     Data profil tidak ditemukan.
