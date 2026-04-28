@@ -23,6 +23,8 @@ export function TeacherForm({ teacher, onClose }: TeacherFormProps) {
     education: '',
     work_unit: '',
     annual_leave_quota: 12,
+    training_history: '',
+    sp_level: 'Tidak ada',
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -43,6 +45,8 @@ export function TeacherForm({ teacher, onClose }: TeacherFormProps) {
         education: teacher.education || '',
         work_unit: teacher.work_unit || '',
         annual_leave_quota: teacher.annual_leave_quota ?? 12,
+        training_history: teacher.training_history || '',
+        sp_level: teacher.sp_level || 'Tidak ada',
       });
     }
   }, [teacher]);
@@ -263,6 +267,36 @@ export function TeacherForm({ teacher, onClose }: TeacherFormProps) {
               onChange={(e) => setFormData({ ...formData, annual_leave_quota: parseInt(e.target.value) || 0 })}
               className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               required
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Status Kedisiplinan (SP)
+            </label>
+            <select
+              value={formData.sp_level}
+              onChange={(e) => setFormData({ ...formData, sp_level: e.target.value })}
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              required
+            >
+              <option value="Tidak ada">Tidak ada</option>
+              <option value="SP 1">SP 1</option>
+              <option value="SP 2">SP 2</option>
+              <option value="SP 3">SP 3</option>
+            </select>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Riwayat Training
+            </label>
+            <textarea
+              value={formData.training_history}
+              onChange={(e) => setFormData({ ...formData, training_history: e.target.value })}
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              rows={4}
+              placeholder="Masukkan riwayat pelatihan/training yang pernah diikuti..."
             />
           </div>
 

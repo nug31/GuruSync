@@ -50,6 +50,14 @@ export interface Database {
           join_date: string
           avatar_url: string | null
           annual_leave_quota: number | null
+          birth_date: string | null
+          birth_place: string | null
+          gender: string | null
+          address: string | null
+          education: string | null
+          work_unit: string | null
+          training_history: string | null
+          sp_level: string | null
           created_at: string
           updated_at: string
         }
@@ -64,6 +72,14 @@ export interface Database {
           join_date: string
           avatar_url?: string | null
           annual_leave_quota?: number | null
+          birth_date?: string | null
+          birth_place?: string | null
+          gender?: string | null
+          address?: string | null
+          education?: string | null
+          work_unit?: string | null
+          training_history?: string | null
+          sp_level?: string | null
           created_at?: string
           updated_at?: string
         }
@@ -78,6 +94,14 @@ export interface Database {
           join_date?: string
           avatar_url?: string | null
           annual_leave_quota?: number | null
+          birth_date?: string | null
+          birth_place?: string | null
+          gender?: string | null
+          address?: string | null
+          education?: string | null
+          work_unit?: string | null
+          training_history?: string | null
+          sp_level?: string | null
           created_at?: string
           updated_at?: string
         }

@@ -130,9 +130,11 @@ export function TeacherList({ teachers, leaves, onEdit, onDelete, onRefresh }: T
         'Tanggal Bergabung': t.join_date,
         'Pendidikan': t.education || '',
         'Sekolah Bertugas': t.work_unit || '',
-        'Email': t.email,
+         'Email': t.email,
         'Telepon': t.phone,
         'Alamat': t.address || '',
+        'Status SP': t.sp_level || 'Tidak ada',
+        'Riwayat Training': t.training_history || '',
         'Total Cuti': (t as any).leaves?.length || 0
       };
     });
@@ -404,6 +406,11 @@ export function TeacherList({ teachers, leaves, onEdit, onDelete, onRefresh }: T
                   {activeLeaves.length > 0 && (
                     <span className="px-2 py-1 bg-orange-100 text-orange-700 text-xs font-medium rounded-full">
                       Cuti
+                    </span>
+                  )}
+                  {teacher.sp_level && teacher.sp_level !== 'Tidak ada' && (
+                    <span className="px-2 py-1 bg-red-100 text-red-700 text-xs font-medium rounded-full">
+                      {teacher.sp_level}
                     </span>
                   )}
                 </div>

@@ -15,6 +15,8 @@ export interface Teacher {
   education?: string;
   work_unit?: string;
   annual_leave_quota?: number;
+  training_history?: string;
+  sp_level?: string;
   created_at: string;
   updated_at: string;
 }

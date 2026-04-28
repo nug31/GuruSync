@@ -4,7 +4,8 @@ import { useAuth } from '../../contexts/AuthContext';
 import { 
   User, Mail, Phone, Calendar, Briefcase, 
   MapPin, GraduationCap, CalendarDays, 
-  Contact, Info, ShieldCheck, ChevronRight
+  Contact, Info, ShieldCheck, ChevronRight,
+  Award, ShieldAlert
 } from 'lucide-react';
 import { format, parseISO, differenceInDays } from 'date-fns';
 import { id } from 'date-fns/locale';
@@ -223,6 +224,51 @@ export function TeacherProfile({ teacherId }: TeacherProfileProps) {
                         <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Alamat</p>
                         <p className="text-sm font-bold text-slate-700 leading-relaxed">{teacher.address || '-'}</p>
                       </div>
+                    </div>
+                  </div>
+                </section>
+
+                <section>
+                  <div className="flex items-center justify-between mb-8">
+                    <h2 className="text-lg font-bold text-slate-800 flex items-center gap-3">
+                      Kedisiplinan & Pengembangan
+                    </h2>
+                    <div className="h-px flex-1 bg-slate-50 ml-6"></div>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-y-10 gap-x-12 mb-10">
+                    <div className="flex gap-4 group/item">
+                      <div className={`w-10 h-10 rounded-xl flex items-center justify-center transition-all ${
+                        teacher.sp_level && teacher.sp_level !== 'Tidak ada' 
+                        ? 'bg-rose-50 text-rose-500' 
+                        : 'bg-emerald-50 text-emerald-500'
+                      }`}>
+                        <ShieldAlert className="w-5 h-5" />
+                      </div>
+                      <div>
+                        <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Status Kedisiplinan</p>
+                        <p className={`text-sm font-bold ${
+                          teacher.sp_level && teacher.sp_level !== 'Tidak ada' ? 'text-rose-700' : 'text-emerald-700'
+                        }`}>
+                          {teacher.sp_level || 'Tidak ada'}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div>
+                    <div className="flex items-center gap-3 mb-4">
+                      <Award className="w-5 h-5 text-blue-500" />
+                      <h3 className="text-sm font-bold text-slate-700 uppercase tracking-wider">Riwayat Training</h3>
+                    </div>
+                    <div className="bg-slate-50/50 rounded-2xl p-6 border border-slate-100">
+                      {teacher.training_history ? (
+                        <p className="text-sm text-slate-600 leading-relaxed whitespace-pre-wrap">
+                          {teacher.training_history}
+                        </p>
+                      ) : (
+                        <p className="text-sm text-slate-400 italic">Belum ada riwayat training yang tercatat.</p>
+                      )}
                     </div>
                   </div>
                 </section>
