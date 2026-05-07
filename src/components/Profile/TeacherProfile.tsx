@@ -274,7 +274,7 @@ export function TeacherProfile({ teacherId }: TeacherProfileProps) {
                 </span>
               </div>
               <div className="relative group">
-                <div className="w-40 h-40 border-2 border-on-surface p-2 mb-6 grayscale hover:grayscale-0 transition-all duration-500 overflow-hidden">
+                <div className="w-40 h-40 border-2 border-on-surface p-2 mb-6 transition-all duration-500 overflow-hidden">
                   {teacher.avatar_url ? (
                     <img alt={teacher.name} className="w-full h-full object-cover" src={teacher.avatar_url} />
                   ) : (
