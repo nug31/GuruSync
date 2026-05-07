@@ -1,3 +1,33 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+.material-symbols-outlined {
+  font-variation-settings: 'FILL' 0, 'wght' 300, 'GRAD' 0, 'opsz' 24;
+}
+.editorial-border {
+  border-bottom: 1px solid theme('colors.outline-variant');
+}
+.sidebar-item-active {
+  position: relative;
+}
+.sidebar-item-active::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 25%;
+  height: 50%;
+  width: 3px;
+  background-color: theme('colors.primary');
+}
+body {
+  font-family: 'Inter', sans-serif;
+}
+h1, h2, h3, h4 {
+  font-family: 'Noto Serif', serif;
+}
+.label-caps {
+  font-family: 'Public Sans', sans-serif;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}

@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { supabase } from '../../lib/supabase';
 import { useAuth } from '../../contexts/AuthContext';
 import { 
-  User, Mail, Phone, Calendar, Briefcase, 
+  User, Mail, Phone, 
   MapPin, GraduationCap, CalendarDays, 
   Contact, Info, ShieldCheck, ChevronRight,
   Award, ShieldAlert

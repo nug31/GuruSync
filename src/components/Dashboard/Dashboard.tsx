@@ -7,7 +7,6 @@ import { TeacherProfile } from '../Profile/TeacherProfile';
 import { LeaveManagement } from './LeaveManagement';
 import { Statistics } from './Statistics';
 import { AdminManagement } from './AdminManagement';
-import { Users, Calendar, LogOut, Plus, BarChart3, ShieldCheck } from 'lucide-react';
 import type { Teacher, Leave } from '../../types';
 
 type View = 'dashboard' | 'teachers' | 'leaves' | 'admins';
@@ -22,6 +21,8 @@ export function Dashboard() {
   const [editingTeacher, setEditingTeacher] = useState<Teacher | null>(null);
 
   const isAdmin = profile?.role === 'admin';
+  const userName = isAdmin ? profile?.name : (teachers.find(t => t.user_id === user?.id)?.name || profile?.name);
+  const userRole = isAdmin ? 'Admin' : 'Guru';
 
   useEffect(() => {
     if (!authLoading) {
@@ -35,7 +36,6 @@ export function Dashboard() {
       let teachersQuery = supabase.from('teachers').select('*');
       let leavesQuery = supabase.from('leaves').select('*');
 
-      // Remove manual filtering since RLS handles leaves correctly and we need all teachers for global stats
       const [teachersRes, leavesRes] = await Promise.all([
         teachersQuery.order('name'),
         leavesQuery.order('created_at', { ascending: false }),
@@ -68,142 +68,133 @@ export function Dashboard() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto"></div>
-          <p className="mt-4 text-gray-600">Memuat data...</p>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
+          <p className="mt-4 text-on-surface-variant font-body">Memuat data...</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <nav className="bg-white shadow-sm border-b">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-16">
-            <div className="flex items-center space-x-4">
-              <Users className="w-8 h-8 text-blue-500" />
-              <h1 className="text-xl font-bold text-gray-800">
-                GuruSync
-              </h1>
-            </div>
+    <div className="min-h-screen bg-background text-on-surface font-body">
+      {/* SideNavBar Component */}
+      <aside className="h-full w-72 fixed left-0 top-0 hidden lg:flex flex-col bg-surface-container-lowest border-r border-outline-variant z-50">
+        <div className="flex flex-col h-full p-8">
+          <div className="mb-12">
+            <span className="text-3xl font-display font-bold text-primary tracking-tight">GuruSync</span>
+          </div>
+          
+          <nav className="flex flex-col gap-2">
+            <button
+              onClick={() => setView('dashboard')}
+              className={`flex items-center gap-4 px-4 py-3 transition-colors text-left ${
+                view === 'dashboard'
+                  ? 'sidebar-item-active bg-primary-fixed/30 text-primary font-semibold'
+                  : 'text-on-surface-variant hover:bg-surface-container'
+              }`}
+            >
+              <span className="material-symbols-outlined" data-icon="dashboard">dashboard</span>
+              <span className="text-base font-body">Dashboard</span>
+            </button>
+            
+            <button
+              onClick={() => setView('teachers')}
+              className={`flex items-center gap-4 px-4 py-3 transition-colors text-left ${
+                view === 'teachers'
+                  ? 'sidebar-item-active bg-primary-fixed/30 text-primary font-semibold'
+                  : 'text-on-surface-variant hover:bg-surface-container'
+              }`}
+            >
+              <span className="material-symbols-outlined" data-icon="groups">groups</span>
+              <span className="text-base font-body">{isAdmin ? 'Data Guru' : 'Profil Saya'}</span>
+            </button>
+            
+            <button
+              onClick={() => setView('leaves')}
+              className={`flex items-center gap-4 px-4 py-3 transition-colors text-left ${
+                view === 'leaves'
+                  ? 'sidebar-item-active bg-primary-fixed/30 text-primary font-semibold'
+                  : 'text-on-surface-variant hover:bg-surface-container'
+              }`}
+            >
+              <span className="material-symbols-outlined" data-icon="event_note">event_note</span>
+              <span className="text-base font-body">{isAdmin ? 'Manajemen Cuti' : 'Pengajuan Cuti'}</span>
+            </button>
 
-            <div className="flex items-center space-x-4">
-              <span className="text-sm text-gray-600">
-                {profile?.email} ({(isAdmin ? profile?.name : (teachers.find(t => t.user_id === user?.id)?.name || profile?.name)) || (isAdmin ? 'Admin' : 'Guru')})
-              </span>
+            {isAdmin && (
               <button
-                onClick={() => signOut()}
-                className="flex items-center space-x-2 px-4 py-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                onClick={() => setView('admins')}
+                className={`flex items-center gap-4 px-4 py-3 transition-colors text-left ${
+                  view === 'admins'
+                    ? 'sidebar-item-active bg-primary-fixed/30 text-primary font-semibold'
+                    : 'text-on-surface-variant hover:bg-surface-container'
+                }`}
               >
-                <LogOut className="w-4 h-4" />
-                <span>Keluar</span>
+                <span className="material-symbols-outlined" data-icon="admin_panel_settings">admin_panel_settings</span>
+                <span className="text-base font-body">Manajemen Admin</span>
+              </button>
+            )}
+          </nav>
+          
+          <div className="mt-12">
+             {isAdmin && view === 'teachers' && (
+              <button 
+                onClick={handleAddTeacher}
+                className="w-full py-3 px-6 bg-primary text-on-primary font-semibold shadow-sm hover:bg-primary/90 transition-all flex items-center justify-center gap-2 rounded-lg"
+              >
+                <span className="material-symbols-outlined text-[20px]" data-icon="add">add</span>
+                Tambah Guru
+              </button>
+            )}
+          </div>
+          
+          <div className="mt-auto pt-8 border-t border-outline-variant">
+            <div className="flex flex-col gap-2">
+              <button 
+                onClick={() => signOut()}
+                className="flex items-center gap-4 px-4 py-2 text-error hover:opacity-80 transition-colors text-sm font-body text-left w-full"
+              >
+                <span className="material-symbols-outlined text-[20px]" data-icon="logout">logout</span>
+                Logout
               </button>
             </div>
           </div>
         </div>
-      </nav>
+      </aside>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="flex space-x-2 mb-6 bg-white p-2 rounded-lg shadow-sm">
-          <button
-            onClick={() => setView('dashboard')}
-            className={`flex items-center space-x-2 px-4 py-2 rounded-lg transition-colors ${
-              view === 'dashboard'
-                ? 'bg-blue-500 text-white'
-                : 'text-gray-600 hover:bg-gray-100'
-            }`}
-          >
-            <BarChart3 className="w-5 h-5" />
-            <span>Dashboard</span>
-          </button>
-
-          {isAdmin ? (
-            <button
-              onClick={() => setView('teachers')}
-              className={`flex items-center space-x-2 px-4 py-2 rounded-lg transition-colors ${
-                view === 'teachers'
-                  ? 'bg-blue-500 text-white'
-                  : 'text-gray-600 hover:bg-gray-100'
-              }`}
-            >
-              <Users className="w-5 h-5" />
-              <span>Data Guru</span>
-            </button>
-          ) : (
-            <button
-              onClick={() => setView('teachers')}
-              className={`flex items-center space-x-2 px-4 py-2 rounded-lg transition-colors ${
-                view === 'teachers'
-                  ? 'bg-blue-500 text-white'
-                  : 'text-gray-600 hover:bg-gray-100'
-              }`}
-            >
-              <ShieldCheck className="w-5 h-5" />
-              <span>Profil Saya</span>
-            </button>
-          )}
-
-          {isAdmin ? (
-            <>
-              <button
-                onClick={() => setView('leaves')}
-                className={`flex items-center space-x-2 px-4 py-2 rounded-lg transition-colors ${
-                  view === 'leaves'
-                    ? 'bg-blue-500 text-white'
-                    : 'text-gray-600 hover:bg-gray-100'
-                }`}
-              >
-                <Calendar className="w-5 h-5" />
-                <span>Manajemen Cuti</span>
-              </button>
-              <button
-                onClick={() => setView('admins')}
-                className={`flex items-center space-x-2 px-4 py-2 rounded-lg transition-colors ${
-                  view === 'admins'
-                    ? 'bg-blue-500 text-white'
-                    : 'text-gray-600 hover:bg-gray-100'
-                }`}
-              >
-                <ShieldCheck className="w-5 h-5" />
-                <span>Manajemen Admin</span>
-              </button>
-            </>
-          ) : (
-            <button
-              onClick={() => setView('leaves')}
-              className={`flex items-center space-x-2 px-4 py-2 rounded-lg transition-colors ${
-                view === 'leaves'
-                  ? 'bg-blue-500 text-white'
-                  : 'text-gray-600 hover:bg-gray-100'
-              }`}
-            >
-              <Calendar className="w-5 h-5" />
-              <span>Pengajuan Cuti</span>
-            </button>
-          )}
+      {/* TopAppBar Component */}
+      <header className="fixed top-0 right-0 w-full lg:w-[calc(100%-18rem)] z-40 bg-surface/80 backdrop-blur-sm border-b border-outline-variant flex justify-between items-center px-6 lg:px-12 h-20">
+        <div className="flex items-center gap-8">
+          <span className="font-display text-2xl font-bold text-primary lg:hidden">GuruSync</span>
         </div>
+        
+        <div className="flex items-center gap-6">
+          <div className="flex items-center gap-4 pl-6 lg:border-l border-outline-variant">
+            <div className="text-right hidden md:block">
+              <p className="text-sm font-semibold text-on-surface italic font-body">{userName || profile?.email}</p>
+              <p className="label-caps text-[10px] text-on-surface-variant">{userRole}</p>
+            </div>
+            <div className="w-10 h-10 rounded-full bg-primary-container text-on-primary-container flex items-center justify-center font-display font-bold">
+              {userName?.charAt(0).toUpperCase() || profile?.email?.charAt(0).toUpperCase()}
+            </div>
+          </div>
+        </div>
+      </header>
 
+      {/* Main Content Canvas */}
+      <main className="lg:ml-72 pt-20 min-h-screen px-4 lg:px-12 pb-24">
         {view === 'dashboard' && (
           <Statistics teachers={teachers} leaves={leaves} />
         )}
 
         {view === 'teachers' && (
-          <div>
-            <div className="flex justify-between items-center mb-6">
-              <h2 className="text-2xl font-bold text-gray-800">
+          <div className="py-8">
+            <div className="flex justify-between items-center mb-8">
+              <h2 className="text-3xl font-display text-on-surface">
                 {isAdmin ? 'Data Guru' : 'Profil Saya'}
               </h2>
-              {isAdmin && (
-                <button
-                  onClick={handleAddTeacher}
-                  className="flex items-center space-x-2 px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
-                >
-                  <Plus className="w-5 h-5" />
-                  <span>Tambah Guru</span>
-                </button>
-              )}
             </div>
 
             {isAdmin ? (
@@ -215,11 +206,11 @@ export function Dashboard() {
                 onRefresh={loadData}
               />
             ) : (
-              <div className="bg-white rounded-xl shadow-sm overflow-hidden">
+              <div className="bg-surface-container-lowest rounded-xl shadow-sm overflow-hidden border border-outline-variant">
                 {teachers.find(t => t.user_id === user?.id) ? (
                   <TeacherProfile teacherId={teachers.find(t => t.user_id === user?.id)!.id} />
                 ) : (
-                  <div className="p-8 text-center text-gray-500">
+                  <div className="p-8 text-center text-on-surface-variant font-body">
                     Data profil tidak ditemukan.
                   </div>
                 )}
@@ -229,18 +220,62 @@ export function Dashboard() {
         )}
 
         {view === 'leaves' && (
-          <LeaveManagement
-            teachers={teachers}
-            leaves={leaves}
-            onUpdate={loadData}
-            currentTeacherId={teachers.find(t => t.user_id === profile?.id)?.id}
-          />
+          <div className="py-8">
+             <h2 className="text-3xl font-display text-on-surface mb-8">
+                {isAdmin ? 'Manajemen Cuti' : 'Pengajuan Cuti'}
+              </h2>
+            <LeaveManagement
+              teachers={teachers}
+              leaves={leaves}
+              onUpdate={loadData}
+              currentTeacherId={teachers.find(t => t.user_id === profile?.id)?.id}
+            />
+          </div>
         )}
 
         {view === 'admins' && isAdmin && (
-          <AdminManagement />
+          <div className="py-8">
+            <h2 className="text-3xl font-display text-on-surface mb-8">
+                Manajemen Admin
+            </h2>
+            <AdminManagement />
+          </div>
         )}
-      </div>
+      </main>
+
+      {/* BottomNavBar for Mobile */}
+      <nav className="fixed bottom-0 left-0 w-full z-50 lg:hidden bg-surface-container-lowest border-t border-outline-variant flex justify-around items-center h-20 px-4">
+        <button 
+          onClick={() => setView('dashboard')}
+          className={`flex flex-col items-center justify-center transition-colors ${view === 'dashboard' ? 'text-primary' : 'text-on-surface-variant'}`}
+        >
+          <span className="material-symbols-outlined" data-icon="dashboard">dashboard</span>
+          <span className="label-caps text-[9px] mt-1">Beranda</span>
+        </button>
+        <button 
+          onClick={() => setView('teachers')}
+          className={`flex flex-col items-center justify-center transition-colors ${view === 'teachers' ? 'text-primary' : 'text-on-surface-variant'}`}
+        >
+          <span className="material-symbols-outlined" data-icon="groups">groups</span>
+          <span className="label-caps text-[9px] mt-1">Guru</span>
+        </button>
+        <button 
+          onClick={() => setView('leaves')}
+          className={`flex flex-col items-center justify-center transition-colors ${view === 'leaves' ? 'text-primary' : 'text-on-surface-variant'}`}
+        >
+          <span className="material-symbols-outlined" data-icon="event_note">event_note</span>
+          <span className="label-caps text-[9px] mt-1">Cuti</span>
+        </button>
+        {isAdmin && (
+          <button 
+            onClick={() => setView('admins')}
+            className={`flex flex-col items-center justify-center transition-colors ${view === 'admins' ? 'text-primary' : 'text-on-surface-variant'}`}
+          >
+            <span className="material-symbols-outlined" data-icon="admin_panel_settings">admin_panel_settings</span>
+            <span className="label-caps text-[9px] mt-1">Admin</span>
+          </button>
+        )}
+      </nav>
 
       {showTeacherForm && (
         <TeacherForm

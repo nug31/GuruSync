@@ -58,16 +58,14 @@ export function TeacherForm({ teacher, onClose }: TeacherFormProps) {
 
     try {
       if (teacher) {
-        const { error: updateError } = await supabase
-          .from('teachers')
-          .update(formData as any)
+        const { error: updateError } = await (supabase.from('teachers') as any)
+          .update(formData)
           .eq('id', teacher.id);
 
         if (updateError) throw updateError;
       } else {
-        const { error: insertError } = await supabase
-          .from('teachers')
-          .insert([formData as any]);
+        const { error: insertError } = await (supabase.from('teachers') as any)
+          .insert([formData]);
 
         if (insertError) throw insertError;
       }

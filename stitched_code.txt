@@ -1,0 +1,3613 @@
+
+
+// ==========================================
+// FILE: src\App.tsx
+// ==========================================
+
+import { BrowserRouter, Routes, Route, Navigate, useParams } from 'react-router-dom';
+import { AuthProvider, useAuth } from './contexts/AuthContext';
+import { LoginForm } from './components/Auth/LoginForm';
+import { Dashboard } from './components/Dashboard/Dashboard';
+import { TeacherProfile } from './components/Profile/TeacherProfile';
+
+function PrivateRoute({ children }: { children: React.ReactNode }) {
+  const { user, loading } = useAuth();
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto"></div>
+          <p className="mt-4 text-gray-600">Memuat...</p>
+        </div>
+      </div>
+    );
+  }
+
+  return user ? <>{children}</> : <Navigate to="/login" />;
+}
+
+function TeacherProfileWrapper() {
+  const { teacherId } = useParams<{ teacherId: string }>();
+  return <TeacherProfile teacherId={teacherId || ''} />;
+}
+
+function App() {
+  return (
+    <AuthProvider>
+      <BrowserRouter>
+        <Routes>
+          <Route path="/login" element={<LoginForm />} />
+          <Route path="/profile/:teacherId" element={<TeacherProfileWrapper />} />
+          <Route
+            path="/"
+            element={
+              <PrivateRoute>
+                <Dashboard />
+              </PrivateRoute>
+            }
+          />
+        </Routes>
+      </BrowserRouter>
+    </AuthProvider>
+  );
+}
+
+export default App;
+
+
+// ==========================================
+// FILE: src\components\Auth\LoginForm.tsx
+// ==========================================
+
+import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../../contexts/AuthContext';
+import { LogIn } from 'lucide-react';
+
+export function LoginForm() {
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+  const { signIn } = useAuth();
+  const navigate = useNavigate();
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError('');
+    setLoading(true);
+
+    try {
+      await signIn(email, password);
+      navigate('/'); // Redirect ke dashboard setelah login
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Gagal login');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-blue-100 flex items-center justify-center p-4">
+      <div className="bg-white rounded-2xl shadow-xl p-8 w-full max-w-md">
+        <div className="flex items-center justify-center mb-8">
+          <div className="bg-blue-500 p-3 rounded-full">
+            <LogIn className="w-8 h-8 text-white" />
+          </div>
+        </div>
+
+        <h1 className="text-3xl font-bold text-center text-gray-800 mb-2">
+          GuruSync
+        </h1>
+        <p className="text-center text-gray-600 mb-8">
+          Masuk untuk melanjutkan
+        </p>
+
+        <form onSubmit={handleSubmit} className="space-y-6">
+          {error && (
+            <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg">
+              {error}
+            </div>
+          )}
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              NIK atau Email
+            </label>
+            <input
+              type="text"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              placeholder="Masukkan NIK atau Email"
+              required
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Password
+            </label>
+            <input
+              type="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              required
+            />
+          </div>
+
+          <button
+            type="submit"
+            disabled={loading}
+            className="w-full bg-blue-500 text-white py-3 rounded-lg font-medium hover:bg-blue-600 transition-colors disabled:bg-blue-300"
+          >
+            {loading ? 'Memproses...' : 'Masuk'}
+          </button>
+        </form>
+      </div>
+    </div>
+  );
+}
+
+
+// ==========================================
+// FILE: src\components\Dashboard\AdminForm.tsx
+// ==========================================
+
+import { useState, useEffect } from 'react';
+import { supabase } from '../../lib/supabase';
+import { X, Shield, Lock, Mail, User, Info } from 'lucide-react';
+import type { Profile } from '../../types';
+
+interface AdminFormProps {
+  admin: Profile | null;
+  onClose: () => void;
+}
+
+export function AdminForm({ admin, onClose }: AdminFormProps) {
+  const [formData, setFormData] = useState({
+    name: '',
+    nik: '',
+    email: '',
+    password: '',
+    avatar_url: '',
+  });
+  const [uploading, setUploading] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+
+  useEffect(() => {
+    if (admin) {
+      setFormData({
+        name: admin.name || '',
+        nik: admin.nik || '',
+        email: admin.email,
+        password: '', // Password will not be loaded for security
+        avatar_url: admin.avatar_url || '',
+      });
+    }
+  }, [admin]);
+
+  const handleAvatarUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    try {
+      const file = event.target.files?.[0];
+      if (!file) return;
+
+      if (file.size > 2 * 1024 * 1024) {
+        alert('Ukuran file maksimal 2MB');
+        return;
+      }
+
+      setUploading(true);
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${Math.random()}.${fileExt}`;
+      const filePath = `avatars/${fileName}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from('avatars')
+        .upload(filePath, file);
+
+      if (uploadError) throw uploadError;
+
+      const { data: { publicUrl } } = supabase.storage
+        .from('avatars')
+        .getPublicUrl(filePath);
+
+      setFormData(prev => ({ ...prev, avatar_url: publicUrl }));
+    } catch (err) {
+      console.error('Error uploading:', err);
+      alert('Gagal upload foto');
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError('');
+    setLoading(true);
+
+    try {
+      if (admin) {
+        // Update existing profile
+        const { error: updateError } = await (supabase
+          .from('profiles') as any)
+          .update({
+            name: formData.name,
+            nik: formData.nik,
+            email: formData.email,
+            avatar_url: formData.avatar_url,
+          })
+          .eq('id', admin.id);
+
+        if (updateError) throw updateError;
+      } else {
+        // Create new admin
+        if (!formData.password) throw new Error('Password wajib diisi untuk admin baru');
+        
+        // We use the signUp from context but it might attempt to login
+        // Better to just call signUp here directly to avoid context side-effects
+        const { data, error: signUpError } = await supabase.auth.signUp({
+          email: formData.email,
+          password: formData.password,
+          options: {
+            data: {
+              role: 'admin',
+              name: formData.name,
+              nik: formData.nik,
+            }
+          }
+        });
+
+        if (signUpError) throw signUpError;
+
+        // If user already exists but no profile, or signUp didn't auto-create profile
+        if (data.user) {
+          const { error: profileError } = await (supabase
+            .from('profiles') as any)
+            .upsert({
+              id: data.user.id,
+              email: formData.email,
+              role: 'admin',
+              name: formData.name,
+              nik: formData.nik,
+              avatar_url: formData.avatar_url,
+            });
+          
+          if (profileError) throw profileError;
+        }
+      }
+
+      onClose();
+    } catch (err) {
+      console.error('Error saving admin:', err);
+      setError(err instanceof Error ? err.message : 'Terjadi kesalahan');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+      <div className="bg-white rounded-xl shadow-xl max-w-md w-full">
+        <div className="p-6 border-b flex justify-between items-center">
+          <div className="flex items-center space-x-2">
+            <Shield className="w-6 h-6 text-blue-600" />
+            <h2 className="text-xl font-bold text-gray-800">
+              {admin ? 'Edit Admin' : 'Tambah Admin Baru'}
+            </h2>
+          </div>
+          <button
+            onClick={onClose}
+            className="text-gray-400 hover:text-gray-600"
+          >
+            <X className="w-6 h-6" />
+          </button>
+        </div>
+
+        <form onSubmit={handleSubmit} className="p-6 space-y-4">
+          {error && (
+            <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm">
+              {error}
+            </div>
+          )}
+
+          {!admin && (
+            <div className="bg-blue-50 border border-blue-100 p-4 rounded-lg flex items-start space-x-3">
+              <Info className="w-5 h-5 text-blue-500 mt-0.5" />
+              <p className="text-sm text-blue-700">
+                Admin baru akan didaftarkan sebagai pengguna sistem. Silakan berikan Email dan Password kepada yang bersangkutan.
+              </p>
+            </div>
+          )}
+
+          <div className="space-y-4">
+            <div className="flex flex-col items-center space-y-3 pb-4">
+              <div className="relative w-24 h-24 bg-gray-100 rounded-full flex items-center justify-center overflow-hidden border-2 border-gray-200">
+                {formData.avatar_url ? (
+                  <img src={formData.avatar_url} alt="" className="w-full h-full object-cover" />
+                ) : (
+                  <User className="w-10 h-10 text-gray-400" />
+                )}
+                {uploading && (
+                  <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center">
+                    <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
+                  </div>
+                )}
+              </div>
+              <label className="cursor-pointer">
+                <input type="file" className="hidden" accept="image/*" onChange={handleAvatarUpload} disabled={uploading} />
+                <span className="text-xs font-medium text-blue-600 hover:text-blue-500">
+                  {formData.avatar_url ? 'Ubah Foto' : 'Pilih Foto (Maks 2MB)'}
+                </span>
+              </label>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Nama Lengkap
+              </label>
+              <div className="relative">
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                  <User className="h-5 w-5 text-gray-400" />
+                </div>
+                <input
+                  type="text"
+                  value={formData.name}
+                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                  className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 text-sm"
+                  placeholder="Nama Admin"
+                  required
+                />
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                NIK
+              </label>
+              <div className="relative">
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                  <Shield className="h-5 w-5 text-gray-400" />
+                </div>
+                <input
+                  type="text"
+                  value={formData.nik}
+                  onChange={(e) => setFormData({ ...formData, nik: e.target.value })}
+                  className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 text-sm"
+                  placeholder="Nomor Induk Kependudukan"
+                  required
+                />
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Email
+              </label>
+              <div className="relative">
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                  <Mail className="h-5 w-5 text-gray-400" />
+                </div>
+                <input
+                  type="email"
+                  value={formData.email}
+                  onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                  className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 text-sm"
+                  placeholder="admin@sekolah.sch.id"
+                  required
+                />
+              </div>
+            </div>
+
+            {!admin && (
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Password
+                </label>
+                <div className="relative">
+                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                    <Lock className="h-5 w-5 text-gray-400" />
+                  </div>
+                  <input
+                    type="password"
+                    value={formData.password}
+                    onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                    className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 text-sm"
+                    placeholder="Minimal 6 karakter"
+                    required={!admin}
+                    minLength={6}
+                  />
+                </div>
+              </div>
+            )}
+          </div>
+
+          <div className="flex justify-end space-x-3 pt-6 border-t mt-6">
+            <button
+              type="button"
+              onClick={onClose}
+              className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors text-sm font-medium"
+            >
+              Batal
+            </button>
+            <button
+              type="submit"
+              disabled={loading}
+              className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:bg-blue-300 text-sm font-medium"
+            >
+              {loading ? 'Memproses...' : admin ? 'Update Admin' : 'Simpan Admin'}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+}
+
+
+// ==========================================
+// FILE: src\components\Dashboard\AdminManagement.tsx
+// ==========================================
+
+import { useState, useEffect } from 'react';
+import { supabase } from '../../lib/supabase';
+import { Shield, Plus, Trash2, Edit2 } from 'lucide-react';
+import type { Profile } from '../../types';
+import { AdminForm } from './AdminForm';
+
+export function AdminManagement() {
+  const [admins, setAdmins] = useState<Profile[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [showForm, setShowForm] = useState(false);
+  const [editingAdmin, setEditingAdmin] = useState<Profile | null>(null);
+  const [error, setError] = useState('');
+
+  useEffect(() => {
+    loadAdmins();
+  }, []);
+
+  const loadAdmins = async () => {
+    setLoading(true);
+    try {
+      const { data, error } = await (supabase
+        .from('profiles') as any)
+        .select('*')
+        .eq('role', 'admin')
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+      if (data) setAdmins(data as Profile[]);
+    } catch (err) {
+      console.error('Error loading admins:', err);
+      setError('Gagal memuat data admin');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleDelete = async (id: string) => {
+    if (!confirm('Apakah Anda yakin ingin menghapus admin ini?')) return;
+
+    try {
+      // Note: This only deletes from profiles, not auth.users unless using service role
+      const { error } = await (supabase
+        .from('profiles') as any)
+        .delete()
+        .eq('id', id);
+
+      if (error) throw error;
+      loadAdmins();
+    } catch (err) {
+      console.error('Error deleting admin:', err);
+      alert('Gagal menghapus admin');
+    }
+  };
+
+  const handleEdit = (admin: Profile) => {
+    setEditingAdmin(admin);
+    setShowForm(true);
+  };
+
+  if (loading) {
+    return (
+      <div className="flex justify-center items-center py-12">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-6">
+      <div className="flex justify-between items-center">
+        <h2 className="text-2xl font-bold text-gray-800">Manajemen Admin</h2>
+        <button
+          onClick={() => {
+            setEditingAdmin(null);
+            setShowForm(true);
+          }}
+          className="flex items-center space-x-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+        >
+          <Plus className="w-5 h-5" />
+          <span>Tambah Admin</span>
+        </button>
+      </div>
+
+      {error && (
+        <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg">
+          {error}
+        </div>
+      )}
+
+      <div className="bg-white rounded-xl shadow-sm border overflow-hidden">
+        <table className="min-w-full divide-y divide-gray-200">
+          <thead className="bg-gray-50">
+            <tr>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Admin
+              </th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                NIK
+              </th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Email
+              </th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Aksi
+              </th>
+            </tr>
+          </thead>
+          <tbody className="bg-white divide-y divide-gray-200">
+            {admins.map((admin) => (
+              <tr key={admin.id} className="hover:bg-gray-50">
+                <td className="px-6 py-4 whitespace-nowrap">
+                  <div className="flex items-center">
+                    <div className="bg-blue-100 p-2 rounded-full mr-3">
+                      {admin.avatar_url ? (
+                        <img src={admin.avatar_url} alt="" className="w-8 h-8 rounded-full" />
+                      ) : (
+                        <Shield className="w-5 h-5 text-blue-600" />
+                      )}
+                    </div>
+                    <div>
+                      <div className="text-sm font-medium text-gray-900">
+                        {admin.name || 'Admin'}
+                      </div>
+                    </div>
+                  </div>
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap">
+                  <div className="text-sm text-gray-600">{admin.nik || '-'}</div>
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap">
+                  <div className="text-sm text-gray-600">{admin.email}</div>
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                  <div className="flex space-x-3">
+                    <button
+                      onClick={() => handleEdit(admin)}
+                      className="text-blue-600 hover:text-blue-900"
+                    >
+                      <Edit2 className="w-5 h-5" />
+                    </button>
+                    <button
+                      onClick={() => handleDelete(admin.id)}
+                      className="text-red-600 hover:text-red-900"
+                    >
+                      <Trash2 className="w-5 h-5" />
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+        {admins.length === 0 && (
+          <div className="text-center py-12 text-gray-500">
+            Belum ada admin terpilih.
+          </div>
+        )}
+      </div>
+
+      {showForm && (
+        <AdminForm
+          admin={editingAdmin}
+          onClose={() => {
+            setShowForm(false);
+            loadAdmins();
+          }}
+        />
+      )}
+    </div>
+  );
+}
+
+
+// ==========================================
+// FILE: src\components\Dashboard\Dashboard.tsx
+// ==========================================
+
+import { useState, useEffect } from 'react';
+import { supabase } from '../../lib/supabase';
+import { useAuth } from '../../contexts/AuthContext';
+import { TeacherList } from './TeacherList';
+import { TeacherForm } from './TeacherForm';
+import { TeacherProfile } from '../Profile/TeacherProfile';
+import { LeaveManagement } from './LeaveManagement';
+import { Statistics } from './Statistics';
+import { AdminManagement } from './AdminManagement';
+import { Users, Calendar, LogOut, Plus, BarChart3, ShieldCheck } from 'lucide-react';
+import type { Teacher, Leave } from '../../types';
+
+type View = 'dashboard' | 'teachers' | 'leaves' | 'admins';
+
+export function Dashboard() {
+  const { user, profile, loading: authLoading, signOut } = useAuth();
+  const [view, setView] = useState<View>('dashboard');
+  const [teachers, setTeachers] = useState<Teacher[]>([]);
+  const [leaves, setLeaves] = useState<Leave[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [showTeacherForm, setShowTeacherForm] = useState(false);
+  const [editingTeacher, setEditingTeacher] = useState<Teacher | null>(null);
+
+  const isAdmin = profile?.role === 'admin';
+
+  useEffect(() => {
+    if (!authLoading) {
+      loadData();
+    }
+  }, [authLoading, user?.id, profile?.role]);
+
+  const loadData = async () => {
+    setLoading(true);
+    try {
+      let teachersQuery = supabase.from('teachers').select('*');
+      let leavesQuery = supabase.from('leaves').select('*');
+
+      // Remove manual filtering since RLS handles leaves correctly and we need all teachers for global stats
+      const [teachersRes, leavesRes] = await Promise.all([
+        teachersQuery.order('name'),
+        leavesQuery.order('created_at', { ascending: false }),
+      ]);
+
+      if (teachersRes.data) setTeachers(teachersRes.data);
+      if (leavesRes.data) setLeaves(leavesRes.data);
+    } catch (error) {
+      console.error('Error loading data:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleAddTeacher = () => {
+    setEditingTeacher(null);
+    setShowTeacherForm(true);
+  };
+
+  const handleEditTeacher = (teacher: Teacher) => {
+    setEditingTeacher(teacher);
+    setShowTeacherForm(true);
+  };
+
+  const handleCloseForm = () => {
+    setShowTeacherForm(false);
+    setEditingTeacher(null);
+    loadData();
+  };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto"></div>
+          <p className="mt-4 text-gray-600">Memuat data...</p>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen bg-gray-50">
+      <nav className="bg-white shadow-sm border-b">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex justify-between items-center h-16">
+            <div className="flex items-center space-x-4">
+              <Users className="w-8 h-8 text-blue-500" />
+              <h1 className="text-xl font-bold text-gray-800">
+                GuruSync
+              </h1>
+            </div>
+
+            <div className="flex items-center space-x-4">
+              <span className="text-sm text-gray-600">
+                {profile?.email} ({(isAdmin ? profile?.name : (teachers.find(t => t.user_id === user?.id)?.name || profile?.name)) || (isAdmin ? 'Admin' : 'Guru')})
+              </span>
+              <button
+                onClick={() => signOut()}
+                className="flex items-center space-x-2 px-4 py-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+              >
+                <LogOut className="w-4 h-4" />
+                <span>Keluar</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      </nav>
+
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div className="flex space-x-2 mb-6 bg-white p-2 rounded-lg shadow-sm">
+          <button
+            onClick={() => setView('dashboard')}
+            className={`flex items-center space-x-2 px-4 py-2 rounded-lg transition-colors ${
+              view === 'dashboard'
+                ? 'bg-blue-500 text-white'
+                : 'text-gray-600 hover:bg-gray-100'
+            }`}
+          >
+            <BarChart3 className="w-5 h-5" />
+            <span>Dashboard</span>
+          </button>
+
+          {isAdmin ? (
+            <button
+              onClick={() => setView('teachers')}
+              className={`flex items-center space-x-2 px-4 py-2 rounded-lg transition-colors ${
+                view === 'teachers'
+                  ? 'bg-blue-500 text-white'
+                  : 'text-gray-600 hover:bg-gray-100'
+              }`}
+            >
+              <Users className="w-5 h-5" />
+              <span>Data Guru</span>
+            </button>
+          ) : (
+            <button
+              onClick={() => setView('teachers')}
+              className={`flex items-center space-x-2 px-4 py-2 rounded-lg transition-colors ${
+                view === 'teachers'
+                  ? 'bg-blue-500 text-white'
+                  : 'text-gray-600 hover:bg-gray-100'
+              }`}
+            >
+              <ShieldCheck className="w-5 h-5" />
+              <span>Profil Saya</span>
+            </button>
+          )}
+
+          {isAdmin ? (
+            <>
+              <button
+                onClick={() => setView('leaves')}
+                className={`flex items-center space-x-2 px-4 py-2 rounded-lg transition-colors ${
+                  view === 'leaves'
+                    ? 'bg-blue-500 text-white'
+                    : 'text-gray-600 hover:bg-gray-100'
+                }`}
+              >
+                <Calendar className="w-5 h-5" />
+                <span>Manajemen Cuti</span>
+              </button>
+              <button
+                onClick={() => setView('admins')}
+                className={`flex items-center space-x-2 px-4 py-2 rounded-lg transition-colors ${
+                  view === 'admins'
+                    ? 'bg-blue-500 text-white'
+                    : 'text-gray-600 hover:bg-gray-100'
+                }`}
+              >
+                <ShieldCheck className="w-5 h-5" />
+                <span>Manajemen Admin</span>
+              </button>
+            </>
+          ) : (
+            <button
+              onClick={() => setView('leaves')}
+              className={`flex items-center space-x-2 px-4 py-2 rounded-lg transition-colors ${
+                view === 'leaves'
+                  ? 'bg-blue-500 text-white'
+                  : 'text-gray-600 hover:bg-gray-100'
+              }`}
+            >
+              <Calendar className="w-5 h-5" />
+              <span>Pengajuan Cuti</span>
+            </button>
+          )}
+        </div>
+
+        {view === 'dashboard' && (
+          <Statistics teachers={teachers} leaves={leaves} />
+        )}
+
+        {view === 'teachers' && (
+          <div>
+            <div className="flex justify-between items-center mb-6">
+              <h2 className="text-2xl font-bold text-gray-800">
+                {isAdmin ? 'Data Guru' : 'Profil Saya'}
+              </h2>
+              {isAdmin && (
+                <button
+                  onClick={handleAddTeacher}
+                  className="flex items-center space-x-2 px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
+                >
+                  <Plus className="w-5 h-5" />
+                  <span>Tambah Guru</span>
+                </button>
+              )}
+            </div>
+
+            {isAdmin ? (
+              <TeacherList
+                teachers={teachers}
+                leaves={leaves}
+                onEdit={handleEditTeacher}
+                onDelete={loadData}
+                onRefresh={loadData}
+              />
+            ) : (
+              <div className="bg-white rounded-xl shadow-sm overflow-hidden">
+                {teachers.find(t => t.user_id === user?.id) ? (
+                  <TeacherProfile teacherId={teachers.find(t => t.user_id === user?.id)!.id} />
+                ) : (
+                  <div className="p-8 text-center text-gray-500">
+                    Data profil tidak ditemukan.
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+        )}
+
+        {view === 'leaves' && (
+          <LeaveManagement
+            teachers={teachers}
+            leaves={leaves}
+            onUpdate={loadData}
+            currentTeacherId={teachers.find(t => t.user_id === profile?.id)?.id}
+          />
+        )}
+
+        {view === 'admins' && isAdmin && (
+          <AdminManagement />
+        )}
+      </div>
+
+      {showTeacherForm && (
+        <TeacherForm
+          teacher={editingTeacher}
+          onClose={handleCloseForm}
+        />
+      )}
+    </div>
+  );
+}
+
+
+// ==========================================
+// FILE: src\components\Dashboard\LeaveManagement.tsx
+// ==========================================
+
+import { useState } from 'react';
+import { supabase } from '../../lib/supabase';
+import { Plus, X, CheckCircle, XCircle, Clock, FileSpreadsheet, Trash2, Edit2, ChevronRight } from 'lucide-react';
+import { format, parseISO, differenceInDays } from 'date-fns';
+import { id } from 'date-fns/locale';
+import * as XLSX from 'xlsx';
+import type { Teacher, Leave } from '../../types';
+import { useAuth } from '../../contexts/AuthContext';
+
+interface LeaveManagementProps {
+  teachers: Teacher[];
+  leaves: Leave[];
+  onUpdate: () => void;
+  currentTeacherId?: string;
+}
+
+export function LeaveManagement({ teachers, leaves, onUpdate, currentTeacherId }: LeaveManagementProps) {
+  const { profile } = useAuth();
+  
+  const role = profile?.role || 'teacher';
+  const isAdmin = role === 'admin';
+  const isManagement = ['hod', 'koordinator_hod', 'wakasek', 'kepsek', 'admin'].includes(role);
+
+  const [showForm, setShowForm] = useState(false);
+  const [editingLeave, setEditingLeave] = useState<Leave | null>(null);
+  const [formData, setFormData] = useState<{
+    teacher_id: string;
+    leave_type: string;
+    start_date: string;
+    end_date: string;
+    reason: string;
+    status: Leave['status'];
+  }>({
+    teacher_id: currentTeacherId || '',
+    leave_type: '',
+    start_date: '',
+    end_date: '',
+    reason: '',
+    status: 'pending_hod',
+  });
+  const [loading, setLoading] = useState(false);
+
+  // Filter leaves: teachers see their own; management/admin see all
+  const displayLeaves = isManagement 
+    ? leaves 
+    : leaves.filter(leave => leave.teacher_id === currentTeacherId);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+
+    try {
+      // Determine initial pending status based on role
+      const initialStatus = role === 'hod' ? 'pending_koor_hod' : 'pending_hod';
+      
+      const submissionData = isAdmin ? formData : {
+        ...formData,
+        teacher_id: currentTeacherId!,
+        status: editingLeave ? formData.status : initialStatus as Leave['status']
+      };
+
+      if (editingLeave) {
+        const { error } = await supabase
+          .from('leaves')
+          .update(submissionData as any)
+          .eq('id', editingLeave.id);
+
+        if (error) throw error;
+      } else {
+        const { error } = await supabase
+          .from('leaves')
+          .insert([submissionData as any]);
+
+        if (error) throw error;
+      }
+
+      setShowForm(false);
+      setEditingLeave(null);
+      setFormData({
+        teacher_id: currentTeacherId || '',
+        leave_type: '',
+        start_date: '',
+        end_date: '',
+        reason: '',
+        status: 'pending_hod',
+      });
+      onUpdate();
+    } catch (error) {
+      alert('Gagal menyimpan data cuti');
+      console.error(error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleEdit = (leave: Leave) => {
+    setEditingLeave(leave);
+    setFormData({
+      teacher_id: leave.teacher_id,
+      leave_type: leave.leave_type,
+      start_date: leave.start_date,
+      end_date: leave.end_date,
+      reason: leave.reason,
+      status: leave.status,
+    });
+    setShowForm(true);
+  };
+
+  const handleDelete = async (leaveId: string) => {
+    if (!confirm('Apakah Anda yakin ingin menghapus data cuti ini?')) {
+      return;
+    }
+
+    try {
+      const { error } = await supabase
+        .from('leaves')
+        .delete()
+        .eq('id', leaveId);
+
+      if (error) throw error;
+      onUpdate();
+    } catch (error) {
+      alert('Gagal menghapus data cuti');
+      console.error(error);
+    }
+  };
+
+  const handleStatusUpdate = async (leaveId: string, action: 'approve' | 'reject', currentStatus: Leave['status']) => {
+    let nextStatus: Leave['status'] = 'rejected';
+
+    if (action === 'approve') {
+      if (isAdmin) nextStatus = 'approved';
+      else if (role === 'hod' && currentStatus === 'pending_hod') nextStatus = 'pending_wakasek';
+      else if (role === 'koordinator_hod' && currentStatus === 'pending_koor_hod') nextStatus = 'pending_wakasek';
+      else if (role === 'wakasek' && currentStatus === 'pending_wakasek') nextStatus = 'pending_kepsek';
+      else if (role === 'kepsek' && currentStatus === 'pending_kepsek') nextStatus = 'approved';
+      else {
+        alert('Anda tidak memiliki wewenang untuk menyetujui tahap ini.');
+        return;
+      }
+    }
+
+    if (!confirm(`Apakah Anda yakin ingin ${action === 'approve' ? 'menyetujui' : 'menolak'} cuti ini?`)) return;
+
+    try {
+      const { error } = await supabase
+        .from('leaves')
+        .update({ status: nextStatus } as any)
+        .eq('id', leaveId);
+
+      if (error) throw error;
+      onUpdate();
+    } catch (error) {
+      alert('Gagal mengubah status cuti');
+      console.error(error);
+    }
+  };
+
+  const getTeacherName = (teacherId: string) => {
+    return teachers.find((t) => t.id === teacherId)?.name || 'Unknown';
+  };
+
+  const getLeaveDuration = (startDate: string, endDate: string) => {
+    return differenceInDays(parseISO(endDate), parseISO(startDate)) + 1;
+  };
+
+  const canApprove = (status: Leave['status']) => {
+    if (isAdmin) return status !== 'approved' && status !== 'rejected';
+    if (role === 'hod' && status === 'pending_hod') return true;
+    if (role === 'koordinator_hod' && status === 'pending_koor_hod') return true;
+    if (role === 'wakasek' && status === 'pending_wakasek') return true;
+    if (role === 'kepsek' && status === 'pending_kepsek') return true;
+    return false;
+  };
+
+  const renderStatusBadge = (status: Leave['status']) => {
+    let bgColor = 'bg-gray-100';
+    let textColor = 'text-gray-800';
+    let label = status;
+
+    switch (status) {
+      case 'pending':
+      case 'pending_hod':
+        bgColor = 'bg-yellow-100'; textColor = 'text-yellow-800'; label = 'Menunggu HOD'; break;
+      case 'pending_koor_hod':
+        bgColor = 'bg-yellow-100'; textColor = 'text-yellow-800'; label = 'Menunggu Koor HOD'; break;
+      case 'pending_wakasek':
+        bgColor = 'bg-blue-100'; textColor = 'text-blue-800'; label = 'Menunggu Wakasek'; break;
+      case 'pending_kepsek':
+        bgColor = 'bg-purple-100'; textColor = 'text-purple-800'; label = 'Menunggu Kepsek'; break;
+      case 'approved':
+        bgColor = 'bg-green-100'; textColor = 'text-green-800'; label = 'Disetujui'; break;
+      case 'rejected':
+        bgColor = 'bg-red-100'; textColor = 'text-red-800'; label = 'Ditolak'; break;
+    }
+
+    return (
+      <span className={`px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${bgColor} ${textColor}`}>
+        {label}
+      </span>
+    );
+  };
+
+  const handleExportExcel = () => {
+    const exportData = displayLeaves.map((leave) => ({
+      'Nama Guru': getTeacherName(leave.teacher_id),
+      'Jenis Cuti': leave.leave_type,
+      'Tanggal Mulai': format(parseISO(leave.start_date), 'dd MMMM yyyy', { locale: id }),
+      'Tanggal Selesai': format(parseISO(leave.end_date), 'dd MMMM yyyy', { locale: id }),
+      'Durasi': `${getLeaveDuration(leave.start_date, leave.end_date)} hari`,
+      'Alasan': leave.reason,
+      'Status': leave.status,
+      'Tanggal Pengajuan': format(parseISO(leave.created_at), 'dd MMMM yyyy HH:mm', { locale: id }),
+    }));
+
+    const ws = XLSX.utils.json_to_sheet(exportData);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'Data Cuti');
+
+    XLSX.writeFile(wb, `data-cuti-${format(new Date(), 'yyyy-MM-dd')}.xlsx`);
+  };
+
+  const currentTeacher = teachers.find(t => t.id === currentTeacherId);
+  const annualLeaveQuota = currentTeacher?.annual_leave_quota ?? 12;
+  const currentYear = new Date().getFullYear();
+  
+  const usedAnnualLeaves = leaves
+    .filter(l => 
+      l.teacher_id === currentTeacherId && 
+      l.leave_type === 'Cuti Tahunan' && 
+      l.status === 'approved' &&
+      new Date(l.start_date).getFullYear() === currentYear
+    )
+    .reduce((total, l) => total + getLeaveDuration(l.start_date, l.end_date), 0);
+  
+  const remainingAnnualLeaves = Math.max(0, annualLeaveQuota - usedAnnualLeaves);
+
+  return (
+    <div className="space-y-6">
+      {/* Header section */}
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+        <h2 className="text-2xl font-bold text-gray-800">
+          {isManagement ? 'Manajemen Cuti' : 'Pengajuan Cuti'}
+        </h2>
+        <div className="flex w-full sm:w-auto space-x-2">
+          {isAdmin && (
+            <button
+              onClick={handleExportExcel}
+              className="flex-1 sm:flex-none justify-center items-center space-x-2 px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors shadow-sm inline-flex"
+            >
+              <FileSpreadsheet className="w-5 h-5" />
+              <span className="hidden sm:inline">Export Excel</span>
+            </button>
+          )}
+          <button
+            onClick={() => {
+              setEditingLeave(null);
+              setFormData({
+                teacher_id: currentTeacherId || '',
+                leave_type: '',
+                start_date: '',
+                end_date: '',
+                reason: '',
+                status: role === 'hod' ? 'pending_koor_hod' : 'pending_hod',
+              });
+              setShowForm(true);
+            }}
+            className="flex-1 sm:flex-none justify-center items-center space-x-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors shadow-sm inline-flex"
+          >
+            <Plus className="w-5 h-5" />
+            <span>{isManagement && !isAdmin ? 'Ajukan Cuti Pribadi' : isAdmin ? 'Tambah Cuti' : 'Ajukan Cuti'}</span>
+          </button>
+        </div>
+      </div>
+
+      {/* Quota Summary for Current Teacher */}
+      {currentTeacherId && (
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          <div className="bg-white rounded-xl p-4 border border-gray-100 shadow-sm flex items-center space-x-4">
+            <div className="p-3 bg-blue-50 text-blue-600 rounded-lg">
+              <Calendar className="w-6 h-6" />
+            </div>
+            <div>
+              <p className="text-sm font-medium text-gray-500">Total Kuota Cuti Tahunan</p>
+              <p className="text-2xl font-bold text-gray-800">{annualLeaveQuota} Hari</p>
+            </div>
+          </div>
+          <div className="bg-white rounded-xl p-4 border border-gray-100 shadow-sm flex items-center space-x-4">
+            <div className="p-3 bg-orange-50 text-orange-600 rounded-lg">
+              <Clock className="w-6 h-6" />
+            </div>
+            <div>
+              <p className="text-sm font-medium text-gray-500">Cuti Terpakai</p>
+              <p className="text-2xl font-bold text-gray-800">{usedAnnualLeaves} Hari</p>
+            </div>
+          </div>
+          <div className="bg-white rounded-xl p-4 border border-gray-100 shadow-sm flex items-center space-x-4">
+            <div className="p-3 bg-green-50 text-green-600 rounded-lg">
+              <CheckCircle className="w-6 h-6" />
+            </div>
+            <div>
+              <p className="text-sm font-medium text-gray-500">Sisa Cuti</p>
+              <p className="text-2xl font-bold text-gray-800">{remainingAnnualLeaves} Hari</p>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Responsive list/table for Leaves */}
+      <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+        {/* Mobile View: Cards */}
+        <div className="block md:hidden">
+          {displayLeaves.length === 0 ? (
+            <div className="p-8 text-center text-gray-500">Belum ada data pengajuan cuti.</div>
+          ) : (
+            <div className="divide-y divide-gray-100">
+              {displayLeaves.map((leave) => (
+                <div key={leave.id} className="p-4 space-y-3 hover:bg-gray-50 transition-colors">
+                  <div className="flex justify-between items-start">
+                    <div>
+                      {isManagement && (
+                        <div className="font-semibold text-gray-900 mb-1">
+                          {getTeacherName(leave.teacher_id)}
+                        </div>
+                      )}
+                      <div className="text-sm font-medium text-blue-600">{leave.leave_type}</div>
+                    </div>
+                    {renderStatusBadge(leave.status)}
+                  </div>
+                  
+                  <div className="text-sm text-gray-600 flex items-center gap-2">
+                    <Clock className="w-4 h-4 text-gray-400" />
+                    <span>
+                      {format(parseISO(leave.start_date), 'dd MMM yyyy', { locale: id })} -{' '}
+                      {format(parseISO(leave.end_date), 'dd MMM yyyy', { locale: id })} 
+                      <span className="ml-1 text-xs bg-gray-100 px-2 py-0.5 rounded-full">
+                        {getLeaveDuration(leave.start_date, leave.end_date)} hari
+                      </span>
+                    </span>
+                  </div>
+
+                  <div className="text-sm text-gray-500 bg-gray-50 p-2 rounded border border-gray-100">
+                    "{leave.reason}"
+                  </div>
+
+                  {/* Actions Mobile */}
+                  <div className="flex justify-end pt-3 gap-2 border-t border-gray-50 mt-2">
+                    {canApprove(leave.status) && (
+                      <>
+                        <button
+                          onClick={() => handleStatusUpdate(leave.id, 'approve', leave.status)}
+                          className="flex items-center gap-1 px-3 py-1.5 bg-green-50 text-green-700 hover:bg-green-100 rounded-md text-sm font-medium transition-colors"
+                        >
+                          <CheckCircle className="w-4 h-4" /> Setujui
+                        </button>
+                        <button
+                          onClick={() => handleStatusUpdate(leave.id, 'reject', leave.status)}
+                          className="flex items-center gap-1 px-3 py-1.5 bg-red-50 text-red-700 hover:bg-red-100 rounded-md text-sm font-medium transition-colors"
+                        >
+                          <XCircle className="w-4 h-4" /> Tolak
+                        </button>
+                      </>
+                    )}
+                    
+                    {leave.teacher_id === currentTeacherId && (leave.status === 'pending_hod' || leave.status === 'pending_koor_hod' || leave.status === 'pending') && (
+                      <button
+                        onClick={() => handleEdit(leave)}
+                        className="p-1.5 text-blue-600 hover:bg-blue-50 rounded-md transition-colors"
+                      >
+                        <Edit2 className="w-4 h-4" />
+                      </button>
+                    )}
+                    
+                    {(isAdmin || (leave.teacher_id === currentTeacherId && (leave.status === 'pending_hod' || leave.status === 'pending_koor_hod' || leave.status === 'pending'))) && (
+                      <button
+                        onClick={() => handleDelete(leave.id)}
+                        className="p-1.5 text-red-600 hover:bg-red-50 rounded-md transition-colors"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* Desktop View: Table */}
+        <div className="hidden md:block overflow-x-auto">
+          <table className="w-full">
+            <thead className="bg-gray-50 border-b border-gray-200">
+              <tr>
+                {isManagement && (
+                  <th className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                    Guru
+                  </th>
+                )}
+                <th className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                  Detail Cuti
+                </th>
+                <th className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                  Periode & Durasi
+                </th>
+                <th className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                  Status
+                </th>
+                <th className="px-6 py-4 text-right text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                  Aksi
+                </th>
+              </tr>
+            </thead>
+            <tbody className="bg-white divide-y divide-gray-100">
+              {displayLeaves.map((leave) => (
+                <tr key={leave.id} className="hover:bg-blue-50/50 transition-colors group">
+                  {isManagement && (
+                    <td className="px-6 py-5 whitespace-nowrap">
+                      <div className="font-medium text-gray-900">
+                        {getTeacherName(leave.teacher_id)}
+                      </div>
+                    </td>
+                  )}
+                  <td className="px-6 py-5">
+                    <div className="text-sm font-medium text-gray-900 mb-1">{leave.leave_type}</div>
+                    <div className="text-sm text-gray-500 line-clamp-2 max-w-xs" title={leave.reason}>{leave.reason}</div>
+                  </td>
+                  <td className="px-6 py-5 whitespace-nowrap">
+                    <div className="text-sm text-gray-900 mb-1">
+                      {format(parseISO(leave.start_date), 'dd MMM yyyy', { locale: id })} <ChevronRight className="w-3 h-3 inline text-gray-400 mx-1" /> {format(parseISO(leave.end_date), 'dd MMM yyyy', { locale: id })}
+                    </div>
+                    <div className="text-xs font-medium text-gray-500 bg-gray-100 inline-block px-2 py-1 rounded-md">
+                      {getLeaveDuration(leave.start_date, leave.end_date)} hari
+                    </div>
+                  </td>
+                  <td className="px-6 py-5 whitespace-nowrap">
+                    {renderStatusBadge(leave.status)}
+                  </td>
+                  <td className="px-6 py-5 whitespace-nowrap text-right text-sm font-medium space-x-2">
+                    <div className="flex items-center justify-end gap-2 sm:opacity-0 sm:group-hover:opacity-100 opacity-100 transition-opacity">
+                      {canApprove(leave.status) && (
+                        <>
+                          <button
+                            onClick={() => handleStatusUpdate(leave.id, 'approve', leave.status)}
+                            className="text-green-600 hover:text-green-900 hover:bg-green-50 p-2 rounded-full transition-colors tooltip"
+                            title="Setujui"
+                          >
+                            <CheckCircle className="w-5 h-5" />
+                          </button>
+                          <button
+                            onClick={() => handleStatusUpdate(leave.id, 'reject', leave.status)}
+                            className="text-red-600 hover:text-red-900 hover:bg-red-50 p-2 rounded-full transition-colors"
+                            title="Tolak"
+                          >
+                            <XCircle className="w-5 h-5" />
+                          </button>
+                        </>
+                      )}
+                      
+                      {leave.teacher_id === currentTeacherId && (leave.status === 'pending_hod' || leave.status === 'pending_koor_hod' || leave.status === 'pending') && (
+                        <button
+                          onClick={() => handleEdit(leave)}
+                          className="text-blue-600 hover:text-blue-900 hover:bg-blue-50 p-2 rounded-full transition-colors"
+                          title="Edit"
+                        >
+                          <Edit2 className="w-5 h-5" />
+                        </button>
+                      )}
+                      
+                      {(isAdmin || (leave.teacher_id === currentTeacherId && (leave.status === 'pending_hod' || leave.status === 'pending_koor_hod' || leave.status === 'pending'))) && (
+                        <button
+                          onClick={() => handleDelete(leave.id)}
+                          className="text-red-600 hover:text-red-900 hover:bg-red-50 p-2 rounded-full transition-colors"
+                          title="Hapus"
+                        >
+                          <Trash2 className="w-5 h-5" />
+                        </button>
+                      )}
+                    </div>
+                  </td>
+                </tr>
+              ))}
+              {displayLeaves.length === 0 && (
+                <tr>
+                  <td colSpan={isManagement ? 5 : 4} className="px-6 py-12 text-center text-gray-500">
+                    <div className="flex flex-col items-center justify-center">
+                      <FileSpreadsheet className="w-12 h-12 text-gray-300 mb-3" />
+                      <p className="text-lg font-medium text-gray-900">Belum ada data cuti</p>
+                      <p className="text-sm text-gray-500">Daftar pengajuan cuti akan tampil di sini.</p>
+                    </div>
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      {showForm && (
+        <div className="fixed inset-0 bg-gray-900/40 backdrop-blur-sm flex items-center justify-center p-4 z-50 animate-in fade-in duration-200">
+          <div className="bg-white rounded-2xl shadow-2xl max-w-lg w-full transform transition-all max-h-[90vh] overflow-y-auto">
+            <div className="border-b border-gray-100 px-6 py-5 flex justify-between items-center sticky top-0 bg-white z-10">
+              <h3 className="text-xl font-bold text-gray-800">
+                {editingLeave ? 'Edit Cuti' : (isAdmin ? 'Tambah Cuti' : 'Ajukan Cuti')}
+              </h3>
+              <button
+                onClick={() => setShowForm(false)}
+                className="text-gray-400 hover:text-gray-600 hover:bg-gray-100 p-2 rounded-full transition-colors"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <form onSubmit={handleSubmit} className="p-6 space-y-5">
+              {isAdmin ? (
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-1.5">
+                    Guru
+                  </label>
+                  <select
+                    value={formData.teacher_id}
+                    onChange={(e) =>
+                      setFormData({ ...formData, teacher_id: e.target.value })
+                    }
+                    className="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors bg-white shadow-sm"
+                    required
+                  >
+                    <option value="">Pilih Guru</option>
+                    {teachers.map((teacher) => (
+                      <option key={teacher.id} value={teacher.id}>
+                        {teacher.name} - {teacher.subject}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              ) : (
+                <div className="bg-blue-50/50 p-4 rounded-xl border border-blue-100 flex items-start space-x-3 text-blue-800 shadow-sm">
+                  <Clock className="w-5 h-5 mt-0.5 text-blue-500" />
+                  <div>
+                    <h4 className="text-sm font-semibold mb-0.5">Mengajukan cuti untuk:</h4>
+                    <p className="text-sm font-medium text-blue-900">{getTeacherName(currentTeacherId || '')}</p>
+                  </div>
+                </div>
+              )}
+
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-1.5">
+                  Jenis Cuti
+                </label>
+                <select
+                  value={formData.leave_type}
+                  onChange={(e) =>
+                    setFormData({ ...formData, leave_type: e.target.value })
+                  }
+                  className="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors bg-white shadow-sm"
+                  required
+                >
+                  <option value="">Pilih Jenis Cuti</option>
+                  <option value="Cuti Tahunan">Cuti Tahunan</option>
+                  <option value="Cuti Sakit">Cuti Sakit</option>
+                  <option value="Cuti Melahirkan">Cuti Melahirkan</option>
+                  <option value="Cuti Keperluan Pribadi">Cuti Keperluan Pribadi</option>
+                  <option value="Cuti Penting">Cuti Penting</option>
+                  <option value="Izin">Izin</option>
+                </select>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-1.5">
+                    Mulai
+                  </label>
+                  <input
+                    type="date"
+                    value={formData.start_date}
+                    onChange={(e) =>
+                      setFormData({ ...formData, start_date: e.target.value })
+                    }
+                    className="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors bg-white shadow-sm"
+                    required
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-1.5">
+                    Selesai
+                  </label>
+                  <input
+                    type="date"
+                    value={formData.end_date}
+                    onChange={(e) =>
+                      setFormData({ ...formData, end_date: e.target.value })
+                    }
+                    className="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors bg-white shadow-sm"
+                    required
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-1.5">
+                  Alasan / Keterangan
+                </label>
+                <textarea
+                  value={formData.reason}
+                  onChange={(e) =>
+                    setFormData({ ...formData, reason: e.target.value })
+                  }
+                  rows={3}
+                  className="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors bg-white shadow-sm resize-none"
+                  placeholder="Jelaskan alasan cuti dengan singkat..."
+                  required
+                />
+              </div>
+
+              {isAdmin && (
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-1.5">
+                    Status (Admin Override)
+                  </label>
+                  <select
+                    value={formData.status}
+                    onChange={(e) =>
+                      setFormData({
+                        ...formData,
+                        status: e.target.value as Leave['status'],
+                      })
+                    }
+                    className="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors bg-white shadow-sm"
+                    required
+                  >
+                    <option value="pending_hod">Menunggu HOD</option>
+                    <option value="pending_koor_hod">Menunggu Koor HOD</option>
+                    <option value="pending_wakasek">Menunggu Wakasek</option>
+                    <option value="pending_kepsek">Menunggu Kepsek</option>
+                    <option value="approved">Disetujui</option>
+                    <option value="rejected">Ditolak</option>
+                  </select>
+                </div>
+              )}
+
+              <div className="flex justify-end space-x-3 pt-6 border-t border-gray-100 mt-2">
+                <button
+                  type="button"
+                  onClick={() => setShowForm(false)}
+                  className="px-5 py-2.5 text-gray-600 font-medium rounded-xl hover:bg-gray-100 transition-colors"
+                >
+                  Batal
+                </button>
+                <button
+                  type="submit"
+                  disabled={loading}
+                  className="px-6 py-2.5 bg-blue-600 text-white font-medium rounded-xl hover:bg-blue-700 transition-colors disabled:bg-blue-300 shadow-sm flex items-center"
+                >
+                  {loading ? 'Menyimpan...' : 'Kirim Pengajuan'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+
+// ==========================================
+// FILE: src\components\Dashboard\Statistics.tsx
+// ==========================================
+
+import { useMemo } from 'react';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line } from 'recharts';
+import { Users, Calendar, Clock, CheckCircle } from 'lucide-react';
+import type { Teacher, Leave } from '../../types';
+import { differenceInDays, format, parseISO, startOfMonth } from 'date-fns';
+import { id } from 'date-fns/locale';
+
+interface StatisticsProps {
+  teachers: Teacher[];
+  leaves: Leave[];
+}
+
+export function Statistics({ teachers, leaves }: StatisticsProps) {
+  const stats = useMemo(() => {
+    const totalTeachers = teachers.length;
+    const activeLeaves = leaves.filter(
+      (leave) =>
+        leave.status === 'approved' &&
+        new Date(leave.start_date) <= new Date() &&
+        new Date(leave.end_date) >= new Date()
+    ).length;
+
+    const avgWorkDuration = teachers.length > 0
+      ? teachers.reduce((sum, teacher) => {
+          const days = differenceInDays(new Date(), parseISO(teacher.join_date));
+          return sum + days / 365;
+        }, 0) / teachers.length
+      : 0;
+
+    const pendingLeaves = leaves.filter((leave) => leave.status === 'pending').length;
+
+    return {
+      totalTeachers,
+      activeLeaves,
+      avgWorkDuration: avgWorkDuration.toFixed(1),
+      pendingLeaves,
+    };
+  }, [teachers, leaves]);
+
+  const leavesByMonth = useMemo(() => {
+    const monthData: { [key: string]: number } = {};
+
+    leaves.forEach((leave) => {
+      const month = format(parseISO(leave.start_date), 'MMM yyyy', { locale: id });
+      monthData[month] = (monthData[month] || 0) + 1;
+    });
+
+    return Object.entries(monthData)
+      .map(([month, count]) => ({ month, count }))
+      .slice(-12);
+  }, [leaves]);
+
+  const leavesByStatus = useMemo(() => {
+    const statusData: { [key: string]: number } = {
+      pending: 0,
+      approved: 0,
+      rejected: 0,
+    };
+
+    leaves.forEach((leave) => {
+      statusData[leave.status]++;
+    });
+
+    return Object.entries(statusData).map(([status, count]) => ({
+      status: status === 'pending' ? 'Menunggu' : status === 'approved' ? 'Disetujui' : 'Ditolak',
+      count,
+    }));
+  }, [leaves]);
+
+  return (
+    <div className="space-y-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-100">
+          <div className="flex items-center justify-between mb-4">
+            <div className="bg-blue-100 p-3 rounded-lg">
+              <Users className="w-6 h-6 text-blue-600" />
+            </div>
+          </div>
+          <h3 className="text-3xl font-bold text-gray-800 mb-1">
+            {stats.totalTeachers}
+          </h3>
+          <p className="text-gray-600 text-sm">Total Guru</p>
+        </div>
+
+        <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-100">
+          <div className="flex items-center justify-between mb-4">
+            <div className="bg-green-100 p-3 rounded-lg">
+              <Calendar className="w-6 h-6 text-green-600" />
+            </div>
+          </div>
+          <h3 className="text-3xl font-bold text-gray-800 mb-1">
+            {stats.activeLeaves}
+          </h3>
+          <p className="text-gray-600 text-sm">Cuti Aktif</p>
+        </div>
+
+        <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-100">
+          <div className="flex items-center justify-between mb-4">
+            <div className="bg-orange-100 p-3 rounded-lg">
+              <Clock className="w-6 h-6 text-orange-600" />
+            </div>
+          </div>
+          <h3 className="text-3xl font-bold text-gray-800 mb-1">
+            {stats.avgWorkDuration} th
+          </h3>
+          <p className="text-gray-600 text-sm">Rata-rata Masa Kerja</p>
+        </div>
+
+        <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-100">
+          <div className="flex items-center justify-between mb-4">
+            <div className="bg-yellow-100 p-3 rounded-lg">
+              <CheckCircle className="w-6 h-6 text-yellow-600" />
+            </div>
+          </div>
+          <h3 className="text-3xl font-bold text-gray-800 mb-1">
+            {stats.pendingLeaves}
+          </h3>
+          <p className="text-gray-600 text-sm">Cuti Menunggu Persetujuan</p>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-100">
+          <h3 className="text-lg font-bold text-gray-800 mb-4">
+            Rekap Cuti per Bulan
+          </h3>
+          <ResponsiveContainer width="100%" height={300}>
+            <LineChart data={leavesByMonth}>
+              <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+              <XAxis dataKey="month" tick={{ fontSize: 12 }} />
+              <YAxis tick={{ fontSize: 12 }} />
+              <Tooltip />
+              <Line type="monotone" dataKey="count" stroke="#3b82f6" strokeWidth={2} />
+            </LineChart>
+          </ResponsiveContainer>
+        </div>
+
+        <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-100">
+          <h3 className="text-lg font-bold text-gray-800 mb-4">
+            Status Pengajuan Cuti
+          </h3>
+          <ResponsiveContainer width="100%" height={300}>
+            <BarChart data={leavesByStatus}>
+              <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+              <XAxis dataKey="status" tick={{ fontSize: 12 }} />
+              <YAxis tick={{ fontSize: 12 }} />
+              <Tooltip />
+              <Bar dataKey="count" fill="#3b82f6" radius={[8, 8, 0, 0]} />
+            </BarChart>
+          </ResponsiveContainer>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+
+// ==========================================
+// FILE: src\components\Dashboard\TeacherCardBack.tsx
+// ==========================================
+
+import { QRCodeSVG } from 'qrcode.react';
+import type { Teacher } from '../../types';
+import { Info } from 'lucide-react';
+
+interface TeacherCardBackProps {
+  teacher: Teacher;
+}
+
+export function TeacherCardBack({ teacher }: TeacherCardBackProps) {
+  const profileUrl = `${window.location.origin}/profile/${teacher.id}`;
+
+  return (
+    <div className="id-card-back-container">
+      {/* Visual Overlay for Screen (not printed) */}
+      <div className="hidden print:hidden lg:flex items-center justify-center p-8 bg-gray-100 rounded-xl border-2 border-dashed border-gray-300 mb-8">
+        <div className="text-center">
+          <Info className="w-8 h-8 text-blue-500 mx-auto mb-2" />
+          <p className="text-sm font-medium text-gray-600">
+            Pratinjau Cetak Sisi Belakang Kartu
+          </p>
+          <p className="text-xs text-gray-400 mt-1">
+            Ukuran Standar PVC (54mm x 85.6mm) Portrait
+          </p>
+        </div>
+      </div>
+
+      <style dangerouslySetInnerHTML={{ __html: `
+        @media print {
+          @page {
+            size: 54mm 85.6mm;
+            margin: 0;
+          }
+          * {
+            -webkit-print-color-adjust: exact !important;
+            print-color-adjust: exact !important;
+            color-adjust: exact !important;
+          }
+          body {
+            margin: 0;
+            padding: 0;
+            background: white;
+          }
+        }
+        
+        .id-card-back {
+          width: 54mm;
+          height: 85.6mm;
+          background: linear-gradient(180deg, #0f183b 0%, #060b1c 100%);
+          position: relative;
+          overflow: hidden;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          justify-content: center;
+          color: white;
+          font-family: Arial, sans-serif;
+          margin: 0 auto;
+          box-shadow: 0 10px 25px rgba(0,0,0,0.15);
+          border-radius: 3.18mm;
+        }
+
+        .qr-area {
+          background: white;
+          padding: 10px;
+          border-radius: 12px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          z-index: 10;
+        }
+
+        .cyber-lines {
+          position: absolute;
+          inset: 0;
+          width: 54mm;
+          height: 85.6mm;
+          z-index: 1;
+        }
+      `}} />
+
+      <div className="id-card-print-area">
+        <div className="id-card-back">
+          <div className="cyber-lines">
+            <svg width="100%" height="100%" viewBox="0 0 204 323" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="none">
+              <g stroke="#3b82f6" fill="none" strokeWidth="0.8" opacity="0.6">
+                {/* Left Top */}
+                <path d="M -10 50 L 30 50 L 40 60 L 65 60" />
+                <circle cx="65" cy="60" r="1.5" fill="#60a5fa" stroke="none" />
+                <path d="M -10 70 L 40 70 L 50 80 L 85 80" />
+                <circle cx="85" cy="80" r="1.5" fill="#60a5fa" stroke="none" />
+                <path d="M -10 90 L 20 90 L 30 80 L 55 80" />
+                <circle cx="55" cy="80" r="1.5" fill="#60a5fa" stroke="none" />
+                
+                {/* Right Top */}
+                <path d="M 214 50 L 174 50 L 164 60 L 139 60" />
+                <circle cx="139" cy="60" r="1.5" fill="#60a5fa" stroke="none" />
+                <path d="M 214 70 L 164 70 L 154 80 L 119 80" />
+                <circle cx="119" cy="80" r="1.5" fill="#60a5fa" stroke="none" />
+                <path d="M 214 90 L 184 90 L 174 80 L 149 80" />
+                <circle cx="149" cy="80" r="1.5" fill="#60a5fa" stroke="none" />
+
+                {/* Left Bottom */}
+                <path d="M -10 273 L 30 273 L 40 263 L 65 263" />
+                <circle cx="65" cy="263" r="1.5" fill="#60a5fa" stroke="none" />
+                <path d="M -10 253 L 40 253 L 50 243 L 85 243" />
+                <circle cx="85" cy="243" r="1.5" fill="#60a5fa" stroke="none" />
+                <path d="M -10 233 L 20 233 L 30 243 L 55 243" />
+                <circle cx="55" cy="243" r="1.5" fill="#60a5fa" stroke="none" />
+                
+                {/* Right Bottom */}
+                <path d="M 214 273 L 174 273 L 164 263 L 139 263" />
+                <circle cx="139" cy="263" r="1.5" fill="#60a5fa" stroke="none" />
+                <path d="M 214 253 L 164 253 L 154 243 L 119 243" />
+                <circle cx="119" cy="243" r="1.5" fill="#60a5fa" stroke="none" />
+                <path d="M 214 233 L 184 233 L 174 243 L 149 243" />
+                <circle cx="149" cy="243" r="1.5" fill="#60a5fa" stroke="none" />
+              </g>
+
+              {/* Starry Dust */}
+              <g fill="#fff" opacity="0.3">
+                <circle cx="30" cy="140" r="0.8" />
+                <circle cx="180" cy="110" r="1" />
+                <circle cx="150" cy="180" r="0.6" />
+                <circle cx="50" cy="190" r="1" />
+                <circle cx="90" cy="290" r="0.5" />
+                <circle cx="80" cy="30" r="0.5" />
+                <circle cx="120" cy="300" r="0.8" />
+                <circle cx="160" cy="20" r="0.5" />
+                <circle cx="20" cy="290" r="1" />
+                <circle cx="190" cy="180" r="0.5" />
+                <circle cx="70" cy="120" r="0.4" />
+                <circle cx="130" cy="150" r="0.7" />
+                <circle cx="160" cy="220" r="0.5" />
+                <circle cx="40" cy="210" r="0.6" />
+                <circle cx="100" cy="310" r="0.4" />
+                <circle cx="190" cy="260" r="0.8" />
+                <circle cx="15" cy="40" r="0.7" />
+              </g>
+            </svg>
+          </div>
+          
+          <div className="z-10 flex flex-col items-center h-full w-full">
+            <div className="text-center flex flex-col items-center mt-10">
+              <span className="text-[12px] font-bold tracking-[0.15em] text-blue-100">
+                SCAN FOR
+              </span>
+              <span className="text-[13px] font-bold tracking-[0.1em] text-white mt-[2px]">
+                DIGITAL PROFILE
+              </span>
+            </div>
+
+            <div className="flex-grow flex items-center justify-center">
+              <div className="qr-area shadow-lg">
+                <QRCodeSVG
+                  value={profileUrl}
+                  size={120}
+                  level="H"
+                  marginSize={0}
+                />
+              </div>
+            </div>
+
+            <div className="text-center mb-8">
+              <p className="text-[8px] font-semibold tracking-[0.25em] text-blue-200">
+                SECURE &bull; DIGITAL &bull; VERIFIED
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+
+// ==========================================
+// FILE: src\components\Dashboard\TeacherForm.tsx
+// ==========================================
+
+import { useState, useEffect } from 'react';
+import { supabase } from '../../lib/supabase';
+import { X } from 'lucide-react';
+import type { Teacher } from '../../types';
+
+interface TeacherFormProps {
+  teacher: Teacher | null;
+  onClose: () => void;
+}
+
+export function TeacherForm({ teacher, onClose }: TeacherFormProps) {
+  const [formData, setFormData] = useState({
+    name: '',
+    nik: '',
+    subject: '',
+    email: '',
+    phone: '',
+    join_date: '',
+    birth_date: '',
+    birth_place: '',
+    gender: 'Laki-laki',
+    address: '',
+    education: '',
+    work_unit: '',
+    annual_leave_quota: 12,
+    training_history: '',
+    sp_level: 'Tidak ada',
+  });
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+
+  useEffect(() => {
+    if (teacher) {
+      setFormData({
+        name: teacher.name,
+        nik: teacher.nik,
+        subject: teacher.subject,
+        email: teacher.email,
+        phone: teacher.phone,
+        join_date: teacher.join_date,
+        birth_date: teacher.birth_date || '',
+        birth_place: teacher.birth_place || '',
+        gender: teacher.gender === 'L' ? 'Laki-laki' : teacher.gender === 'P' ? 'Perempuan' : (teacher.gender || 'Laki-laki'),
+        address: teacher.address || '',
+        education: teacher.education || '',
+        work_unit: teacher.work_unit || '',
+        annual_leave_quota: teacher.annual_leave_quota ?? 12,
+        training_history: teacher.training_history || '',
+        sp_level: teacher.sp_level || 'Tidak ada',
+      });
+    }
+  }, [teacher]);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError('');
+    setLoading(true);
+
+    try {
+      if (teacher) {
+        const { error: updateError } = await supabase
+          .from('teachers')
+          .update(formData as any)
+          .eq('id', teacher.id);
+
+        if (updateError) throw updateError;
+      } else {
+        const { error: insertError } = await supabase
+          .from('teachers')
+          .insert([formData as any]);
+
+        if (insertError) throw insertError;
+      }
+
+      onClose();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Terjadi kesalahan');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+      <div className="bg-white rounded-xl shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+        <div className="sticky top-0 bg-white border-b px-6 py-4 flex justify-between items-center">
+          <h2 className="text-xl font-bold text-gray-800">
+            {teacher ? 'Edit Guru' : 'Tambah Guru Baru'}
+          </h2>
+          <button
+            onClick={onClose}
+            className="text-gray-400 hover:text-gray-600 transition-colors"
+          >
+            <X className="w-6 h-6" />
+          </button>
+        </div>
+
+        <form onSubmit={handleSubmit} className="p-6 space-y-4">
+          {error && (
+            <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg">
+              {error}
+            </div>
+          )}
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Nama Lengkap
+            </label>
+            <input
+              type="text"
+              value={formData.name}
+              onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              required
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              NIK
+            </label>
+            <input
+              type="text"
+              value={formData.nik}
+              onChange={(e) => setFormData({ ...formData, nik: e.target.value })}
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              required
+              disabled={!!teacher}
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Mata Pelajaran
+            </label>
+            <input
+              type="text"
+              value={formData.subject}
+              onChange={(e) => setFormData({ ...formData, subject: e.target.value })}
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              required
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Email
+            </label>
+            <input
+              type="email"
+              value={formData.email}
+              onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              required
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Nomor Telepon
+            </label>
+            <input
+              type="tel"
+              value={formData.phone}
+              onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              required
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Tanggal Bergabung
+            </label>
+            <input
+              type="date"
+              value={formData.join_date}
+              onChange={(e) => setFormData({ ...formData, join_date: e.target.value })}
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              required
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Tempat Lahir
+            </label>
+            <input
+              type="text"
+              value={formData.birth_place}
+              onChange={(e) => setFormData({ ...formData, birth_place: e.target.value })}
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              placeholder="Contoh: Jakarta"
+              required
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Tanggal Lahir
+            </label>
+            <input
+              type="date"
+              value={formData.birth_date}
+              onChange={(e) => setFormData({ ...formData, birth_date: e.target.value })}
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              required
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Jenis Kelamin
+            </label>
+            <select
+              value={formData.gender}
+              onChange={(e) => setFormData({ ...formData, gender: e.target.value })}
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              required
+            >
+              <option value="Laki-laki">Laki-laki</option>
+              <option value="Perempuan">Perempuan</option>
+            </select>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Pendidikan Terakhir
+            </label>
+            <select
+              value={formData.education}
+              onChange={(e) => setFormData({ ...formData, education: e.target.value })}
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              required
+            >
+              <option value="" disabled>Pilih Pendidikan</option>
+              <option value="SMA/SMK">SMA/SMK</option>
+              <option value="D3">D3</option>
+              <option value="S1">S1</option>
+              <option value="S2">S2</option>
+              <option value="S3">S3</option>
+            </select>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Sekolah Bertugas
+            </label>
+            <input
+              type="text"
+              value={formData.work_unit}
+              onChange={(e) => setFormData({ ...formData, work_unit: e.target.value })}
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              placeholder="Contoh: SMKN 1 Jakarta"
+              required
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Kuota Cuti Tahunan
+            </label>
+            <input
+              type="number"
+              min="0"
+              value={formData.annual_leave_quota}
+              onChange={(e) => setFormData({ ...formData, annual_leave_quota: parseInt(e.target.value) || 0 })}
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              required
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Status Kedisiplinan (SP)
+            </label>
+            <select
+              value={formData.sp_level}
+              onChange={(e) => setFormData({ ...formData, sp_level: e.target.value })}
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              required
+            >
+              <option value="Tidak ada">Tidak ada</option>
+              <option value="SP 1">SP 1</option>
+              <option value="SP 2">SP 2</option>
+              <option value="SP 3">SP 3</option>
+            </select>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Riwayat Training
+            </label>
+            <textarea
+              value={formData.training_history}
+              onChange={(e) => setFormData({ ...formData, training_history: e.target.value })}
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              rows={4}
+              placeholder="Masukkan riwayat pelatihan/training yang pernah diikuti..."
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Alamat Lengkap
+            </label>
+            <textarea
+              value={formData.address}
+              onChange={(e) => setFormData({ ...formData, address: e.target.value })}
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              rows={3}
+              required
+            />
+          </div>
+
+          <div className="flex justify-end space-x-3 pt-4">
+            <button
+              type="button"
+              onClick={onClose}
+              className="px-6 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
+            >
+              Batal
+            </button>
+            <button
+              type="submit"
+              disabled={loading}
+              className="px-6 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors disabled:bg-blue-300"
+            >
+              {loading ? 'Menyimpan...' : teacher ? 'Update' : 'Simpan'}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+}
+
+
+// ==========================================
+// FILE: src\components\Dashboard\TeacherList.tsx
+// ==========================================
+
+import { useState, useMemo, useRef } from 'react';
+import { QRCodeSVG } from 'qrcode.react';
+import { supabase } from '../../lib/supabase';
+import { Search, Download, Edit, Trash2, QrCode, FileSpreadsheet, Eye } from 'lucide-react';
+import { differenceInDays, parseISO, format, parse, isValid } from 'date-fns';
+import { id, enUS } from 'date-fns/locale';
+import { Printer, X as CloseIcon } from 'lucide-react';
+import * as XLSX from 'xlsx';
+import type { Teacher, Leave } from '../../types';
+import { TeacherCardBack } from './TeacherCardBack';
+
+interface TeacherListProps {
+  teachers: Teacher[];
+  leaves: Leave[];
+  onEdit?: (teacher: Teacher) => void;
+  onDelete?: () => void;
+  onRefresh?: () => void;
+}
+
+export function TeacherList({ teachers, leaves, onEdit, onDelete, onRefresh }: TeacherListProps) {
+  const [searchTerm, setSearchTerm] = useState('');
+  const [subjectFilter, setSubjectFilter] = useState('');
+  const [showQRModal, setShowQRModal] = useState<Teacher | null>(null);
+  const [showPrintModal, setShowPrintModal] = useState<Teacher | null>(null);
+  const [importing, setImporting] = useState(false);
+  const qrRef = useRef<HTMLDivElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const subjects = useMemo(() => {
+    return Array.from(new Set(teachers.map((t) => t.subject))).sort();
+  }, [teachers]);
+
+  const filteredTeachers = useMemo(() => {
+    return teachers.filter((teacher) => {
+      const matchesSearch =
+        teacher.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        teacher.nik.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        teacher.email.toLowerCase().includes(searchTerm.toLowerCase());
+
+      const matchesSubject = !subjectFilter || teacher.subject === subjectFilter;
+
+      return matchesSearch && matchesSubject;
+    });
+  }, [teachers, searchTerm, subjectFilter]);
+
+  const getWorkDuration = (joinDate: string) => {
+    const days = differenceInDays(new Date(), parseISO(joinDate));
+    const years = Math.floor(days / 365);
+    const months = Math.floor((days % 365) / 30);
+
+    if (years > 0) {
+      return `${years} tahun ${months} bulan`;
+    }
+    return `${months} bulan`;
+  };
+
+  const getTeacherLeaves = (teacherId: string) => {
+    return leaves.filter((leave) => leave.teacher_id === teacherId);
+  };
+
+  const getActiveLeaves = (teacherId: string) => {
+    return leaves.filter(
+      (leave) =>
+        leave.teacher_id === teacherId &&
+        leave.status === 'approved' &&
+        new Date(leave.start_date) <= new Date() &&
+        new Date(leave.end_date) >= new Date()
+    );
+  };
+
+  const handleDelete = async (teacher: Teacher) => {
+    if (!confirm(`Apakah Anda yakin ingin menghapus data ${teacher.name}?`)) {
+      return;
+    }
+
+    try {
+      const { error } = await supabase
+        .from('teachers')
+        .delete()
+        .eq('id', teacher.id);
+
+      if (error) throw error;
+
+      alert('Data guru berhasil dihapus');
+      onDelete?.();
+    } catch (error) {
+      alert('Gagal menghapus data guru');
+      console.error(error);
+    }
+  };
+
+  const handleDownloadQR = (teacher: Teacher) => {
+    const svg = qrRef.current?.querySelector('svg');
+    if (!svg) return;
+
+    const svgData = new XMLSerializer().serializeToString(svg);
+    const canvas = document.createElement('canvas');
+    const ctx = canvas.getContext('2d');
+    const img = new Image();
+
+    img.onload = () => {
+      canvas.width = img.width;
+      canvas.height = img.height;
+      ctx?.drawImage(img, 0, 0);
+
+      canvas.toBlob((blob) => {
+        if (blob) {
+          const url = URL.createObjectURL(blob);
+          const link = document.createElement('a');
+          link.href = url;
+          link.download = `qr-${teacher.nik}.png`;
+          link.click();
+          URL.revokeObjectURL(url);
+        }
+      });
+    };
+
+    img.src = 'data:image/svg+xml;base64,' + btoa(unescape(encodeURIComponent(svgData)));
+  };
+
+  const handleExportExcel = () => {
+    const exportData = filteredTeachers.map((t) => {
+      return {
+        'Nama': t.name,
+        'NIK': t.nik,
+        'Tempat Lahir': t.birth_place || '',
+        'Tanggal Lahir': t.birth_date || '',
+        'Jenis Kelamin': t.gender || '',
+        'Mata Pelajaran': t.subject,
+        'Tanggal Bergabung': t.join_date,
+        'Pendidikan': t.education || '',
+        'Sekolah Bertugas': t.work_unit || '',
+         'Email': t.email,
+        'Telepon': t.phone,
+        'Alamat': t.address || '',
+        'Status SP': t.sp_level || 'Tidak ada',
+        'Riwayat Training': t.training_history || '',
+        'Total Cuti': (t as any).leaves?.length || 0
+      };
+    });
+
+    const ws = XLSX.utils.json_to_sheet(exportData);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'Data Guru');
+
+    XLSX.writeFile(wb, `data-guru-${format(new Date(), 'yyyy-MM-dd')}.xlsx`);
+  };
+
+  const handleDownloadTemplate = () => {
+    const templateData = [
+      {
+        'Nama': 'Joko Setyo Nugroho, S.T',
+        'NIK': '940866',
+        'Tempat Lahir': 'Jakarta',
+        'Tanggal Lahir': '1994-08-31',
+        'Jenis Kelamin': 'Laki-laki',
+        'Mata Pelajaran': 'TKR',
+        'Tanggal Bergabung': '2022-03-01',
+        'Pendidikan': 'S1',
+        'Sekolah Bertugas': 'SMKN 1 Jakarta',
+        'Email': 'joko@example.com',
+        'Telepon': '08123456789',
+        'Alamat': 'Jl. Contoh No. 123, Kota Bandung'
+      }
+    ];
+
+    const ws = XLSX.utils.json_to_sheet(templateData);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'Template Guru');
+    XLSX.writeFile(wb, 'template-guru-sync.xlsx');
+  };
+
+  const handleImportExcel = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setImporting(true);
+    const reader = new FileReader();
+    reader.onload = async (evt) => {
+      try {
+        const bstr = evt.target?.result;
+        const wb = XLSX.read(bstr, { type: 'binary', cellDates: true });
+        const wsname = wb.SheetNames[0];
+        const ws = wb.Sheets[wsname];
+        const data = XLSX.utils.sheet_to_json(ws) as any[];
+
+        const parseExcelDate = (val: any): string | null => {
+          if (!val) return null;
+          
+          if (val instanceof Date && !isNaN(val.getTime())) {
+            // Use manual date components to avoid timezone shift
+            const year = val.getFullYear();
+            const month = String(val.getMonth() + 1).padStart(2, '0');
+            const day = String(val.getDate()).padStart(2, '0');
+            return `${year}-${month}-${day}`;
+          }
+
+          if (typeof val === 'number') {
+            const date = XLSX.SSF.parse_date_code(val);
+            // date object from SSF has y, m, d
+            const month = String(date.m).padStart(2, '0');
+            const day = String(date.d).padStart(2, '0');
+            return `${date.y}-${month}-${day}`;
+          }
+
+          if (typeof val === 'string') {
+            const dateStr = val.trim();
+            if (!dateStr) return null;
+
+            const formats = ['yyyy-MM-dd', 'dd-MM-yyyy', 'dd/MM/yyyy', 'd-MMM-yy', 'd-MMM-yyyy', 'MMM d, yyyy', 'MMMM d, yyyy'];
+            const locales = [id, enUS];
+
+            for (const f of formats) {
+              for (const locale of locales) {
+                try {
+                  const parsed = parse(dateStr, f, new Date(), { locale });
+                  if (isValid(parsed)) return format(parsed, 'yyyy-MM-dd');
+                } catch (e) { /* ignore */ }
+              }
+            }
+            
+            const isoParsed = parseISO(dateStr);
+            if (isValid(isoParsed)) return format(isoParsed, 'yyyy-MM-dd');
+          }
+          return null;
+        };
+
+        const getRowVal = (row: any, possibleKeys: string[]) => {
+          const key = Object.keys(row).find(k => 
+            possibleKeys.some(pk => k.toLowerCase().replace(/[^a-z0-9]/g, '').trim() === pk.toLowerCase().replace(/[^a-z0-9]/g, '').trim())
+          );
+          return key ? row[key] : undefined;
+        };
+
+        const totalRows = data.length;
+        const foundColumns = totalRows > 0 ? Object.keys(data[0]) : [];
+
+        const teachersToUpsert = data.map((row: any) => {
+          const name = getRowVal(row, ['Nama', 'Nama Guru', 'Name', 'Full Name', 'Nama Lengkap']);
+          const nikRaw = getRowVal(row, ['NIK', 'N.I.K', 'No NIK', 'Nomor NIK', 'Identity Number', 'nik']);
+          
+          if (!name || (!nikRaw && nikRaw !== 0)) return null;
+
+          const nik = String(nikRaw).trim();
+          if (nik === 'undefined' || !nik || nik === '-') return null;
+
+          const sanitizeField = (val: any) => {
+            if (val === undefined || val === null) return '';
+            const str = String(val).trim();
+            return (str === '-' || str === 'strip') ? '' : str;
+          };
+
+          return {
+            name: String(name).trim(),
+            nik: nik,
+            birth_place: sanitizeField(getRowVal(row, ['Tempat Lahir', 'birth_place', 'Place of Birth', 'Kota Lahir'])),
+            birth_date: parseExcelDate(getRowVal(row, ['Tanggal Lahir', 'birth_date', 'Date of Birth', 'Tgl Lahir'])),
+            gender: (() => {
+              const val = sanitizeField(getRowVal(row, ['Jenis Kelamin', 'gender', 'Sex', 'Gender', 'Kelamin', 'L/P']));
+              if (!val) return 'Laki-laki';
+              const normalized = val.toLowerCase();
+              if (normalized === 'l' || normalized === 'laki-laki') return 'Laki-laki';
+              if (normalized === 'p' || normalized === 'perempuan') return 'Perempuan';
+              return val;
+            })(),
+            subject: sanitizeField(getRowVal(row, ['Mata Pelajaran', 'subject', 'Subject', 'Mapel'])) || 'Lainnya',
+            join_date: parseExcelDate(getRowVal(row, ['Tanggal Bergabung', 'join_date', 'Join Date', 'Tgl Bergabung', 'Tgl Masuk'])) || new Date().toISOString().split('T')[0],
+            education: sanitizeField(getRowVal(row, ['Pendidikan', 'education', 'Education', 'Pendidikan Terakhir'])),
+            work_unit: sanitizeField(getRowVal(row, ['Sekolah Bertugas', 'work_unit', 'Work Unit', 'Kampus', 'Unit Kerja', 'Sekolah'])),
+            email: sanitizeField(getRowVal(row, ['Email', 'email'])),
+            phone: sanitizeField(getRowVal(row, ['Telepon', 'phone', 'Phone', 'Mobile', 'No HP', 'No Telp'])),
+            address: sanitizeField(getRowVal(row, ['Alamat', 'address', 'Address', 'Alamat Lengkap'])),
+          };
+        }).filter((t): t is any => t !== null);
+
+        const processedCount = teachersToUpsert.length;
+        const skippedCount = totalRows - processedCount;
+
+        if (processedCount === 0) {
+          throw new Error(`Tidak ada data valid. Pastikan kolom Nama dan NIK ada.\n\nKolom yang ditemukan di file Anda: \n${foundColumns.join(', ')}`);
+        }
+
+        const { error: upsertError } = await (supabase
+          .from('teachers') as any)
+          .upsert(teachersToUpsert, { onConflict: 'nik' });
+
+        if (upsertError) throw upsertError;
+
+        let summaryMsg = `Berhasil memproses ${processedCount} data guru.`;
+        if (skippedCount > 0) {
+          summaryMsg += `\n\n${skippedCount} baris dilewati (karena Nama atau NIK kosong).`;
+        }
+        summaryMsg += `\n\nSilakan jalankan sinkronisasi akun untuk mengaktifkan login.`;
+        
+        alert(summaryMsg);
+        onRefresh?.();
+      } catch (err: any) {
+        console.error('Error importing excel:', err);
+        const errMsg = err?.message || (typeof err === 'string' ? err : 'Format file salah atau kolom tidak sesuai');
+        alert(`Gagal mengimport data: ${errMsg}`);
+      } finally {
+        setImporting(false);
+        if (fileInputRef.current) fileInputRef.current.value = '';
+      }
+    };
+    reader.readAsBinaryString(file);
+  };
+
+  const getProfileUrl = (teacherId: string) => {
+    return `${window.location.origin}/profile/${teacherId}`;
+  };
+
+  return (
+    <div className="space-y-6">
+      <div className="bg-white rounded-xl shadow-sm p-4 border border-gray-100">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="md:col-span-2">
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+              <input
+                type="text"
+                placeholder="Cari nama, NIK, atau email..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              />
+            </div>
+          </div>
+
+          <div>
+            <select
+              value={subjectFilter}
+              onChange={(e) => setSubjectFilter(e.target.value)}
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            >
+              <option value="">Semua Mata Pelajaran</option>
+              {subjects.map((subject) => (
+                <option key={subject} value={subject}>
+                  {subject}
+                </option>
+              ))}
+            </select>
+          </div>
+        </div>
+
+        <div className="flex justify-between items-center mt-4 pt-4 border-t flex-wrap gap-2">
+          <p className="text-sm text-gray-600">
+            Menampilkan {filteredTeachers.length} dari {teachers.length} guru
+          </p>
+          <div className="flex items-center space-x-2 flex-wrap sm:flex-nowrap">
+            <input
+              type="file"
+              ref={fileInputRef}
+              onChange={handleImportExcel}
+              accept=".xlsx, .xls"
+              className="hidden"
+            />
+            {onRefresh && (
+              <>
+                <button
+                  onClick={handleDownloadTemplate}
+                  className="flex items-center space-x-2 px-4 py-2 bg-gray-100 text-gray-600 rounded-lg hover:bg-gray-200 transition-colors"
+                >
+                  <Download className="w-4 h-4" />
+                  <span>Template</span>
+                </button>
+                <button
+                  onClick={() => fileInputRef.current?.click()}
+                  disabled={importing}
+                  className="flex items-center space-x-2 px-4 py-2 bg-blue-100 text-blue-600 rounded-lg hover:bg-blue-200 transition-colors disabled:opacity-50"
+                >
+                  <FileSpreadsheet className="w-4 h-4" />
+                  <span>{importing ? 'Importing...' : 'Import Excel'}</span>
+                </button>
+              </>
+            )}
+            <button
+              onClick={handleExportExcel}
+              className="flex items-center space-x-2 px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors"
+            >
+              <FileSpreadsheet className="w-4 h-4" />
+              <span>Export Excel</span>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {filteredTeachers.map((teacher) => {
+          const activeLeaves = getActiveLeaves(teacher.id);
+          const totalLeaves = getTeacherLeaves(teacher.id);
+
+          return (
+            <div
+              key={teacher.id}
+              className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden hover:shadow-md transition-shadow"
+            >
+              <div className="p-6">
+                <div className="flex justify-between items-start mb-4">
+                  <div>
+                    <h3 className="font-bold text-lg text-gray-800 mb-1">
+                      {teacher.name}
+                    </h3>
+                    <p className="text-sm text-gray-600">NIK: {teacher.nik}</p>
+                  </div>
+                  {activeLeaves.length > 0 && (
+                    <span className="px-2 py-1 bg-orange-100 text-orange-700 text-xs font-medium rounded-full">
+                      Cuti
+                    </span>
+                  )}
+                  {teacher.sp_level && teacher.sp_level !== 'Tidak ada' && (
+                    <span className="px-2 py-1 bg-red-100 text-red-700 text-xs font-medium rounded-full">
+                      {teacher.sp_level}
+                    </span>
+                  )}
+                </div>
+
+                <div className="space-y-2 mb-4">
+                  <div className="flex items-center text-sm text-gray-600">
+                    <span className="font-medium w-24">Mapel:</span>
+                    <span>{teacher.subject}</span>
+                  </div>
+                  <div className="flex items-center text-sm text-gray-600">
+                    <span className="font-medium w-24">Email:</span>
+                    <span className="truncate">{teacher.email}</span>
+                  </div>
+                  <div className="flex items-center text-sm text-gray-600">
+                    <span className="font-medium w-24">Telepon:</span>
+                    <span>{teacher.phone}</span>
+                  </div>
+                  <div className="flex items-center text-sm text-gray-600">
+                    <span className="font-medium w-24">Masa Kerja:</span>
+                    <span>{getWorkDuration(teacher.join_date)}</span>
+                  </div>
+                  <div className="flex items-center text-sm text-gray-600">
+                    <span className="font-medium w-24">Total Cuti:</span>
+                    <span>{totalLeaves.length} kali</span>
+                  </div>
+                </div>
+
+                <div className="flex space-x-2">
+                  <a
+                    href={`/profile/${teacher.id}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex-1 flex items-center justify-center space-x-1 px-3 py-2 bg-blue-50 text-blue-600 rounded-lg hover:bg-blue-100 transition-colors text-sm"
+                  >
+                    <Eye className="w-4 h-4" />
+                    <span>Profil</span>
+                  </a>
+                  <button
+                    onClick={() => setShowPrintModal(teacher)}
+                    className="flex-1 flex items-center justify-center space-x-1 px-3 py-2 bg-indigo-50 text-indigo-600 rounded-lg hover:bg-indigo-100 transition-colors text-sm"
+                  >
+                    <Printer className="w-4 h-4" />
+                    <span>Card</span>
+                  </button>
+                  <button
+                    onClick={() => setShowQRModal(teacher)}
+                    className="flex-1 flex items-center justify-center space-x-1 px-3 py-2 bg-gray-50 text-gray-700 rounded-lg hover:bg-gray-100 transition-colors text-sm"
+                  >
+                    <QrCode className="w-4 h-4" />
+                    <span>QR</span>
+                  </button>
+                  {onEdit && (
+                    <button
+                      onClick={() => onEdit(teacher)}
+                      className="px-3 py-2 bg-yellow-50 text-yellow-600 rounded-lg hover:bg-yellow-100 transition-colors"
+                    >
+                      <Edit className="w-4 h-4" />
+                    </button>
+                  )}
+                  {onDelete && (
+                    <button
+                      onClick={() => handleDelete(teacher)}
+                      className="px-3 py-2 bg-red-50 text-red-600 rounded-lg hover:bg-red-100 transition-colors"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  )}
+                </div>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+
+      {showQRModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-xl shadow-xl max-w-md w-full p-6">
+            <div className="flex justify-between items-center mb-6">
+              <h3 className="text-xl font-bold text-gray-800">QR Code</h3>
+              <button
+                onClick={() => setShowQRModal(null)}
+                className="text-gray-400 hover:text-gray-600"
+              >
+                <CloseIcon className="w-6 h-6" />
+              </button>
+            </div>
+
+            <div className="text-center space-y-4">
+              <p className="text-gray-600">{showQRModal.name}</p>
+              <div ref={qrRef} className="flex justify-center bg-white p-4">
+                <QRCodeSVG
+                  value={getProfileUrl(showQRModal.id)}
+                  size={256}
+                  level="H"
+                  includeMargin
+                />
+              </div>
+              <button
+                onClick={() => handleDownloadQR(showQRModal)}
+                className="w-full flex items-center justify-center space-x-2 px-4 py-3 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
+              >
+                <Download className="w-5 h-5" />
+                <span>Download QR Code</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {showPrintModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50 overflow-y-auto">
+          <div className="bg-white rounded-xl shadow-xl max-w-2xl w-full p-8 my-auto relative">
+            <button
+              onClick={() => setShowPrintModal(null)}
+              className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 print:hidden"
+            >
+              <CloseIcon className="w-6 h-6" />
+            </button>
+
+            <div className="text-center mb-8 print:hidden">
+              <h3 className="text-2xl font-bold text-gray-800">Cetak Sisi Belakang Kartu</h3>
+              <p className="text-gray-500 mt-2">Pastikan pengaturan printer menggunakan "No Margins" dan ukuran kertas "CR80" atau sesuai ukuran ID Card.</p>
+            </div>
+
+            <div className="flex justify-center mb-8">
+              <TeacherCardBack teacher={showPrintModal} />
+            </div>
+
+            <div className="flex justify-center space-x-3 print:hidden">
+              <button
+                onClick={() => setShowPrintModal(null)}
+                className="px-6 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
+              >
+                Tutup
+              </button>
+              <button
+                onClick={() => {
+                  const printArea = document.querySelector('.id-card-print-area');
+                  if (!printArea) return window.print();
+                  
+                  const root = document.getElementById('root');
+                  const origDisplay = root ? root.style.display : '';
+                  if (root) root.style.display = 'none';
+                  
+                  const printContainer = document.createElement('div');
+                  printContainer.id = 'temp-print-container';
+                  printContainer.style.position = 'fixed';
+                  printContainer.style.left = '0';
+                  printContainer.style.top = '0';
+                  printContainer.style.width = '100%';
+                  printContainer.style.height = '100%';
+                  printContainer.style.background = 'white';
+                  printContainer.style.zIndex = '99999';
+                  
+                  const clone = printArea.cloneNode(true) as HTMLElement;
+                  printContainer.appendChild(clone);
+                  document.body.appendChild(printContainer);
+                  
+                  window.print();
+                  
+                  document.body.removeChild(printContainer);
+                  if (root) root.style.display = origDisplay;
+                }}
+                className="flex items-center space-x-2 px-6 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors"
+              >
+                <Printer className="w-5 h-5" />
+                <span>Cetak Sekarang</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+
+// ==========================================
+// FILE: src\components\Profile\TeacherProfile.tsx
+// ==========================================
+
+import { useEffect, useState } from 'react';
+import { supabase } from '../../lib/supabase';
+import { useAuth } from '../../contexts/AuthContext';
+import { 
+  User, Mail, Phone, Calendar, Briefcase, 
+  MapPin, GraduationCap, CalendarDays, 
+  Contact, Info, ShieldCheck, ChevronRight,
+  Award, ShieldAlert
+} from 'lucide-react';
+import { format, parseISO, differenceInDays } from 'date-fns';
+import { id } from 'date-fns/locale';
+import type { Teacher, Leave } from '../../types';
+
+interface TeacherProfileProps {
+  teacherId: string;
+}
+
+export function TeacherProfile({ teacherId }: TeacherProfileProps) {
+  const [teacher, setTeacher] = useState<Teacher | null>(null);
+  const [leaves, setLeaves] = useState<Leave[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [uploading, setUploading] = useState(false);
+  const { user, profile } = useAuth();
+
+  const canEdit = profile?.role === 'admin' || (user && teacher && user.id === teacher.user_id);
+
+  useEffect(() => {
+    loadTeacherData();
+  }, [teacherId]);
+
+  const handleAvatarUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    try {
+      setUploading(true);
+      const file = event.target.files?.[0];
+      if (!file) return;
+
+      const maxSize = 2 * 1024 * 1024;
+      if (file.size > maxSize) {
+        alert('Ukuran file terlalu besar. Maksimal 2MB.');
+        return;
+      }
+
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${teacherId}-${Math.random()}.${fileExt}`;
+      const filePath = `${fileName}`;
+
+      await supabase.storage.from('avatars').upload(filePath, file);
+      const { data: { publicUrl } } = supabase.storage.from('avatars').getPublicUrl(filePath);
+
+      const { error: updateError } = await (supabase.from('teachers') as any)
+        .update({ avatar_url: publicUrl })
+        .eq('id', teacherId);
+
+      if (updateError) throw updateError;
+      setTeacher(prev => prev ? { ...prev, avatar_url: publicUrl } : null);
+      alert('Foto profil diperbarui!');
+    } catch (error) {
+      console.error('Error uploading avatar:', error);
+      alert('Gagal mengupload foto profil');
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  const loadTeacherData = async () => {
+    setLoading(true);
+    try {
+      const [teacherRes, leavesRes] = await Promise.all([
+        supabase.from('teachers').select('*').eq('id', teacherId).maybeSingle(),
+        supabase.from('leaves').select('*').eq('teacher_id', teacherId).order('start_date', { ascending: false }),
+      ]);
+      if (teacherRes.data) setTeacher(teacherRes.data as any);
+      if (leavesRes.data) setLeaves(leavesRes.data as any);
+    } catch (error) {
+      console.error('Error loading data:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const getWorkDuration = (joinDate: string) => {
+    const days = differenceInDays(new Date(), parseISO(joinDate));
+    return `${Math.floor(days / 365)} thn ${Math.floor((days % 365) / 30)} bln`;
+  };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-white flex items-center justify-center">
+        <div className="animate-pulse flex flex-col items-center">
+          <div className="w-16 h-16 bg-slate-100 rounded-full mb-4"></div>
+          <div className="h-4 w-32 bg-slate-50 rounded"></div>
+        </div>
+      </div>
+    );
+  }
+
+  if (!teacher) {
+    return (
+      <div className="min-h-screen bg-slate-50 flex items-center justify-center p-6">
+        <div className="text-center max-w-sm">
+          <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
+            <Info className="w-12 h-12 text-slate-300 mx-auto mb-4" />
+            <h2 className="text-xl font-bold text-slate-800">Profil Tidak Tersedia</h2>
+            <p className="text-slate-500 mt-2">ID Guru tidak valid atau datanya telah dihapus.</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  const activeLeave = leaves.find(l => 
+    l.status === 'approved' && new Date(l.start_date) <= new Date() && new Date(l.end_date) >= new Date()
+  );
+
+  const annualLeaveQuota = teacher.annual_leave_quota ?? 12;
+  const currentYear = new Date().getFullYear();
+  const usedAnnualLeaves = leaves
+    .filter(l => 
+      l.leave_type === 'Cuti Tahunan' && 
+      l.status === 'approved' &&
+      new Date(l.start_date).getFullYear() === currentYear
+    )
+    .reduce((total, l) => total + (differenceInDays(parseISO(l.end_date), parseISO(l.start_date)) + 1), 0);
+  const remainingAnnualLeaves = Math.max(0, annualLeaveQuota - usedAnnualLeaves);
+
+  return (
+    <div className="min-h-screen bg-[#FDFDFE] selection:bg-blue-100 selection:text-blue-700 pb-20">
+      {/* Visual Top Bar */}
+      <div className="h-1.5 w-full bg-gradient-to-r from-blue-500 to-indigo-600"></div>
+
+      <div className="max-w-4xl mx-auto px-4 sm:px-6">
+        {/* Profile Card Main */}
+        <div className="mt-12 group">
+          <div className="bg-white rounded-[2.5rem] shadow-[0_20px_50px_rgba(8,_112,_184,_0.07)] border border-slate-50 overflow-hidden">
+            
+            {/* Header Content */}
+            <div className="pt-12 pb-10 px-8 text-center sm:text-left flex flex-col sm:flex-row items-center sm:items-end gap-8">
+              <div className="relative">
+                <div className="w-36 h-36 rounded-[2rem] overflow-hidden bg-slate-50 ring-8 ring-slate-50/50 shadow-inner group-hover:ring-blue-50 transition-all duration-500">
+                  {teacher.avatar_url ? (
+                    <img src={teacher.avatar_url} alt="" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" />
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center"><User className="w-16 h-16 text-slate-200" /></div>
+                  )}
+                  {canEdit && (
+                    <label className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-all flex items-center justify-center cursor-pointer backdrop-blur-[2px]">
+                      <input type="file" className="hidden" accept="image/*" onChange={handleAvatarUpload} disabled={uploading} />
+                      <span className="text-white text-[10px] font-black tracking-widest uppercase">{uploading ? '...' : 'Upload'}</span>
+                    </label>
+                  )}
+                </div>
+                {activeLeave && (
+                  <div className="absolute -top-2 -right-2 bg-rose-500 w-8 h-8 rounded-full border-4 border-white flex items-center justify-center animate-bounce shadow-md">
+                    <div className="w-2 h-2 bg-white rounded-full"></div>
+                  </div>
+                )}
+              </div>
+
+              <div className="flex-1 space-y-3">
+                <div className="inline-flex items-center gap-2 px-3 py-1 bg-blue-50 text-blue-600 rounded-full text-[10px] font-black uppercase tracking-widest border border-blue-100">
+                  <ShieldCheck className="w-3 h-3" />
+                  {teacher.subject}
+                </div>
+                <h1 className="text-4xl font-extrabold text-slate-800 tracking-tight leading-tight">
+                  {teacher.name}
+                </h1>
+                <p className="text-slate-500 font-medium flex items-center justify-center sm:justify-start gap-2 text-sm italic">
+                  {teacher.work_unit || 'Guru Sync Network'}
+                </p>
+              </div>
+
+              <div className="hidden sm:block pb-2">
+                 <div className={`px-4 py-3 rounded-2xl border text-center transition-all ${activeLeave ? 'bg-rose-50 border-rose-100' : 'bg-emerald-50 border-emerald-100'}`}>
+                    <p className={`text-[10px] font-black uppercase tracking-[0.2em] mb-1 ${activeLeave ? 'text-rose-500' : 'text-emerald-500'}`}>
+                      STATUS
+                    </p>
+                    <p className={`text-sm font-bold ${activeLeave ? 'text-rose-700' : 'text-emerald-700'}`}>
+                      {activeLeave ? 'Sedang Cuti' : 'Aktif Bekerja'}
+                    </p>
+                 </div>
+              </div>
+            </div>
+
+            {/* Info Grid Split */}
+            <div className="grid grid-cols-1 md:grid-cols-12 border-t border-slate-50/80">
+              {/* Personal Data Column */}
+              <div className="md:col-span-8 p-10 space-y-12">
+                <section>
+                  <div className="flex items-center justify-between mb-8">
+                    <h2 className="text-lg font-bold text-slate-800 flex items-center gap-3">
+                      Data Pribadi
+                    </h2>
+                    <div className="h-px flex-1 bg-slate-50 ml-6"></div>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-y-10 gap-x-12">
+                    {[
+                      { label: 'NIK', value: teacher.nik, icon: Contact },
+                      { 
+                        label: 'TTL', 
+                        value: `${teacher.birth_place ? `${teacher.birth_place}, ` : ''}${teacher.birth_date ? format(parseISO(teacher.birth_date), 'dd MMM yyyy', { locale: id }) : '-'}`, 
+                        icon: CalendarDays 
+                      },
+                      { 
+                        label: 'Kelamin', 
+                        value: teacher.gender === 'L' ? 'Laki-laki' : teacher.gender === 'P' ? 'Perempuan' : (teacher.gender || '-'),
+                        icon: Contact 
+                      },
+                      { label: 'Pendidikan', value: teacher.education || '-', icon: GraduationCap },
+                    ].map((item, i) => (
+                      <div key={i} className="flex gap-4 group/item">
+                        <div className="w-10 h-10 rounded-xl bg-slate-50 flex items-center justify-center text-slate-400 group-hover/item:text-blue-500 group-hover/item:bg-blue-50 transition-all">
+                          <item.icon className="w-5 h-5" />
+                        </div>
+                        <div>
+                          <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">{item.label}</p>
+                          <p className="text-sm font-bold text-slate-700">{item.value}</p>
+                        </div>
+                      </div>
+                    ))}
+                    <div className="sm:col-span-2 flex gap-4 pr-10">
+                      <div className="w-10 h-10 rounded-xl bg-slate-50 flex items-center justify-center text-slate-400 shrink-0"><MapPin className="w-5 h-5" /></div>
+                      <div>
+                        <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Alamat</p>
+                        <p className="text-sm font-bold text-slate-700 leading-relaxed">{teacher.address || '-'}</p>
+                      </div>
+                    </div>
+                  </div>
+                </section>
+
+                <section>
+                  <div className="flex items-center justify-between mb-8">
+                    <h2 className="text-lg font-bold text-slate-800 flex items-center gap-3">
+                      Kedisiplinan & Pengembangan
+                    </h2>
+                    <div className="h-px flex-1 bg-slate-50 ml-6"></div>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-y-10 gap-x-12 mb-10">
+                    <div className="flex gap-4 group/item">
+                      <div className={`w-10 h-10 rounded-xl flex items-center justify-center transition-all ${
+                        teacher.sp_level && teacher.sp_level !== 'Tidak ada' 
+                        ? 'bg-rose-50 text-rose-500' 
+                        : 'bg-emerald-50 text-emerald-500'
+                      }`}>
+                        <ShieldAlert className="w-5 h-5" />
+                      </div>
+                      <div>
+                        <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Status Kedisiplinan</p>
+                        <p className={`text-sm font-bold ${
+                          teacher.sp_level && teacher.sp_level !== 'Tidak ada' ? 'text-rose-700' : 'text-emerald-700'
+                        }`}>
+                          {teacher.sp_level || 'Tidak ada'}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div>
+                    <div className="flex items-center gap-3 mb-4">
+                      <Award className="w-5 h-5 text-blue-500" />
+                      <h3 className="text-sm font-bold text-slate-700 uppercase tracking-wider">Riwayat Training</h3>
+                    </div>
+                    <div className="bg-slate-50/50 rounded-2xl p-6 border border-slate-100">
+                      {teacher.training_history ? (
+                        <p className="text-sm text-slate-600 leading-relaxed whitespace-pre-wrap">
+                          {teacher.training_history}
+                        </p>
+                      ) : (
+                        <p className="text-sm text-slate-400 italic">Belum ada riwayat training yang tercatat.</p>
+                      )}
+                    </div>
+                  </div>
+                </section>
+
+                <section>
+                  <div className="flex items-center justify-between mb-8">
+                    <h2 className="text-lg font-bold text-slate-800 flex items-center gap-3">
+                      Riwayat Cuti
+                    </h2>
+                    <div className="h-px flex-1 bg-slate-50 ml-6"></div>
+                  </div>
+
+                  {leaves.length === 0 ? (
+                    <div className="bg-slate-50/50 rounded-[1.5rem] p-10 text-center border border-dashed border-slate-100">
+                      <p className="text-slate-400 font-medium text-sm">Tidak ada catatan riwayat cuti</p>
+                    </div>
+                  ) : (
+                    <div className="space-y-4">
+                      {leaves.slice(0, 3).map((leave) => (
+                        <div key={leave.id} className="flex items-center justify-between bg-white border border-slate-100 p-4 rounded-2xl hover:border-blue-100 hover:shadow-sm transition-all group/leave">
+                           <div className="flex items-center gap-4">
+                              <div className={`w-2 h-2 rounded-full ${
+                                leave.status === 'approved' ? 'bg-emerald-400' : leave.status === 'rejected' ? 'bg-rose-400' : 'bg-amber-400'
+                              }`} />
+                              <div>
+                                <p className="text-sm font-bold text-slate-700">{leave.leave_type}</p>
+                                <p className="text-[10px] font-medium text-slate-400 tracking-wide">
+                                  {format(parseISO(leave.start_date), 'dd MMM')} - {format(parseISO(leave.end_date), 'dd MMM yyyy')}
+                                </p>
+                              </div>
+                           </div>
+                           <ChevronRight className="w-4 h-4 text-slate-200 group-hover/leave:text-blue-300 transition-colors" />
+                        </div>
+                      ))}
+                      {leaves.length > 3 && (
+                        <p className="text-center text-[10px] font-bold text-slate-300 uppercase tracking-widest pt-2">
+                          + {leaves.length - 3} riwayat lainnya
+                        </p>
+                      )}
+                    </div>
+                  )}
+                </section>
+              </div>
+
+              {/* Sidebar Stats Column */}
+              <div className="md:col-span-4 bg-slate-50/50 p-10 space-y-10 border-l border-slate-50/80">
+                <div className="space-y-8">
+                   <div className="space-y-1">
+                      <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Bergabung Sejak</p>
+                      <p className="text-md font-bold text-slate-700">{format(parseISO(teacher.join_date), 'dd MMMM yyyy')}</p>
+                   </div>
+                   <div className="space-y-1">
+                      <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Masa Kerja</p>
+                      <p className="text-md font-bold text-slate-700">{getWorkDuration(teacher.join_date)}</p>
+                   </div>
+                   <div className="space-y-1">
+                      <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Sisa Cuti Tahunan ({currentYear})</p>
+                      <div className="flex items-center gap-2">
+                        <p className="text-md font-bold text-slate-700">{remainingAnnualLeaves} Hari</p>
+                        <span className="text-[10px] font-bold text-slate-400 bg-slate-100 px-2 py-0.5 rounded-md">dari {annualLeaveQuota}</span>
+                      </div>
+                   </div>
+                   <div className="pt-4 space-y-4">
+                      <div className="h-px w-12 bg-slate-200"></div>
+                      <div className="flex flex-col gap-4">
+                        <a href={`mailto:${teacher.email}`} className="flex items-center gap-3 text-slate-600 hover:text-blue-600 transition-colors group/link text-sm font-medium">
+                           <div className="w-8 h-8 rounded-lg bg-white flex items-center justify-center shadow-sm border border-slate-100 group-hover/link:border-blue-200 transition-all"><Mail className="w-4 h-4" /></div>
+                           {teacher.email}
+                        </a>
+                        <a href={`tel:${teacher.phone}`} className="flex items-center gap-3 text-slate-600 hover:text-emerald-600 transition-colors group/link text-sm font-medium">
+                           <div className="w-8 h-8 rounded-lg bg-white flex items-center justify-center shadow-sm border border-slate-100 group-hover/link:border-emerald-200 transition-all"><Phone className="w-4 h-4" /></div>
+                           {teacher.phone}
+                        </a>
+                      </div>
+                   </div>
+                </div>
+
+                <div className="pt-10">
+                   <button className="w-full py-4 bg-slate-900 text-white rounded-2xl font-bold text-sm shadow-xl shadow-slate-200 hover:bg-blue-600 transition-all hover:scale-[1.02] active:scale-[0.98]">
+                      Hubungi Guru
+                   </button>
+                </div>
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+        {/* Footer Minimalist */}
+        <div className="mt-16 text-center space-y-2 opacity-30 group-hover:opacity-100 transition-opacity duration-700">
+           <p className="text-[10px] font-black tracking-[0.4em] text-slate-400 uppercase">GuruSync Official Profile</p>
+           <p className="text-[9px] font-medium text-slate-300">Generated for Digital Identity Verification System</p>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+
+// ==========================================
+// FILE: src\contexts\AuthContext.tsx
+// ==========================================
+
+import { createContext, useContext, useEffect, useState } from 'react';
+import { User } from '@supabase/supabase-js';
+import { supabase } from '../lib/supabase';
+import type { Profile } from '../types';
+
+interface AuthContextType {
+  user: User | null;
+  profile: Profile | null;
+  loading: boolean;
+  signIn: (identifier: string, password: string) => Promise<void>;
+  signUp: (email: string, password: string, role: string, nik?: string, name?: string) => Promise<void>;
+  signOut: () => Promise<void>;
+}
+
+const AuthContext = createContext<AuthContextType | undefined>(undefined);
+
+export function AuthProvider({ children }: { children: React.ReactNode }) {
+  const [user, setUser] = useState<User | null>(null);
+  const [profile, setProfile] = useState<Profile | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setUser(session?.user ?? null);
+      if (session?.user) {
+        loadProfile(session.user.id);
+      } else {
+        setLoading(false);
+      }
+    });
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      (async () => {
+        setUser(session?.user ?? null);
+        if (session?.user) {
+          await loadProfile(session.user.id);
+        } else {
+          setProfile(null);
+          setLoading(false);
+        }
+      })();
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
+
+  const loadProfile = async (userId: string) => {
+    try {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', userId)
+        .maybeSingle();
+
+      if (error) throw error;
+      setProfile(data);
+    } catch (error) {
+      console.error('Error loading profile:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const signIn = async (identifier: string, password: string) => {
+    let email = identifier;
+
+    // Check if it's an email
+    const isEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(identifier);
+
+    if (!isEmail) {
+      // Resolve NIK to Email via RPC (to bypass RLS for anon users)
+      const { data: resolvedEmail, error: rpcError } = await (supabase as any)
+        .rpc('resolve_nik_to_email', { p_nik: identifier });
+
+      if (rpcError) {
+        console.error('Error resolving NIK:', rpcError);
+        throw new Error('Gagal memproses NIK');
+      }
+
+      if (resolvedEmail) {
+        email = resolvedEmail;
+      } else {
+        throw new Error('NIK atau Email tidak terdaftar');
+      }
+    }
+
+    const { error } = await supabase.auth.signInWithPassword({
+      email,
+      password,
+    });
+    if (error) throw error;
+  };
+
+  const signUp = async (email: string, password: string, role: string, nik?: string, name?: string) => {
+    const { data, error } = await supabase.auth.signUp({
+      email,
+      password,
+    });
+    if (error) throw error;
+
+    if (data.user) {
+      const { error: profileError } = await (supabase
+        .from('profiles') as any)
+        .insert([
+          {
+            id: data.user.id,
+            email: data.user.email!,
+            role,
+            nik: nik ?? null,
+            name: name ?? null,
+          },
+        ]);
+      if (profileError) throw profileError;
+    }
+  };
+
+  const signOut = async () => {
+    const { error } = await supabase.auth.signOut();
+    if (error) throw error;
+  };
+
+  return (
+    <AuthContext.Provider
+      value={{
+        user,
+        profile,
+        loading,
+        signIn,
+        signUp,
+        signOut,
+      }}
+    >
+      {children}
+    </AuthContext.Provider>
+  );
+}
+
+export function useAuth() {
+  const context = useContext(AuthContext);
+  if (context === undefined) {
+    throw new Error('useAuth must be used within an AuthProvider');
+  }
+  return context;
+}
+
+
+// ==========================================
+// FILE: src\lib\supabase.ts
+// ==========================================
+
+import { createClient } from '@supabase/supabase-js';
+import type { Database } from '../types/database';
+
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+
+if (!supabaseUrl || !supabaseAnonKey) {
+  throw new Error('Missing Supabase environment variables');
+}
+
+export const supabase = createClient<Database>(supabaseUrl, supabaseAnonKey);
+
+
+// ==========================================
+// FILE: src\main.tsx
+// ==========================================
+
+import { StrictMode } from 'react';
+import { createRoot } from 'react-dom/client';
+import App from './App.tsx';
+import './index.css';
+
+createRoot(document.getElementById('root')!).render(
+  <StrictMode>
+    <App />
+  </StrictMode>
+);
+
+
+// ==========================================
+// FILE: src\types\database.ts
+// ==========================================
+
+export type Json =
+  | string
+  | number
+  | boolean
+  | null
+  | { [key: string]: Json | undefined }
+  | Json[]
+
+export interface Database {
+  public: {
+    Tables: {
+      profiles: {
+        Row: {
+          id: string
+          email: string
+          role: string
+          nik: string | null
+          avatar_url: string | null
+          name: string | null
+          created_at: string
+        }
+        Insert: {
+          id: string
+          email: string
+          role?: string
+          nik?: string | null
+          avatar_url?: string | null
+          name?: string | null
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          email?: string
+          role?: string
+          nik?: string | null
+          avatar_url?: string | null
+          name?: string | null
+          created_at?: string
+        }
+      }
+      teachers: {
+        Row: {
+          id: string
+          user_id: string | null
+          name: string
+          nik: string
+          subject: string
+          email: string
+          phone: string
+          join_date: string
+          avatar_url: string | null
+          annual_leave_quota: number | null
+          birth_date: string | null
+          birth_place: string | null
+          gender: string | null
+          address: string | null
+          education: string | null
+          work_unit: string | null
+          training_history: string | null
+          sp_level: string | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          user_id?: string | null
+          name: string
+          nik: string
+          subject: string
+          email: string
+          phone: string
+          join_date: string
+          avatar_url?: string | null
+          annual_leave_quota?: number | null
+          birth_date?: string | null
+          birth_place?: string | null
+          gender?: string | null
+          address?: string | null
+          education?: string | null
+          work_unit?: string | null
+          training_history?: string | null
+          sp_level?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string | null
+          name?: string
+          nik?: string
+          subject?: string
+          email?: string
+          phone?: string
+          join_date?: string
+          avatar_url?: string | null
+          annual_leave_quota?: number | null
+          birth_date?: string | null
+          birth_place?: string | null
+          gender?: string | null
+          address?: string | null
+          education?: string | null
+          work_unit?: string | null
+          training_history?: string | null
+          sp_level?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+      }
+      leaves: {
+        Row: {
+          id: string
+          teacher_id: string
+          leave_type: string
+          start_date: string
+          end_date: string
+          reason: string
+          status: string
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          teacher_id: string
+          leave_type: string
+          start_date: string
+          end_date: string
+          reason: string
+          status?: string
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          teacher_id?: string
+          leave_type?: string
+          start_date?: string
+          end_date?: string
+          reason?: string
+          status?: string
+          created_at?: string
+          updated_at?: string
+        }
+      }
+    }
+    Views: {
+      [_ in never]: never
+    }
+    Functions: {
+      resolve_nik_to_email: {
+        Args: {
+          p_nik: string
+        }
+        Returns: string
+      }
+    }
+    Enums: {
+      [_ in never]: never
+    }
+  }
+}
+
+
+// ==========================================
+// FILE: src\types\index.ts
+// ==========================================
+
+export interface Teacher {
+  id: string;
+  user_id: string | null;
+  name: string;
+  nik: string;
+  subject: string;
+  email: string;
+  phone: string;
+  join_date: string;
+  avatar_url?: string;
+  birth_date?: string;
+  birth_place?: string;
+  gender?: string;
+  address?: string;
+  education?: string;
+  work_unit?: string;
+  annual_leave_quota?: number;
+  training_history?: string;
+  sp_level?: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface Leave {
+  id: string;
+  teacher_id: string;
+  leave_type: string;
+  start_date: string;
+  end_date: string;
+  reason: string;
+  status: 'pending_hod' | 'pending_koor_hod' | 'pending_wakasek' | 'pending_kepsek' | 'approved' | 'rejected' | 'pending';
+  created_at: string;
+  updated_at: string;
+}
+
+export interface Profile {
+  id: string;
+  email: string;
+  role: 'admin' | 'teacher' | 'hod' | 'koordinator_hod' | 'wakasek' | 'kepsek';
+  nik?: string;
+  avatar_url?: string;
+  name?: string;
+  created_at: string;
+}
+
+export interface TeacherWithLeaves extends Teacher {
+  leaves?: Leave[];
+}
+
+
+// ==========================================
+// FILE: src\vite-env.d.ts
+// ==========================================
+
+/// <reference types="vite/client" />

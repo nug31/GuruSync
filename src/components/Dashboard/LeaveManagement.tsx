@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { supabase } from '../../lib/supabase';
-import { Plus, X, CheckCircle, XCircle, Clock, FileSpreadsheet, Trash2, Edit2, ChevronRight } from 'lucide-react';
+import { Plus, X, CheckCircle, XCircle, Clock, FileSpreadsheet, Trash2, Edit2, ChevronRight, Calendar } from 'lucide-react';
 import { format, parseISO, differenceInDays } from 'date-fns';
 import { id } from 'date-fns/locale';
 import * as XLSX from 'xlsx';
@@ -60,16 +60,14 @@ export function LeaveManagement({ teachers, leaves, onUpdate, currentTeacherId }
       };
 
       if (editingLeave) {
-        const { error } = await supabase
-          .from('leaves')
-          .update(submissionData as any)
+        const { error } = await (supabase.from('leaves') as any)
+          .update(submissionData)
           .eq('id', editingLeave.id);
 
         if (error) throw error;
       } else {
-        const { error } = await supabase
-          .from('leaves')
-          .insert([submissionData as any]);
+        const { error } = await (supabase.from('leaves') as any)
+          .insert([submissionData]);
 
         if (error) throw error;
       }
@@ -143,9 +141,8 @@ export function LeaveManagement({ teachers, leaves, onUpdate, currentTeacherId }
     if (!confirm(`Apakah Anda yakin ingin ${action === 'approve' ? 'menyetujui' : 'menolak'} cuti ini?`)) return;
 
     try {
-      const { error } = await supabase
-        .from('leaves')
-        .update({ status: nextStatus } as any)
+      const { error } = await (supabase.from('leaves') as any)
+        .update({ status: nextStatus })
         .eq('id', leaveId);
 
       if (error) throw error;
@@ -176,7 +173,7 @@ export function LeaveManagement({ teachers, leaves, onUpdate, currentTeacherId }
   const renderStatusBadge = (status: Leave['status']) => {
     let bgColor = 'bg-gray-100';
     let textColor = 'text-gray-800';
-    let label = status;
+    let label: string = status;
 
     switch (status) {
       case 'pending':
