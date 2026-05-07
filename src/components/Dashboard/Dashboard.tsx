@@ -139,18 +139,6 @@ export function Dashboard() {
             )}
           </nav>
           
-          <div className="mt-8">
-             {isAdmin && view === 'teachers' && (
-              <button 
-                onClick={handleAddTeacher}
-                className="w-full bg-on-surface text-surface py-4 px-6 rounded font-bold flex items-center justify-center gap-2 hover:bg-primary transition-colors"
-              >
-                <span className="material-symbols-outlined text-[20px]">add</span>
-                <span>Tambah Guru</span>
-              </button>
-            )}
-          </div>
-          
           <div className="mt-auto pt-8 border-t border-outline-variant flex flex-col gap-1">
             <button className="text-on-surface-variant hover:text-primary px-4 py-2 flex items-center gap-3 text-sm text-left">
               <span className="material-symbols-outlined text-[18px]">help</span>
@@ -194,11 +182,35 @@ export function Dashboard() {
 
         {view === 'teachers' && (
           <div className="py-8">
-            <div className="flex justify-between items-center mb-8">
-              <h2 className="text-3xl font-display text-on-surface">
-                {isAdmin ? 'Data Guru' : 'Profil Saya'}
-              </h2>
-            </div>
+            {isAdmin ? (
+              <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-12 border-b border-outline-variant pb-8">
+                <div>
+                  <nav className="flex items-center gap-2 text-on-surface-variant/70 font-label text-[10px] mb-4">
+                    <span>Management</span>
+                    <span className="material-symbols-outlined text-[10px]">chevron_right</span>
+                    <span className="text-primary font-bold">Teachers Registry</span>
+                  </nav>
+                  <h2 className="font-display text-4xl text-on-surface font-bold tracking-tight mb-4">Manajemen Data Guru</h2>
+                  <p className="font-serif italic text-lg text-on-surface-variant/80 max-w-3xl">Kelola informasi profil, status kepegawaian, dan riwayat pelatihan staf pengajar dalam satu dashboard terintegrasi.</p>
+                </div>
+                <button onClick={handleAddTeacher} className="flex items-center justify-center gap-3 bg-primary text-on-primary px-8 py-3 rounded-sm font-bold text-sm hover:bg-primary/90 transition-all shadow-sm">
+                  <span className="material-symbols-outlined text-lg">person_add</span>
+                  Tambah Guru Baru
+                </button>
+              </div>
+            ) : (
+              <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-12 border-b border-outline-variant pb-8">
+                <div>
+                  <nav className="flex items-center gap-2 text-on-surface-variant/70 font-label text-[10px] mb-4">
+                    <span>Personal</span>
+                    <span className="material-symbols-outlined text-[10px]">chevron_right</span>
+                    <span className="text-primary font-bold">Profile</span>
+                  </nav>
+                  <h2 className="font-display text-4xl text-on-surface font-bold tracking-tight mb-4">Profil Saya</h2>
+                  <p className="font-serif italic text-lg text-on-surface-variant/80 max-w-3xl">Kelola informasi profil dan riwayat akademik Anda.</p>
+                </div>
+              </div>
+            )}
 
             {isAdmin ? (
               <TeacherList
