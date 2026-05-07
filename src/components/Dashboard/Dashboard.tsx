@@ -83,83 +83,86 @@ export function Dashboard() {
       <aside className="h-full w-72 fixed left-0 top-0 hidden lg:flex flex-col bg-surface-container-lowest border-r border-outline-variant z-50">
         <div className="flex flex-col h-full p-8">
           <div className="mb-12">
-            <span className="text-3xl font-display font-bold text-primary tracking-tight">GuruSync</span>
+            <h1 className="text-3xl font-bold text-primary tracking-tight">GuruSync</h1>
+            <p className="font-label text-xs uppercase tracking-widest text-on-surface-variant mt-1">Institutional Portal</p>
           </div>
           
           <nav className="flex flex-col gap-2">
             <button
               onClick={() => setView('dashboard')}
-              className={`flex items-center gap-4 px-4 py-3 transition-colors text-left ${
+              className={`flex items-center gap-4 px-4 py-3 transition-colors text-left rounded-lg ${
                 view === 'dashboard'
-                  ? 'sidebar-item-active bg-primary-fixed/30 text-primary font-semibold'
-                  : 'text-on-surface-variant hover:bg-surface-container'
+                  ? 'bg-primary text-on-primary font-semibold'
+                  : 'text-on-surface-variant hover:text-primary hover:bg-surface-container-low'
               }`}
             >
-              <span className="material-symbols-outlined" data-icon="dashboard">dashboard</span>
-              <span className="text-base font-body">Dashboard</span>
+              <span className="material-symbols-outlined text-[20px]">dashboard</span>
+              <span className="font-medium">Dashboard</span>
             </button>
             
             <button
               onClick={() => setView('teachers')}
-              className={`flex items-center gap-4 px-4 py-3 transition-colors text-left ${
+              className={`flex items-center gap-4 px-4 py-3 transition-colors text-left rounded-lg ${
                 view === 'teachers'
-                  ? 'sidebar-item-active bg-primary-fixed/30 text-primary font-semibold'
-                  : 'text-on-surface-variant hover:bg-surface-container'
+                  ? 'bg-primary text-on-primary font-semibold'
+                  : 'text-on-surface-variant hover:text-primary hover:bg-surface-container-low'
               }`}
             >
-              <span className="material-symbols-outlined" data-icon="groups">groups</span>
-              <span className="text-base font-body">{isAdmin ? 'Data Guru' : 'Profil Saya'}</span>
+              <span className="material-symbols-outlined text-[20px]">groups</span>
+              <span>{isAdmin ? 'Data Guru' : 'Profil Guru'}</span>
             </button>
             
             <button
               onClick={() => setView('leaves')}
-              className={`flex items-center gap-4 px-4 py-3 transition-colors text-left ${
+              className={`flex items-center gap-4 px-4 py-3 transition-colors text-left rounded-lg ${
                 view === 'leaves'
-                  ? 'sidebar-item-active bg-primary-fixed/30 text-primary font-semibold'
-                  : 'text-on-surface-variant hover:bg-surface-container'
+                  ? 'bg-primary text-on-primary font-semibold'
+                  : 'text-on-surface-variant hover:text-primary hover:bg-surface-container-low'
               }`}
             >
-              <span className="material-symbols-outlined" data-icon="event_note">event_note</span>
-              <span className="text-base font-body">{isAdmin ? 'Manajemen Cuti' : 'Pengajuan Cuti'}</span>
+              <span className="material-symbols-outlined text-[20px]">event_busy</span>
+              <span>{isAdmin ? 'Manajemen Cuti' : 'Pengajuan Cuti'}</span>
             </button>
 
             {isAdmin && (
               <button
                 onClick={() => setView('admins')}
-                className={`flex items-center gap-4 px-4 py-3 transition-colors text-left ${
+                className={`flex items-center gap-4 px-4 py-3 transition-colors text-left rounded-lg ${
                   view === 'admins'
-                    ? 'sidebar-item-active bg-primary-fixed/30 text-primary font-semibold'
-                    : 'text-on-surface-variant hover:bg-surface-container'
+                    ? 'bg-primary text-on-primary font-semibold'
+                    : 'text-on-surface-variant hover:text-primary hover:bg-surface-container-low'
                 }`}
               >
-                <span className="material-symbols-outlined" data-icon="admin_panel_settings">admin_panel_settings</span>
-                <span className="text-base font-body">Manajemen Admin</span>
+                <span className="material-symbols-outlined text-[20px]">admin_panel_settings</span>
+                <span>Manajemen Admin</span>
               </button>
             )}
           </nav>
           
-          <div className="mt-12">
+          <div className="mt-8">
              {isAdmin && view === 'teachers' && (
               <button 
                 onClick={handleAddTeacher}
-                className="w-full py-3 px-6 bg-primary text-on-primary font-semibold shadow-sm hover:bg-primary/90 transition-all flex items-center justify-center gap-2 rounded-lg"
+                className="w-full bg-on-surface text-surface py-4 px-6 rounded font-bold flex items-center justify-center gap-2 hover:bg-primary transition-colors"
               >
-                <span className="material-symbols-outlined text-[20px]" data-icon="add">add</span>
-                Tambah Guru
+                <span className="material-symbols-outlined text-[20px]">add</span>
+                <span>Tambah Guru</span>
               </button>
             )}
           </div>
           
-          <div className="mt-auto pt-8 border-t border-outline-variant">
-            <div className="flex flex-col gap-2">
-              <button 
-                onClick={() => signOut()}
-                className="flex items-center gap-4 px-4 py-2 text-error hover:opacity-80 transition-colors text-sm font-body text-left w-full"
-              >
-                <span className="material-symbols-outlined text-[20px]" data-icon="logout">logout</span>
-                Logout
-              </button>
-            </div>
+          <div className="mt-auto pt-8 border-t border-outline-variant flex flex-col gap-1">
+            <button className="text-on-surface-variant hover:text-primary px-4 py-2 flex items-center gap-3 text-sm text-left">
+              <span className="material-symbols-outlined text-[18px]">help</span>
+              <span>Bantuan</span>
+            </button>
+            <button 
+              onClick={() => signOut()}
+              className="text-on-surface-variant hover:text-error px-4 py-2 flex items-center gap-3 text-sm text-left"
+            >
+              <span className="material-symbols-outlined text-[18px]">logout</span>
+              <span>Keluar Sesi</span>
+            </button>
           </div>
         </div>
       </aside>

@@ -124,243 +124,240 @@ export function TeacherProfile({ teacherId }: TeacherProfileProps) {
   const remainingAnnualLeaves = Math.max(0, annualLeaveQuota - usedAnnualLeaves);
 
   return (
-    <div className="min-h-screen bg-[#FDFDFE] selection:bg-blue-100 selection:text-blue-700 pb-20">
-      {/* Visual Top Bar */}
-      <div className="h-1.5 w-full bg-gradient-to-r from-blue-500 to-indigo-600"></div>
+    <div className="min-h-screen bg-background selection:bg-primary-container/20 pb-20">
+      {/* Welcome section */}
+      <section className="mb-16">
+        <div className="flex flex-col md:flex-row md:items-baseline justify-between border-b-2 border-on-surface pb-6">
+          <div>
+            <h2 className="text-5xl font-serif font-bold text-on-surface italic">Halo, {teacher.name.split(',')[0]}</h2>
+            <p className="text-xl text-on-surface-variant mt-3 font-serif">Ringkasan profil akademik dan administratif Anda.</p>
+          </div>
+          <div className="mt-6 md:mt-0 font-label text-sm uppercase tracking-widest flex items-center gap-2">
+            <span className="material-symbols-outlined text-[18px]">calendar_today</span>
+            {format(new Date(), 'EEEE, d MMMM yyyy', { locale: id })}
+          </div>
+        </div>
+      </section>
 
-      <div className="max-w-4xl mx-auto px-4 sm:px-6">
-        {/* Profile Card Main */}
-        <div className="mt-12 group">
-          <div className="bg-white rounded-[2.5rem] shadow-[0_20px_50px_rgba(8,_112,_184,_0.07)] border border-slate-50 overflow-hidden">
-            
-            {/* Header Content */}
-            <div className="pt-12 pb-10 px-8 text-center sm:text-left flex flex-col sm:flex-row items-center sm:items-end gap-8">
-              <div className="relative">
-                <div className="w-36 h-36 rounded-[2rem] overflow-hidden bg-slate-50 ring-8 ring-slate-50/50 shadow-inner group-hover:ring-blue-50 transition-all duration-500">
-                  {teacher.avatar_url ? (
-                    <img src={teacher.avatar_url} alt="" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" />
-                  ) : (
-                    <div className="w-full h-full flex items-center justify-center"><User className="w-16 h-16 text-slate-200" /></div>
-                  )}
-                  {canEdit && (
-                    <label className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-all flex items-center justify-center cursor-pointer backdrop-blur-[2px]">
-                      <input type="file" className="hidden" accept="image/*" onChange={handleAvatarUpload} disabled={uploading} />
-                      <span className="text-white text-[10px] font-black tracking-widest uppercase">{uploading ? '...' : 'Upload'}</span>
-                    </label>
-                  )}
-                </div>
-                {activeLeave && (
-                  <div className="absolute -top-2 -right-2 bg-rose-500 w-8 h-8 rounded-full border-4 border-white flex items-center justify-center animate-bounce shadow-md">
-                    <div className="w-2 h-2 bg-white rounded-full"></div>
-                  </div>
-                )}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-12">
+        {/* Left: Stats & Profile */}
+        <div className="lg:col-span-8 flex flex-col gap-16">
+          {/* Stats */}
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-8">
+            <div className="p-8 bg-surface-container-low border border-outline-variant rounded">
+              <p className="font-label text-[11px] uppercase tracking-[0.2em] text-on-surface-variant mb-6">Sisa Saldo Cuti</p>
+              <div className="flex items-baseline gap-2">
+                <span className="text-4xl font-serif font-bold">{remainingAnnualLeaves}</span>
+                <span className="text-on-surface-variant">/ {annualLeaveQuota} Hari</span>
               </div>
-
-              <div className="flex-1 space-y-3">
-                <div className="inline-flex items-center gap-2 px-3 py-1 bg-blue-50 text-blue-600 rounded-full text-[10px] font-black uppercase tracking-widest border border-blue-100">
-                  <ShieldCheck className="w-3 h-3" />
-                  {teacher.subject}
-                </div>
-                <h1 className="text-4xl font-extrabold text-slate-800 tracking-tight leading-tight">
-                  {teacher.name}
-                </h1>
-                <p className="text-slate-500 font-medium flex items-center justify-center sm:justify-start gap-2 text-sm italic">
-                  {teacher.work_unit || 'Guru Sync Network'}
-                </p>
-              </div>
-
-              <div className="hidden sm:block pb-2">
-                 <div className={`px-4 py-3 rounded-2xl border text-center transition-all ${activeLeave ? 'bg-rose-50 border-rose-100' : 'bg-emerald-50 border-emerald-100'}`}>
-                    <p className={`text-[10px] font-black uppercase tracking-[0.2em] mb-1 ${activeLeave ? 'text-rose-500' : 'text-emerald-500'}`}>
-                      STATUS
-                    </p>
-                    <p className={`text-sm font-bold ${activeLeave ? 'text-rose-700' : 'text-emerald-700'}`}>
-                      {activeLeave ? 'Sedang Cuti' : 'Aktif Bekerja'}
-                    </p>
-                 </div>
+              <div className="mt-6 h-1 bg-surface-container-high w-full">
+                <div className="h-full bg-primary" style={{ width: `${(remainingAnnualLeaves / annualLeaveQuota) * 100}%` }}></div>
               </div>
             </div>
+            <div className="p-8 bg-surface-container-low border border-outline-variant rounded">
+              <p className="font-label text-[11px] uppercase tracking-[0.2em] text-on-surface-variant mb-6">Cuti Diambil</p>
+              <div className="flex items-baseline gap-2">
+                <span className="text-4xl font-serif font-bold">{usedAnnualLeaves}</span>
+                <span className="text-on-surface-variant">Hari</span>
+              </div>
+              <p className="text-[11px] text-on-surface-variant mt-4 italic">Tahun Ajaran {currentYear}</p>
+            </div>
+            <div className="p-8 bg-surface-container-low border border-outline-variant rounded">
+              <p className="font-label text-[11px] uppercase tracking-[0.2em] text-on-surface-variant mb-6">Sertifikasi</p>
+              <div className="flex items-baseline gap-2">
+                <span className="text-4xl font-serif font-bold">5</span>
+                <span className="text-on-surface-variant">Aktif</span>
+              </div>
+              <p className="text-[11px] text-on-surface-variant mt-4 italic">2 Dalam Proses</p>
+            </div>
+          </div>
 
-            {/* Info Grid Split */}
-            <div className="grid grid-cols-1 md:grid-cols-12 border-t border-slate-50/80">
-              {/* Personal Data Column */}
-              <div className="md:col-span-8 p-10 space-y-12">
-                <section>
-                  <div className="flex items-center justify-between mb-8">
-                    <h2 className="text-lg font-bold text-slate-800 flex items-center gap-3">
-                      Data Pribadi
-                    </h2>
-                    <div className="h-px flex-1 bg-slate-50 ml-6"></div>
-                  </div>
+          {/* Personal Detail */}
+          <div>
+            <div className="flex items-center justify-between border-b border-on-surface/10 pb-4 mb-8">
+              <h3 className="text-2xl font-serif font-bold">Detail Personal</h3>
+              {canEdit && (
+                <button className="text-primary font-label text-xs uppercase tracking-widest flex items-center gap-2 hover:underline">
+                  <span className="material-symbols-outlined text-[16px]">edit</span> Edit
+                </button>
+              )}
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-12 gap-y-8">
+              <div>
+                <p className="font-label text-[10px] uppercase tracking-widest text-on-surface-variant mb-1">NIK / NIP</p>
+                <p className="text-lg font-serif">{teacher.nik}</p>
+              </div>
+              <div>
+                <p className="font-label text-[10px] uppercase tracking-widest text-on-surface-variant mb-1">Jabatan Akademik</p>
+                <p className="text-lg font-serif">{teacher.subject}</p>
+              </div>
+              <div>
+                <p className="font-label text-[10px] uppercase tracking-widest text-on-surface-variant mb-1">Unit Kerja</p>
+                <p className="text-lg font-serif">{teacher.work_unit || '-'}</p>
+              </div>
+              <div>
+                <p className="font-label text-[10px] uppercase tracking-widest text-on-surface-variant mb-1">Terdaftar Sejak</p>
+                <p className="text-lg font-serif">{format(parseISO(teacher.join_date), 'd MMMM yyyy', { locale: id })}</p>
+              </div>
+              <div>
+                <p className="font-label text-[10px] uppercase tracking-widest text-on-surface-variant mb-1">Email Institusi</p>
+                <p className="text-lg font-serif underline decoration-primary/30">{teacher.email}</p>
+              </div>
+              <div>
+                <p className="font-label text-[10px] uppercase tracking-widest text-on-surface-variant mb-1">Masa Kerja</p>
+                <p className="text-lg font-serif">{getWorkDuration(teacher.join_date)}</p>
+              </div>
+            </div>
+          </div>
 
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-y-10 gap-x-12">
-                    {[
-                      { label: 'NIK', value: teacher.nik, icon: Contact },
-                      { 
-                        label: 'TTL', 
-                        value: `${teacher.birth_place ? `${teacher.birth_place}, ` : ''}${teacher.birth_date ? format(parseISO(teacher.birth_date), 'dd MMM yyyy', { locale: id }) : '-'}`, 
-                        icon: CalendarDays 
-                      },
-                      { 
-                        label: 'Kelamin', 
-                        value: teacher.gender === 'L' ? 'Laki-laki' : teacher.gender === 'P' ? 'Perempuan' : (teacher.gender || '-'),
-                        icon: Contact 
-                      },
-                      { label: 'Pendidikan', value: teacher.education || '-', icon: GraduationCap },
-                    ].map((item, i) => (
-                      <div key={i} className="flex gap-4 group/item">
-                        <div className="w-10 h-10 rounded-xl bg-slate-50 flex items-center justify-center text-slate-400 group-hover/item:text-blue-500 group-hover/item:bg-blue-50 transition-all">
-                          <item.icon className="w-5 h-5" />
-                        </div>
-                        <div>
-                          <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">{item.label}</p>
-                          <p className="text-sm font-bold text-slate-700">{item.value}</p>
-                        </div>
-                      </div>
-                    ))}
-                    <div className="sm:col-span-2 flex gap-4 pr-10">
-                      <div className="w-10 h-10 rounded-xl bg-slate-50 flex items-center justify-center text-slate-400 shrink-0"><MapPin className="w-5 h-5" /></div>
-                      <div>
-                        <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Alamat</p>
-                        <p className="text-sm font-bold text-slate-700 leading-relaxed">{teacher.address || '-'}</p>
-                      </div>
-                    </div>
-                  </div>
-                </section>
-
-                <section>
-                  <div className="flex items-center justify-between mb-8">
-                    <h2 className="text-lg font-bold text-slate-800 flex items-center gap-3">
-                      Kedisiplinan & Pengembangan
-                    </h2>
-                    <div className="h-px flex-1 bg-slate-50 ml-6"></div>
-                  </div>
-
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-y-10 gap-x-12 mb-10">
-                    <div className="flex gap-4 group/item">
-                      <div className={`w-10 h-10 rounded-xl flex items-center justify-center transition-all ${
-                        teacher.sp_level && teacher.sp_level !== 'Tidak ada' 
-                        ? 'bg-rose-50 text-rose-500' 
-                        : 'bg-emerald-50 text-emerald-500'
-                      }`}>
-                        <ShieldAlert className="w-5 h-5" />
-                      </div>
-                      <div>
-                        <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Status Kedisiplinan</p>
-                        <p className={`text-sm font-bold ${
-                          teacher.sp_level && teacher.sp_level !== 'Tidak ada' ? 'text-rose-700' : 'text-emerald-700'
-                        }`}>
-                          {teacher.sp_level || 'Tidak ada'}
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div>
-                    <div className="flex items-center gap-3 mb-4">
-                      <Award className="w-5 h-5 text-blue-500" />
-                      <h3 className="text-sm font-bold text-slate-700 uppercase tracking-wider">Riwayat Training</h3>
-                    </div>
-                    <div className="bg-slate-50/50 rounded-2xl p-6 border border-slate-100">
-                      {teacher.training_history ? (
-                        <p className="text-sm text-slate-600 leading-relaxed whitespace-pre-wrap">
-                          {teacher.training_history}
-                        </p>
-                      ) : (
-                        <p className="text-sm text-slate-400 italic">Belum ada riwayat training yang tercatat.</p>
-                      )}
-                    </div>
-                  </div>
-                </section>
-
-                <section>
-                  <div className="flex items-center justify-between mb-8">
-                    <h2 className="text-lg font-bold text-slate-800 flex items-center gap-3">
-                      Riwayat Cuti
-                    </h2>
-                    <div className="h-px flex-1 bg-slate-50 ml-6"></div>
-                  </div>
-
+          {/* Leave History */}
+          <div>
+            <div className="flex items-center justify-between border-b border-on-surface/10 pb-4 mb-6">
+              <h3 className="text-2xl font-serif font-bold">Riwayat Cuti</h3>
+              <button className="text-on-surface-variant font-label text-[10px] uppercase tracking-widest hover:text-primary">Arsip Lengkap</button>
+            </div>
+            <div className="overflow-hidden border border-outline-variant rounded">
+              <table className="w-full text-left">
+                <thead className="bg-surface-container-low border-b border-outline-variant">
+                  <tr>
+                    <th className="p-4 font-label text-[10px] uppercase tracking-widest text-on-surface-variant">Jenis</th>
+                    <th className="p-4 font-label text-[10px] uppercase tracking-widest text-on-surface-variant">Durasi</th>
+                    <th className="p-4 font-label text-[10px] uppercase tracking-widest text-on-surface-variant">Diajukan</th>
+                    <th className="p-4 font-label text-[10px] uppercase tracking-widest text-on-surface-variant text-right">Status</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-outline-variant">
                   {leaves.length === 0 ? (
-                    <div className="bg-slate-50/50 rounded-[1.5rem] p-10 text-center border border-dashed border-slate-100">
-                      <p className="text-slate-400 font-medium text-sm">Tidak ada catatan riwayat cuti</p>
-                    </div>
+                    <tr>
+                      <td colSpan={4} className="p-8 text-center text-on-surface-variant italic">Belum ada riwayat cuti</td>
+                    </tr>
                   ) : (
-                    <div className="space-y-4">
-                      {leaves.slice(0, 3).map((leave) => (
-                        <div key={leave.id} className="flex items-center justify-between bg-white border border-slate-100 p-4 rounded-2xl hover:border-blue-100 hover:shadow-sm transition-all group/leave">
-                           <div className="flex items-center gap-4">
-                              <div className={`w-2 h-2 rounded-full ${
-                                leave.status === 'approved' ? 'bg-emerald-400' : leave.status === 'rejected' ? 'bg-rose-400' : 'bg-amber-400'
-                              }`} />
-                              <div>
-                                <p className="text-sm font-bold text-slate-700">{leave.leave_type}</p>
-                                <p className="text-[10px] font-medium text-slate-400 tracking-wide">
-                                  {format(parseISO(leave.start_date), 'dd MMM')} - {format(parseISO(leave.end_date), 'dd MMM yyyy')}
-                                </p>
-                              </div>
-                           </div>
-                           <ChevronRight className="w-4 h-4 text-slate-200 group-hover/leave:text-blue-300 transition-colors" />
-                        </div>
-                      ))}
-                      {leaves.length > 3 && (
-                        <p className="text-center text-[10px] font-bold text-slate-300 uppercase tracking-widest pt-2">
-                          + {leaves.length - 3} riwayat lainnya
-                        </p>
-                      )}
-                    </div>
+                    leaves.slice(0, 5).map((leave) => (
+                      <tr key={leave.id} className="hover:bg-surface-container-lowest transition-colors">
+                        <td className="p-4">
+                          <p className="font-serif font-bold">{leave.leave_type}</p>
+                          <p className="text-xs text-on-surface-variant italic">{leave.reason}</p>
+                        </td>
+                        <td className="p-4 font-serif italic text-on-surface">
+                          {differenceInDays(parseISO(leave.end_date), parseISO(leave.start_date)) + 1} Hari
+                        </td>
+                        <td className="p-4 text-xs text-on-surface-variant">
+                          {format(parseISO(leave.created_at || leave.start_date), 'd MMM yyyy', { locale: id })}
+                        </td>
+                        <td className="p-4 text-right">
+                          <span className={`status-badge px-2 py-1 rounded-sm border ${
+                            leave.status === 'approved' ? 'bg-green-50 text-green-700 border-green-200' :
+                            leave.status === 'rejected' ? 'bg-red-50 text-red-700 border-red-200' :
+                            'bg-amber-50 text-amber-700 border-amber-200'
+                          }`}>
+                            {leave.status.charAt(0).toUpperCase() + leave.status.slice(1)}
+                          </span>
+                        </td>
+                      </tr>
+                    ))
                   )}
-                </section>
-              </div>
-
-              {/* Sidebar Stats Column */}
-              <div className="md:col-span-4 bg-slate-50/50 p-10 space-y-10 border-l border-slate-50/80">
-                <div className="space-y-8">
-                   <div className="space-y-1">
-                      <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Bergabung Sejak</p>
-                      <p className="text-md font-bold text-slate-700">{format(parseISO(teacher.join_date), 'dd MMMM yyyy')}</p>
-                   </div>
-                   <div className="space-y-1">
-                      <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Masa Kerja</p>
-                      <p className="text-md font-bold text-slate-700">{getWorkDuration(teacher.join_date)}</p>
-                   </div>
-                   <div className="space-y-1">
-                      <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Sisa Cuti Tahunan ({currentYear})</p>
-                      <div className="flex items-center gap-2">
-                        <p className="text-md font-bold text-slate-700">{remainingAnnualLeaves} Hari</p>
-                        <span className="text-[10px] font-bold text-slate-400 bg-slate-100 px-2 py-0.5 rounded-md">dari {annualLeaveQuota}</span>
-                      </div>
-                   </div>
-                   <div className="pt-4 space-y-4">
-                      <div className="h-px w-12 bg-slate-200"></div>
-                      <div className="flex flex-col gap-4">
-                        <a href={`mailto:${teacher.email}`} className="flex items-center gap-3 text-slate-600 hover:text-blue-600 transition-colors group/link text-sm font-medium">
-                           <div className="w-8 h-8 rounded-lg bg-white flex items-center justify-center shadow-sm border border-slate-100 group-hover/link:border-blue-200 transition-all"><Mail className="w-4 h-4" /></div>
-                           {teacher.email}
-                        </a>
-                        <a href={`tel:${teacher.phone}`} className="flex items-center gap-3 text-slate-600 hover:text-emerald-600 transition-colors group/link text-sm font-medium">
-                           <div className="w-8 h-8 rounded-lg bg-white flex items-center justify-center shadow-sm border border-slate-100 group-hover/link:border-emerald-200 transition-all"><Phone className="w-4 h-4" /></div>
-                           {teacher.phone}
-                        </a>
-                      </div>
-                   </div>
-                </div>
-
-                <div className="pt-10">
-                   <button className="w-full py-4 bg-slate-900 text-white rounded-2xl font-bold text-sm shadow-xl shadow-slate-200 hover:bg-blue-600 transition-all hover:scale-[1.02] active:scale-[0.98]">
-                      Hubungi Guru
-                   </button>
-                </div>
-              </div>
+                </tbody>
+              </table>
             </div>
-
           </div>
         </div>
 
-        {/* Footer Minimalist */}
-        <div className="mt-16 text-center space-y-2 opacity-30 group-hover:opacity-100 transition-opacity duration-700">
-           <p className="text-[10px] font-black tracking-[0.4em] text-slate-400 uppercase">GuruSync Official Profile</p>
-           <p className="text-[9px] font-medium text-slate-300">Generated for Digital Identity Verification System</p>
+        {/* Right: Identity & Certs */}
+        <div className="lg:col-span-4 flex flex-col gap-12">
+          {/* ID Card (Editorial Style) */}
+          <div className="border-2 border-on-surface p-1 rounded-sm">
+            <div className="bg-surface-container-lowest p-8 border border-outline-variant flex flex-col items-center">
+              <div className="w-full flex justify-between border-b border-on-surface/10 pb-4 mb-8">
+                <span className="font-label text-[10px] uppercase tracking-[0.3em] font-bold">Academic Identity</span>
+                <span className={`material-symbols-outlined text-[18px] ${activeLeave ? 'text-error' : 'text-primary'}`}>
+                  {activeLeave ? 'event_busy' : 'verified'}
+                </span>
+              </div>
+              <div className="relative group">
+                <div className="w-40 h-40 border-2 border-on-surface p-2 mb-6 grayscale hover:grayscale-0 transition-all duration-500 overflow-hidden">
+                  {teacher.avatar_url ? (
+                    <img alt={teacher.name} className="w-full h-full object-cover" src={teacher.avatar_url} />
+                  ) : (
+                    <div className="w-full h-full bg-surface-container flex items-center justify-center">
+                      <span className="material-symbols-outlined text-4xl text-on-surface-variant">person</span>
+                    </div>
+                  )}
+                </div>
+                {canEdit && (
+                  <label className="absolute inset-2 bg-black/40 opacity-0 group-hover:opacity-100 transition-all flex items-center justify-center cursor-pointer backdrop-blur-[2px]">
+                    <input type="file" className="hidden" accept="image/*" onChange={handleAvatarUpload} disabled={uploading} />
+                    <span className="text-white text-[10px] font-black tracking-widest uppercase">{uploading ? '...' : 'Upload'}</span>
+                  </label>
+                )}
+              </div>
+              <h4 className="text-2xl font-serif font-bold text-center">{teacher.name}</h4>
+              <p className="font-label text-[10px] uppercase tracking-[0.2em] text-on-surface-variant mt-2">NIP: {teacher.nik}</p>
+              
+              <div className="my-8 p-4 border border-outline-variant bg-white">
+                {/* QR Code Placeholder */}
+                <div className="w-32 h-32 bg-surface-container flex items-center justify-center opacity-90">
+                  <span className="material-symbols-outlined text-4xl text-on-surface-variant">qr_code_2</span>
+                </div>
+              </div>
+              <p className="text-[11px] text-center italic text-on-surface-variant px-4 mb-8">
+                Pindai kode ini untuk keperluan administrasi institusi dan verifikasi kehadiran harian.
+              </p>
+              <button className="w-full py-3 bg-surface-container-high border border-outline text-on-surface font-label text-[10px] uppercase tracking-widest hover:bg-on-surface hover:text-white transition-all">
+                Simpan ke Perangkat
+              </button>
+            </div>
+          </div>
+
+          {/* Certifications */}
+          <div className="p-8 border border-outline-variant bg-surface-container-lowest">
+            <h3 className="text-xl font-serif font-bold mb-6 italic">Sertifikasi & Keahlian</h3>
+            <div className="flex flex-wrap gap-2 mb-8">
+              <span className="px-3 py-1 bg-primary/5 text-primary border border-primary/10 text-[10px] font-label uppercase tracking-wider">Pedagogi Digital</span>
+              <span className="px-3 py-1 bg-secondary/5 text-secondary border border-secondary/10 text-[10px] font-label uppercase tracking-wider">Analisis Data</span>
+              <span className="px-3 py-1 bg-tertiary/5 text-tertiary border border-tertiary/10 text-[10px] font-label uppercase tracking-wider">STEM</span>
+            </div>
+            <div className="space-y-4">
+              {teacher.training_history ? (
+                <div className="flex items-start gap-4 p-3 hover:bg-surface-container-low transition-colors group">
+                  <span className="material-symbols-outlined text-primary mt-0.5">workspace_premium</span>
+                  <div>
+                    <p className="text-sm font-bold font-serif leading-tight">Riwayat Pengembangan</p>
+                    <p className="text-[11px] text-on-surface-variant mt-1 line-clamp-2">{teacher.training_history}</p>
+                  </div>
+                </div>
+              ) : (
+                <p className="text-xs text-on-surface-variant italic">Belum ada riwayat training</p>
+              )}
+              {teacher.sp_level && teacher.sp_level !== 'Tidak ada' && (
+                <div className="flex items-start gap-4 p-3 bg-red-50/50 border-t border-red-100 mt-4">
+                  <span className="material-symbols-outlined text-error mt-0.5">warning</span>
+                  <div>
+                    <p className="text-sm font-bold font-serif leading-tight text-error">Catatan Kedisiplinan</p>
+                    <p className="text-[11px] text-red-600/70 mt-1">{teacher.sp_level}</p>
+                  </div>
+                </div>
+              )}
+            </div>
+            <button className="w-full mt-8 flex items-center justify-center gap-2 text-primary font-label text-[10px] uppercase tracking-widest group">
+              Portfolio Lengkap 
+              <span className="material-symbols-outlined text-[16px] group-hover:translate-x-1 transition-transform">arrow_forward</span>
+            </button>
+          </div>
+
+          {/* Tautan Cepat */}
+          <div className="p-8 border border-on-surface bg-surface-container-low">
+            <h3 className="text-xl font-serif font-bold mb-6">Tautan Cepat</h3>
+            <div className="grid grid-cols-2 gap-4">
+              <button className="p-4 border border-outline-variant bg-white text-center hover:border-primary transition-all group">
+                <span className="material-symbols-outlined text-on-surface-variant group-hover:text-primary mb-2 block">description</span>
+                <span className="font-label text-[10px] uppercase tracking-widest">Slip Gaji</span>
+              </button>
+              <button className="p-4 border border-outline-variant bg-white text-center hover:border-secondary transition-all group">
+                <span className="material-symbols-outlined text-on-surface-variant group-hover:text-secondary mb-2 block">menu_book</span>
+                <span className="font-label text-[10px] uppercase tracking-widest">Kurikulum</span>
+              </button>
+            </div>
+          </div>
         </div>
       </div>
     </div>
