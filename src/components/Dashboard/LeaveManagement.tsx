@@ -1,6 +1,5 @@
 import { useState } from 'react';
 import { supabase } from '../../lib/supabase';
-import { Plus, X, CheckCircle, XCircle, Clock, FileSpreadsheet, Trash2, Edit2, ChevronRight, Calendar } from 'lucide-react';
 import { format, parseISO, differenceInDays } from 'date-fns';
 import { id } from 'date-fns/locale';
 import * as XLSX from 'xlsx';
@@ -170,32 +169,23 @@ export function LeaveManagement({ teachers, leaves, onUpdate, currentTeacherId }
     return false;
   };
 
-  const renderStatusBadge = (status: Leave['status']) => {
-    let bgColor = 'bg-gray-100';
-    let textColor = 'text-gray-800';
-    let label: string = status;
-
+  const getStatusLabel = (status: Leave['status']) => {
     switch (status) {
-      case 'pending':
-      case 'pending_hod':
-        bgColor = 'bg-yellow-100'; textColor = 'text-yellow-800'; label = 'Menunggu HOD'; break;
-      case 'pending_koor_hod':
-        bgColor = 'bg-yellow-100'; textColor = 'text-yellow-800'; label = 'Menunggu Koor HOD'; break;
-      case 'pending_wakasek':
-        bgColor = 'bg-blue-100'; textColor = 'text-blue-800'; label = 'Menunggu Wakasek'; break;
-      case 'pending_kepsek':
-        bgColor = 'bg-purple-100'; textColor = 'text-purple-800'; label = 'Menunggu Kepsek'; break;
-      case 'approved':
-        bgColor = 'bg-green-100'; textColor = 'text-green-800'; label = 'Disetujui'; break;
-      case 'rejected':
-        bgColor = 'bg-red-100'; textColor = 'text-red-800'; label = 'Ditolak'; break;
+      case 'pending': return 'Menunggu';
+      case 'pending_hod': return 'Menunggu HOD';
+      case 'pending_koor_hod': return 'Menunggu Koor';
+      case 'pending_wakasek': return 'Menunggu Wakasek';
+      case 'pending_kepsek': return 'Menunggu Kepsek';
+      case 'approved': return 'Disetujui';
+      case 'rejected': return 'Ditolak';
+      default: return status;
     }
+  };
 
-    return (
-      <span className={`px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${bgColor} ${textColor}`}>
-        {label}
-      </span>
-    );
+  const getStatusPillClasses = (status: Leave['status']) => {
+    if (status.startsWith('pending')) return 'bg-tertiary-fixed text-on-tertiary-fixed font-bold px-4 py-1.5 rounded-full text-[10px] font-label uppercase tracking-[0.1em] text-center';
+    if (status === 'approved') return 'bg-primary-fixed text-on-primary-fixed font-bold px-4 py-1.5 rounded-full text-[10px] font-label uppercase tracking-[0.1em] text-center';
+    return 'bg-error-container text-on-error-container font-bold px-4 py-1.5 rounded-full text-[10px] font-label uppercase tracking-[0.1em] text-center';
   };
 
   const handleExportExcel = () => {
@@ -235,18 +225,21 @@ export function LeaveManagement({ teachers, leaves, onUpdate, currentTeacherId }
   return (
     <div className="space-y-6">
       {/* Header section */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-        <h2 className="text-2xl font-bold text-gray-800">
-          {isManagement ? 'Manajemen Cuti' : 'Pengajuan Cuti'}
-        </h2>
-        <div className="flex w-full sm:w-auto space-x-2">
+      <div className="flex flex-col md:flex-row md:items-end justify-between mb-12 gap-6 border-b border-outline-variant/30 pb-8">
+        <div>
+          <h1 className="text-4xl font-headline font-bold text-on-surface mb-3 tracking-tight">
+            {isManagement ? 'Manajemen Pengajuan Cuti' : 'Pengajuan Cuti'}
+          </h1>
+          <p className="text-lg text-on-surface-variant/80 italic font-headline">Kelola dan tinjau semua permintaan izin dan cuti staf pengajar dengan presisi.</p>
+        </div>
+        <div className="flex flex-wrap gap-4">
           {isAdmin && (
             <button
               onClick={handleExportExcel}
-              className="flex-1 sm:flex-none justify-center items-center space-x-2 px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors shadow-sm inline-flex"
+              className="flex items-center gap-2 px-6 py-2.5 bg-surface-container-lowest border border-outline-variant/50 rounded-xl font-bold text-primary hover:bg-primary/5 transition-all text-sm shadow-sm"
             >
-              <FileSpreadsheet className="w-5 h-5" />
-              <span className="hidden sm:inline">Export Excel</span>
+              <span className="material-symbols-outlined text-[20px]">download</span>
+              Ekspor Laporan
             </button>
           )}
           <button
@@ -262,396 +255,332 @@ export function LeaveManagement({ teachers, leaves, onUpdate, currentTeacherId }
               });
               setShowForm(true);
             }}
-            className="flex-1 sm:flex-none justify-center items-center space-x-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors shadow-sm inline-flex"
+            className="flex items-center gap-2 px-6 py-2.5 bg-primary rounded-xl font-bold text-on-primary hover:brightness-95 transition-all text-sm shadow-sm"
           >
-            <Plus className="w-5 h-5" />
-            <span>{isManagement && !isAdmin ? 'Ajukan Cuti Pribadi' : isAdmin ? 'Tambah Cuti' : 'Ajukan Cuti'}</span>
+            <span className="material-symbols-outlined text-[20px]">add</span>
+            {isManagement && !isAdmin ? 'Ajukan Cuti Pribadi' : isAdmin ? 'Tambah Cuti' : 'Ajukan Cuti'}
           </button>
         </div>
       </div>
 
       {/* Quota Summary for Current Teacher */}
       {currentTeacherId && (
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-          <div className="bg-white rounded-xl p-4 border border-gray-100 shadow-sm flex items-center space-x-4">
-            <div className="p-3 bg-blue-50 text-blue-600 rounded-lg">
-              <Calendar className="w-6 h-6" />
-            </div>
-            <div>
-              <p className="text-sm font-medium text-gray-500">Total Kuota Cuti Tahunan</p>
-              <p className="text-2xl font-bold text-gray-800">{annualLeaveQuota} Hari</p>
+        <div className="bg-surface-container-low p-6 rounded-2xl border border-outline-variant/20 shadow-sm mb-12 flex flex-col md:flex-row md:items-center gap-8">
+          <div className="flex-1">
+             <p className="text-[10px] font-label uppercase tracking-widest text-on-surface-variant/60 mb-2 font-bold">Sisa Saldo Cuti</p>
+             <div className="flex items-baseline gap-2 mb-3">
+               <span className="text-4xl font-headline font-bold text-primary">{remainingAnnualLeaves.toString().padStart(2, '0')}</span>
+               <span className="text-sm text-on-surface-variant font-medium">Hari</span>
+               <span className="text-[11px] text-on-surface-variant italic ml-2">Dari {annualLeaveQuota} Hari / Tahun</span>
+             </div>
+             <div className="w-full bg-outline-variant/30 h-1.5 rounded-full overflow-hidden">
+               <div className="bg-primary h-full rounded-full" style={{ width: `${(remainingAnnualLeaves / annualLeaveQuota) * 100}%` }}></div>
+             </div>
+          </div>
+          <div className="flex gap-8">
+             <div>
+               <p className="text-[10px] font-label uppercase tracking-widest text-on-surface-variant/60 mb-2 font-bold">Cuti Terpakai</p>
+               <p className="text-2xl font-headline font-bold text-on-surface">{usedAnnualLeaves.toString().padStart(2, '0')} Hari</p>
+             </div>
+          </div>
+        </div>
+      )}
+
+      {/* Stats Bento */}
+      {isManagement && (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
+          <div className="bg-surface-container-lowest p-6 rounded-2xl border border-outline-variant/20 shadow-sm hover:border-primary/30 transition-all">
+            <p className="text-on-surface-variant/60 font-label text-[11px] uppercase tracking-widest mb-4">Menunggu</p>
+            <div className="flex items-end justify-between">
+              <span className="text-4xl font-headline font-bold text-on-surface">
+                {displayLeaves.filter(l => l.status.startsWith('pending')).length.toString().padStart(2, '0')}
+              </span>
+              <div className="w-10 h-10 rounded-full bg-tertiary-fixed/30 flex items-center justify-center text-tertiary">
+                <span className="material-symbols-outlined">pending_actions</span>
+              </div>
             </div>
           </div>
-          <div className="bg-white rounded-xl p-4 border border-gray-100 shadow-sm flex items-center space-x-4">
-            <div className="p-3 bg-orange-50 text-orange-600 rounded-lg">
-              <Clock className="w-6 h-6" />
-            </div>
-            <div>
-              <p className="text-sm font-medium text-gray-500">Cuti Terpakai</p>
-              <p className="text-2xl font-bold text-gray-800">{usedAnnualLeaves} Hari</p>
+          <div className="bg-surface-container-lowest p-6 rounded-2xl border border-outline-variant/20 shadow-sm hover:border-primary/30 transition-all">
+            <p className="text-on-surface-variant/60 font-label text-[11px] uppercase tracking-widest mb-4">Disetujui</p>
+            <div className="flex items-end justify-between">
+              <span className="text-4xl font-headline font-bold text-on-surface">
+                {displayLeaves.filter(l => l.status === 'approved').length.toString().padStart(2, '0')}
+              </span>
+              <div className="w-10 h-10 rounded-full bg-primary-fixed/30 flex items-center justify-center text-primary">
+                <span className="material-symbols-outlined">event_available</span>
+              </div>
             </div>
           </div>
-          <div className="bg-white rounded-xl p-4 border border-gray-100 shadow-sm flex items-center space-x-4">
-            <div className="p-3 bg-green-50 text-green-600 rounded-lg">
-              <CheckCircle className="w-6 h-6" />
+          <div className="bg-surface-container-lowest p-6 rounded-2xl border border-outline-variant/20 shadow-sm hover:border-primary/30 transition-all">
+            <p className="text-on-surface-variant/60 font-label text-[11px] uppercase tracking-widest mb-4">Sedang Cuti</p>
+            <div className="flex items-end justify-between">
+              <span className="text-4xl font-headline font-bold text-on-surface">
+                {displayLeaves.filter(l => l.status === 'approved' && new Date(l.start_date) <= new Date() && new Date(l.end_date) >= new Date()).length.toString().padStart(2, '0')}
+              </span>
+              <div className="w-10 h-10 rounded-full bg-secondary-fixed/30 flex items-center justify-center text-secondary">
+                <span className="material-symbols-outlined">person_off</span>
+              </div>
             </div>
-            <div>
-              <p className="text-sm font-medium text-gray-500">Sisa Cuti</p>
-              <p className="text-2xl font-bold text-gray-800">{remainingAnnualLeaves} Hari</p>
+          </div>
+          <div className="bg-surface-container-lowest p-6 rounded-2xl border border-outline-variant/20 shadow-sm hover:border-primary/30 transition-all">
+            <p className="text-on-surface-variant/60 font-label text-[11px] uppercase tracking-widest mb-4">Ditolak</p>
+            <div className="flex items-end justify-between">
+              <span className="text-4xl font-headline font-bold text-on-surface">
+                {displayLeaves.filter(l => l.status === 'rejected').length.toString().padStart(2, '0')}
+              </span>
+              <div className="w-10 h-10 rounded-full bg-error-container/30 flex items-center justify-center text-error">
+                <span className="material-symbols-outlined">cancel</span>
+              </div>
             </div>
           </div>
         </div>
       )}
 
-      {/* Responsive list/table for Leaves */}
-      <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
-        {/* Mobile View: Cards */}
-        <div className="block md:hidden">
-          {displayLeaves.length === 0 ? (
-            <div className="p-8 text-center text-gray-500">Belum ada data pengajuan cuti.</div>
-          ) : (
-            <div className="divide-y divide-gray-100">
-              {displayLeaves.map((leave) => (
-                <div key={leave.id} className="p-4 space-y-3 hover:bg-gray-50 transition-colors">
-                  <div className="flex justify-between items-start">
-                    <div>
-                      {isManagement && (
-                        <div className="font-semibold text-gray-900 mb-1">
-                          {getTeacherName(leave.teacher_id)}
-                        </div>
-                      )}
-                      <div className="text-sm font-medium text-blue-600">{leave.leave_type}</div>
-                    </div>
-                    {renderStatusBadge(leave.status)}
-                  </div>
-                  
-                  <div className="text-sm text-gray-600 flex items-center gap-2">
-                    <Clock className="w-4 h-4 text-gray-400" />
-                    <span>
-                      {format(parseISO(leave.start_date), 'dd MMM yyyy', { locale: id })} -{' '}
-                      {format(parseISO(leave.end_date), 'dd MMM yyyy', { locale: id })} 
-                      <span className="ml-1 text-xs bg-gray-100 px-2 py-0.5 rounded-full">
-                        {getLeaveDuration(leave.start_date, leave.end_date)} hari
-                      </span>
-                    </span>
-                  </div>
-
-                  <div className="text-sm text-gray-500 bg-gray-50 p-2 rounded border border-gray-100">
-                    "{leave.reason}"
-                  </div>
-
-                  {/* Actions Mobile */}
-                  <div className="flex justify-end pt-3 gap-2 border-t border-gray-50 mt-2">
-                    {canApprove(leave.status) && (
-                      <>
-                        <button
-                          onClick={() => handleStatusUpdate(leave.id, 'approve', leave.status)}
-                          className="flex items-center gap-1 px-3 py-1.5 bg-green-50 text-green-700 hover:bg-green-100 rounded-md text-sm font-medium transition-colors"
-                        >
-                          <CheckCircle className="w-4 h-4" /> Setujui
-                        </button>
-                        <button
-                          onClick={() => handleStatusUpdate(leave.id, 'reject', leave.status)}
-                          className="flex items-center gap-1 px-3 py-1.5 bg-red-50 text-red-700 hover:bg-red-100 rounded-md text-sm font-medium transition-colors"
-                        >
-                          <XCircle className="w-4 h-4" /> Tolak
-                        </button>
-                      </>
-                    )}
-                    
-                    {leave.teacher_id === currentTeacherId && (leave.status === 'pending_hod' || leave.status === 'pending_koor_hod' || leave.status === 'pending') && (
-                      <button
-                        onClick={() => handleEdit(leave)}
-                        className="p-1.5 text-blue-600 hover:bg-blue-50 rounded-md transition-colors"
-                      >
-                        <Edit2 className="w-4 h-4" />
-                      </button>
-                    )}
-                    
-                    {(isAdmin || (leave.teacher_id === currentTeacherId && (leave.status === 'pending_hod' || leave.status === 'pending_koor_hod' || leave.status === 'pending'))) && (
-                      <button
-                        onClick={() => handleDelete(leave.id)}
-                        className="p-1.5 text-red-600 hover:bg-red-50 rounded-md transition-colors"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </button>
-                    )}
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
-
-        {/* Desktop View: Table */}
-        <div className="hidden md:block overflow-x-auto">
-          <table className="w-full">
-            <thead className="bg-gray-50 border-b border-gray-200">
-              <tr>
-                {isManagement && (
-                  <th className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
-                    Guru
-                  </th>
-                )}
-                <th className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
-                  Detail Cuti
-                </th>
-                <th className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
-                  Periode & Durasi
-                </th>
-                <th className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
-                  Status
-                </th>
-                <th className="px-6 py-4 text-right text-xs font-semibold text-gray-500 uppercase tracking-wider">
-                  Aksi
-                </th>
-              </tr>
-            </thead>
-            <tbody className="bg-white divide-y divide-gray-100">
-              {displayLeaves.map((leave) => (
-                <tr key={leave.id} className="hover:bg-blue-50/50 transition-colors group">
-                  {isManagement && (
-                    <td className="px-6 py-5 whitespace-nowrap">
-                      <div className="font-medium text-gray-900">
-                        {getTeacherName(leave.teacher_id)}
-                      </div>
-                    </td>
-                  )}
-                  <td className="px-6 py-5">
-                    <div className="text-sm font-medium text-gray-900 mb-1">{leave.leave_type}</div>
-                    <div className="text-sm text-gray-500 line-clamp-2 max-w-xs" title={leave.reason}>{leave.reason}</div>
-                  </td>
-                  <td className="px-6 py-5 whitespace-nowrap">
-                    <div className="text-sm text-gray-900 mb-1">
-                      {format(parseISO(leave.start_date), 'dd MMM yyyy', { locale: id })} <ChevronRight className="w-3 h-3 inline text-gray-400 mx-1" /> {format(parseISO(leave.end_date), 'dd MMM yyyy', { locale: id })}
-                    </div>
-                    <div className="text-xs font-medium text-gray-500 bg-gray-100 inline-block px-2 py-1 rounded-md">
-                      {getLeaveDuration(leave.start_date, leave.end_date)} hari
-                    </div>
-                  </td>
-                  <td className="px-6 py-5 whitespace-nowrap">
-                    {renderStatusBadge(leave.status)}
-                  </td>
-                  <td className="px-6 py-5 whitespace-nowrap text-right text-sm font-medium space-x-2">
-                    <div className="flex items-center justify-end gap-2 sm:opacity-0 sm:group-hover:opacity-100 opacity-100 transition-opacity">
-                      {canApprove(leave.status) && (
-                        <>
-                          <button
-                            onClick={() => handleStatusUpdate(leave.id, 'approve', leave.status)}
-                            className="text-green-600 hover:text-green-900 hover:bg-green-50 p-2 rounded-full transition-colors tooltip"
-                            title="Setujui"
-                          >
-                            <CheckCircle className="w-5 h-5" />
-                          </button>
-                          <button
-                            onClick={() => handleStatusUpdate(leave.id, 'reject', leave.status)}
-                            className="text-red-600 hover:text-red-900 hover:bg-red-50 p-2 rounded-full transition-colors"
-                            title="Tolak"
-                          >
-                            <XCircle className="w-5 h-5" />
-                          </button>
-                        </>
-                      )}
-                      
-                      {leave.teacher_id === currentTeacherId && (leave.status === 'pending_hod' || leave.status === 'pending_koor_hod' || leave.status === 'pending') && (
-                        <button
-                          onClick={() => handleEdit(leave)}
-                          className="text-blue-600 hover:text-blue-900 hover:bg-blue-50 p-2 rounded-full transition-colors"
-                          title="Edit"
-                        >
-                          <Edit2 className="w-5 h-5" />
-                        </button>
-                      )}
-                      
-                      {(isAdmin || (leave.teacher_id === currentTeacherId && (leave.status === 'pending_hod' || leave.status === 'pending_koor_hod' || leave.status === 'pending'))) && (
-                        <button
-                          onClick={() => handleDelete(leave.id)}
-                          className="text-red-600 hover:text-red-900 hover:bg-red-50 p-2 rounded-full transition-colors"
-                          title="Hapus"
-                        >
-                          <Trash2 className="w-5 h-5" />
-                        </button>
-                      )}
-                    </div>
-                  </td>
-                </tr>
-              ))}
-              {displayLeaves.length === 0 && (
-                <tr>
-                  <td colSpan={isManagement ? 5 : 4} className="px-6 py-12 text-center text-gray-500">
-                    <div className="flex flex-col items-center justify-center">
-                      <FileSpreadsheet className="w-12 h-12 text-gray-300 mb-3" />
-                      <p className="text-lg font-medium text-gray-900">Belum ada data cuti</p>
-                      <p className="text-sm text-gray-500">Daftar pengajuan cuti akan tampil di sini.</p>
-                    </div>
-                  </td>
-                </tr>
-              )}
-            </tbody>
-          </table>
+      {/* Filter Bar */}
+      <div className="flex flex-wrap items-center justify-between gap-6 mb-8 px-2 border-b border-outline-variant/30 pb-2">
+        <div className="flex items-center gap-8">
+          <div className="flex items-center gap-2 border-b-2 border-primary pb-2 -mb-[3px]">
+            <span className="text-sm font-bold text-primary">Semua Pengajuan</span>
+          </div>
         </div>
       </div>
 
-      {showForm && (
-        <div className="fixed inset-0 bg-gray-900/40 backdrop-blur-sm flex items-center justify-center p-4 z-50 animate-in fade-in duration-200">
-          <div className="bg-white rounded-2xl shadow-2xl max-w-lg w-full transform transition-all max-h-[90vh] overflow-y-auto">
-            <div className="border-b border-gray-100 px-6 py-5 flex justify-between items-center sticky top-0 bg-white z-10">
-              <h3 className="text-xl font-bold text-gray-800">
-                {editingLeave ? 'Edit Cuti' : (isAdmin ? 'Tambah Cuti' : 'Ajukan Cuti')}
-              </h3>
-              <button
-                onClick={() => setShowForm(false)}
-                className="text-gray-400 hover:text-gray-600 hover:bg-gray-100 p-2 rounded-full transition-colors"
-              >
-                <X className="w-5 h-5" />
-              </button>
-            </div>
-
-            <form onSubmit={handleSubmit} className="p-6 space-y-5">
-              {isAdmin ? (
-                <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-1.5">
-                    Guru
-                  </label>
-                  <select
-                    value={formData.teacher_id}
-                    onChange={(e) =>
-                      setFormData({ ...formData, teacher_id: e.target.value })
-                    }
-                    className="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors bg-white shadow-sm"
-                    required
-                  >
-                    <option value="">Pilih Guru</option>
-                    {teachers.map((teacher) => (
-                      <option key={teacher.id} value={teacher.id}>
-                        {teacher.name} - {teacher.subject}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-              ) : (
-                <div className="bg-blue-50/50 p-4 rounded-xl border border-blue-100 flex items-start space-x-3 text-blue-800 shadow-sm">
-                  <Clock className="w-5 h-5 mt-0.5 text-blue-500" />
-                  <div>
-                    <h4 className="text-sm font-semibold mb-0.5">Mengajukan cuti untuk:</h4>
-                    <p className="text-sm font-medium text-blue-900">{getTeacherName(currentTeacherId || '')}</p>
+      {/* Leave Request Table (Card Layout) */}
+      <div className="flex flex-col gap-4">
+        {displayLeaves.length === 0 ? (
+           <div className="p-12 text-center text-on-surface-variant/60 shadow-sm bg-surface-container-lowest rounded-2xl border border-outline-variant/20">
+             <span className="material-symbols-outlined text-4xl mb-2">inbox</span>
+             <p className="font-serif italic text-lg">Belum ada pengajuan cuti.</p>
+           </div>
+        ) : (
+          displayLeaves.map(leave => {
+            const teacher = teachers.find(t => t.id === leave.teacher_id);
+            const isPending = leave.status.startsWith('pending');
+            
+            return (
+              <div key={leave.id} className="bg-surface-container-lowest p-6 rounded-2xl border border-outline-variant/20 shadow-sm hover:shadow-md hover:border-primary/30 transition-all group">
+                <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-center">
+                  <div className="col-span-4 flex items-center gap-4">
+                    {teacher?.avatar_url ? (
+                      <img className="w-14 h-14 rounded-full object-cover border-2 border-surface-container-high" src={teacher.avatar_url} alt="" />
+                    ) : (
+                      <div className="w-14 h-14 rounded-full bg-surface-container flex items-center justify-center border-2 border-surface-container-high text-on-surface-variant">
+                        <span className="material-symbols-outlined">person</span>
+                      </div>
+                    )}
+                    <div>
+                      <h4 className="font-headline font-bold text-on-surface text-lg">{teacher?.name || 'Unknown'}</h4>
+                      <p className="text-sm text-on-surface-variant italic">{teacher?.subject || '-'}</p>
+                    </div>
+                  </div>
+                  <div className="col-span-2">
+                    <span className="text-[11px] font-label uppercase tracking-widest text-on-surface-variant/60 block mb-1">Jenis Cuti</span>
+                    <span className="text-sm font-bold flex items-center gap-1.5">
+                      <span className="material-symbols-outlined text-[16px] text-primary">
+                        {leave.leave_type.includes('Sakit') ? 'medical_services' : 
+                         leave.leave_type.includes('Tahunan') ? 'flight' : 'event_note'}
+                      </span>
+                      {leave.leave_type}
+                    </span>
+                  </div>
+                  <div className="col-span-2">
+                    <span className="text-[11px] font-label uppercase tracking-widest text-on-surface-variant/60 block mb-1">Durasi</span>
+                    <p className="text-sm font-bold">{format(parseISO(leave.start_date), 'dd MMM', { locale: id })} - {format(parseISO(leave.end_date), 'dd MMM yyyy', { locale: id })}</p>
+                    <p className="text-[11px] text-on-surface-variant">{getLeaveDuration(leave.start_date, leave.end_date)} Hari Kerja</p>
+                  </div>
+                  <div className="col-span-2 flex items-center lg:justify-center">
+                    <span className={getStatusPillClasses(leave.status)}>
+                      {getStatusLabel(leave.status)}
+                    </span>
+                  </div>
+                  <div className="col-span-2 flex items-center justify-end gap-2">
+                    {canApprove(leave.status) && (
+                      <>
+                        <button onClick={() => handleStatusUpdate(leave.id, 'approve', leave.status)} className="w-10 h-10 rounded-xl bg-primary text-on-primary flex items-center justify-center hover:shadow-lg transition-all" title="Setujui">
+                          <span className="material-symbols-outlined text-[20px]">check</span>
+                        </button>
+                        <button onClick={() => handleStatusUpdate(leave.id, 'reject', leave.status)} className="w-10 h-10 rounded-xl bg-surface-container-high text-on-surface-variant flex items-center justify-center hover:bg-error/10 hover:text-error transition-all" title="Tolak">
+                          <span className="material-symbols-outlined text-[20px]">close</span>
+                        </button>
+                      </>
+                    )}
+                    {leave.teacher_id === currentTeacherId && isPending && (
+                      <button onClick={() => handleEdit(leave)} className="w-10 h-10 rounded-xl bg-surface-container-high text-on-surface-variant flex items-center justify-center hover:bg-primary/10 hover:text-primary transition-all" title="Edit">
+                        <span className="material-symbols-outlined text-[20px]">edit</span>
+                      </button>
+                    )}
+                    {(isAdmin || (leave.teacher_id === currentTeacherId && isPending)) && (
+                      <button onClick={() => handleDelete(leave.id)} className="w-10 h-10 rounded-xl bg-surface-container-high text-on-surface-variant flex items-center justify-center hover:bg-error/10 hover:text-error transition-all" title="Hapus">
+                        <span className="material-symbols-outlined text-[20px]">delete</span>
+                      </button>
+                    )}
                   </div>
                 </div>
-              )}
-
-              <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-1.5">
-                  Jenis Cuti
-                </label>
-                <select
-                  value={formData.leave_type}
-                  onChange={(e) =>
-                    setFormData({ ...formData, leave_type: e.target.value })
-                  }
-                  className="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors bg-white shadow-sm"
-                  required
-                >
-                  <option value="">Pilih Jenis Cuti</option>
-                  <option value="Cuti Tahunan">Cuti Tahunan</option>
-                  <option value="Cuti Sakit">Cuti Sakit</option>
-                  <option value="Cuti Melahirkan">Cuti Melahirkan</option>
-                  <option value="Cuti Keperluan Pribadi">Cuti Keperluan Pribadi</option>
-                  <option value="Cuti Penting">Cuti Penting</option>
-                  <option value="Izin">Izin</option>
-                </select>
               </div>
+            );
+          })
+        )}
+      </div>
 
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-1.5">
-                    Mulai
-                  </label>
-                  <input
-                    type="date"
-                    value={formData.start_date}
-                    onChange={(e) =>
-                      setFormData({ ...formData, start_date: e.target.value })
-                    }
-                    className="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors bg-white shadow-sm"
-                    required
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-1.5">
-                    Selesai
-                  </label>
-                  <input
-                    type="date"
-                    value={formData.end_date}
-                    onChange={(e) =>
-                      setFormData({ ...formData, end_date: e.target.value })
-                    }
-                    className="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors bg-white shadow-sm"
-                    required
-                  />
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-1.5">
-                  Alasan / Keterangan
-                </label>
-                <textarea
-                  value={formData.reason}
-                  onChange={(e) =>
-                    setFormData({ ...formData, reason: e.target.value })
-                  }
-                  rows={3}
-                  className="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors bg-white shadow-sm resize-none"
-                  placeholder="Jelaskan alasan cuti dengan singkat..."
-                  required
-                />
-              </div>
-
-              {isAdmin && (
-                <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-1.5">
-                    Status (Admin Override)
-                  </label>
-                  <select
-                    value={formData.status}
-                    onChange={(e) =>
-                      setFormData({
-                        ...formData,
-                        status: e.target.value as Leave['status'],
-                      })
-                    }
-                    className="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors bg-white shadow-sm"
-                    required
-                  >
-                    <option value="pending_hod">Menunggu HOD</option>
-                    <option value="pending_koor_hod">Menunggu Koor HOD</option>
-                    <option value="pending_wakasek">Menunggu Wakasek</option>
-                    <option value="pending_kepsek">Menunggu Kepsek</option>
-                    <option value="approved">Disetujui</option>
-                    <option value="rejected">Ditolak</option>
-                  </select>
-                </div>
-              )}
-
-              <div className="flex justify-end space-x-3 pt-6 border-t border-gray-100 mt-2">
+      {/* Form Modal (Styled like Details Panel) */}
+      {showForm && (
+        <div className="fixed inset-0 bg-on-surface/50 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+          <div className="bg-surface-container-lowest rounded-3xl border border-outline-variant/30 shadow-2xl relative overflow-hidden max-w-3xl w-full max-h-[90vh] overflow-y-auto">
+            <div className="h-2 bg-primary"></div>
+            <div className="p-10">
+              <div className="absolute top-10 right-10">
                 <button
-                  type="button"
                   onClick={() => setShowForm(false)}
-                  className="px-5 py-2.5 text-gray-600 font-medium rounded-xl hover:bg-gray-100 transition-colors"
+                  className="p-2 hover:bg-surface-container-high rounded-full transition-all"
                 >
-                  Batal
-                </button>
-                <button
-                  type="submit"
-                  disabled={loading}
-                  className="px-6 py-2.5 bg-blue-600 text-white font-medium rounded-xl hover:bg-blue-700 transition-colors disabled:bg-blue-300 shadow-sm flex items-center"
-                >
-                  {loading ? 'Menyimpan...' : 'Kirim Pengajuan'}
+                  <span className="material-symbols-outlined text-on-surface-variant">close</span>
                 </button>
               </div>
-            </form>
+
+              <div className="mb-10 border-b border-outline-variant/30 pb-6 pr-8">
+                <h4 className="text-2xl font-headline font-bold text-on-surface">
+                  {editingLeave ? 'Detail & Edit Pengajuan Cuti' : (isAdmin ? 'Formulir Pengajuan Cuti (Admin)' : 'Formulir Pengajuan Cuti')}
+                </h4>
+                {editingLeave && (
+                  <div className="mt-4">
+                     <span className={getStatusPillClasses(formData.status)}>{getStatusLabel(formData.status)}</span>
+                  </div>
+                )}
+              </div>
+
+              <form onSubmit={handleSubmit} className="space-y-8">
+                {isAdmin ? (
+                  <div>
+                    <label className="text-[10px] font-label uppercase tracking-widest text-on-surface-variant/60 mb-2 font-bold block">
+                      Guru
+                    </label>
+                    <select
+                      value={formData.teacher_id}
+                      onChange={(e) => setFormData({ ...formData, teacher_id: e.target.value })}
+                      className="w-full bg-surface-container-low px-4 py-3 rounded-xl border border-outline-variant/20 focus:ring-primary focus:border-primary text-on-surface font-bold text-sm"
+                      required
+                    >
+                      <option value="">Pilih Guru</option>
+                      {teachers.map((teacher) => (
+                        <option key={teacher.id} value={teacher.id}>
+                          {teacher.name} - {teacher.subject}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                ) : (
+                  <div className="bg-surface-container-low p-6 rounded-2xl border border-outline-variant/20">
+                    <p className="text-[10px] font-label uppercase tracking-widest text-on-surface-variant/60 mb-2 font-bold">Mengajukan cuti untuk:</p>
+                    <p className="text-lg font-headline font-bold text-primary">{getTeacherName(currentTeacherId || '')}</p>
+                  </div>
+                )}
+
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+                  <div>
+                    <label className="text-[10px] font-label uppercase tracking-widest text-on-surface-variant/60 mb-2 font-bold block">
+                      Jenis Cuti
+                    </label>
+                    <select
+                      value={formData.leave_type}
+                      onChange={(e) => setFormData({ ...formData, leave_type: e.target.value })}
+                      className="w-full bg-surface-container-low px-4 py-3 rounded-xl border border-outline-variant/20 focus:ring-primary focus:border-primary text-on-surface font-bold text-sm"
+                      required
+                    >
+                      <option value="">Pilih Jenis Cuti</option>
+                      <option value="Cuti Tahunan">Cuti Tahunan</option>
+                      <option value="Cuti Sakit">Cuti Sakit</option>
+                      <option value="Cuti Melahirkan">Cuti Melahirkan</option>
+                      <option value="Cuti Keperluan Pribadi">Cuti Keperluan Pribadi</option>
+                      <option value="Cuti Penting">Cuti Penting</option>
+                      <option value="Izin">Izin</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="text-[10px] font-label uppercase tracking-widest text-on-surface-variant/60 mb-2 font-bold block">
+                      Tanggal Mulai
+                    </label>
+                    <input
+                      type="date"
+                      value={formData.start_date}
+                      onChange={(e) => setFormData({ ...formData, start_date: e.target.value })}
+                      className="w-full bg-surface-container-low px-4 py-3 rounded-xl border border-outline-variant/20 focus:ring-primary focus:border-primary text-on-surface font-bold text-sm"
+                      required
+                    />
+                  </div>
+
+                  <div>
+                    <label className="text-[10px] font-label uppercase tracking-widest text-on-surface-variant/60 mb-2 font-bold block">
+                      Tanggal Selesai
+                    </label>
+                    <input
+                      type="date"
+                      value={formData.end_date}
+                      onChange={(e) => setFormData({ ...formData, end_date: e.target.value })}
+                      className="w-full bg-surface-container-low px-4 py-3 rounded-xl border border-outline-variant/20 focus:ring-primary focus:border-primary text-on-surface font-bold text-sm"
+                      required
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="text-[10px] font-label uppercase tracking-widest text-on-surface-variant/60 mb-4 font-bold block">
+                    Alasan / Keterangan Lengkap
+                  </label>
+                  <div className="relative">
+                    <span className="absolute -top-4 -left-2 text-6xl text-primary/10 font-serif opacity-50">“</span>
+                    <textarea
+                      value={formData.reason}
+                      onChange={(e) => setFormData({ ...formData, reason: e.target.value })}
+                      rows={4}
+                      className="w-full relative z-10 px-6 py-4 bg-surface-container-low rounded-2xl border-l-4 border-primary/20 border-y-0 border-r-0 focus:ring-primary text-on-surface font-headline italic leading-relaxed resize-none text-lg"
+                      placeholder="Jelaskan alasan pengajuan secara rinci..."
+                      required
+                    />
+                  </div>
+                </div>
+
+                {isAdmin && (
+                  <div>
+                    <label className="text-[10px] font-label uppercase tracking-widest text-on-surface-variant/60 mb-2 font-bold block">
+                      Status (Admin Override)
+                    </label>
+                    <select
+                      value={formData.status}
+                      onChange={(e) => setFormData({ ...formData, status: e.target.value as Leave['status'] })}
+                      className="w-full bg-surface-container-low px-4 py-3 rounded-xl border border-outline-variant/20 focus:ring-primary focus:border-primary text-on-surface font-bold text-sm"
+                      required
+                    >
+                      <option value="pending_hod">Menunggu HOD</option>
+                      <option value="pending_koor_hod">Menunggu Koor HOD</option>
+                      <option value="pending_wakasek">Menunggu Wakasek</option>
+                      <option value="pending_kepsek">Menunggu Kepsek</option>
+                      <option value="approved">Disetujui</option>
+                      <option value="rejected">Ditolak</option>
+                    </select>
+                  </div>
+                )}
+
+                <div className="flex flex-wrap justify-end gap-4 pt-8 border-t border-outline-variant/20">
+                  <button
+                    type="button"
+                    onClick={() => setShowForm(false)}
+                    className="px-8 py-3 rounded-xl border border-error/30 text-error font-bold hover:bg-error/5 transition-all flex items-center gap-2"
+                  >
+                    <span className="material-symbols-outlined text-[20px]">close</span>
+                    Batal
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={loading}
+                    className="px-8 py-3 rounded-xl bg-primary text-on-primary font-bold shadow-lg shadow-primary/20 hover:scale-[1.02] transition-all flex items-center gap-2 disabled:opacity-50 disabled:hover:scale-100"
+                  >
+                    <span className="material-symbols-outlined text-[20px]">check_circle</span>
+                    {loading ? 'Menyimpan...' : 'Simpan Pengajuan'}
+                  </button>
+                </div>
+              </form>
+            </div>
           </div>
         </div>
       )}
