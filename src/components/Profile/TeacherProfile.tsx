@@ -124,12 +124,12 @@ export function TeacherProfile({ teacherId }: TeacherProfileProps) {
   const remainingAnnualLeaves = Math.max(0, annualLeaveQuota - usedAnnualLeaves);
 
   return (
-    <div className="min-h-screen bg-background selection:bg-primary-container/20 pb-20">
+    <div className="min-h-screen bg-background selection:bg-primary-container/20 pb-20 p-8 lg:p-12">
       {/* Welcome section */}
-      <section className="mb-16">
-        <div className="flex flex-col md:flex-row md:items-baseline justify-between border-b-2 border-on-surface pb-6">
+      <section className="mb-16 mt-4">
+        <div className="flex flex-col md:flex-row md:items-baseline justify-between border-b-2 border-on-surface pb-8">
           <div>
-            <h2 className="text-5xl font-serif font-bold text-on-surface italic">Halo, {teacher.name.split(',')[0]}</h2>
+            <h2 className="text-5xl font-serif font-bold text-on-surface italic tracking-tight">Halo, {teacher.name.split(',')[0]}</h2>
             <p className="text-xl text-on-surface-variant mt-3 font-serif">Ringkasan profil akademik dan administratif Anda.</p>
           </div>
           <div className="mt-6 md:mt-0 font-label text-sm uppercase tracking-widest flex items-center gap-2">
@@ -265,7 +265,7 @@ export function TeacherProfile({ teacherId }: TeacherProfileProps) {
         {/* Right: Identity & Certs */}
         <div className="lg:col-span-4 flex flex-col gap-12">
           {/* ID Card (Editorial Style) */}
-          <div className="border-2 border-on-surface p-1 rounded-sm">
+          <div className="border-2 border-on-surface p-2 rounded-sm">
             <div className="bg-surface-container-lowest p-8 border border-outline-variant flex flex-col items-center">
               <div className="w-full flex justify-between border-b border-on-surface/10 pb-4 mb-8">
                 <span className="font-label text-[10px] uppercase tracking-[0.3em] font-bold">Academic Identity</span>
