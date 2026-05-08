@@ -155,29 +155,8 @@ export function TeacherPublicProfile({ teacherId }: TeacherPublicProfileProps) {
             </div>
           </div>
 
-          {/* Footer / Verification Seal */}
-          <div className="mt-12 text-center flex flex-col items-center">
-            <div className="w-24 h-24 mb-4 opacity-40 flex items-center justify-center">
-              <span className="material-symbols-outlined text-[80px] text-primary">gpp_good</span>
-            </div>
-            <p className="font-label text-[10px] uppercase tracking-[0.3em] text-on-surface-variant mb-6">Alexandria Editorial Sync — Digital Curator</p>
-            
-            {/* Action for PDF version or similar */}
-            <button className="w-full py-4 px-6 rounded-full bg-surface-container-high text-primary font-label text-sm font-bold uppercase tracking-widest hover:bg-surface-variant transition-all flex items-center justify-center gap-3">
-              <span className="material-symbols-outlined text-lg">download</span>
-              Download Digital Credential
-            </button>
-          </div>
         </div>
       </main>
-
-      {/* Bottom Disclaimer (Mobile Friendly) */}
-      <footer className="mt-12 mb-8 px-8 text-center relative z-10">
-        <p className="font-body text-[10px] text-outline leading-relaxed max-w-xs mx-auto">
-          This page was generated via an encrypted QR link for verification purposes.
-          The data shown is synced in real-time with the Alexandria Editorial Database.
-        </p>
-      </footer>
     </div>
   );
 }
