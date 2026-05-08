@@ -2,7 +2,7 @@ import { BrowserRouter, Routes, Route, Navigate, useParams } from 'react-router-
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { LoginForm } from './components/Auth/LoginForm';
 import { Dashboard } from './components/Dashboard/Dashboard';
-import { TeacherProfile } from './components/Profile/TeacherProfile';
+import { TeacherPublicProfile } from './components/Profile/TeacherPublicProfile';
 
 function PrivateRoute({ children }: { children: React.ReactNode }) {
   const { user, loading } = useAuth();
@@ -23,7 +23,7 @@ function PrivateRoute({ children }: { children: React.ReactNode }) {
 
 function TeacherProfileWrapper() {
   const { teacherId } = useParams<{ teacherId: string }>();
-  return <TeacherProfile teacherId={teacherId || ''} />;
+  return <TeacherPublicProfile teacherId={teacherId || ''} />;
 }
 
 function App() {
