@@ -243,7 +243,7 @@ export function Dashboard() {
               teachers={teachers}
               leaves={leaves}
               onUpdate={loadData}
-              currentTeacherId={teachers.find(t => t.user_id === profile?.id)?.id}
+              currentTeacherId={teachers.find(t => t.user_id === user?.id)?.id}
             />
           </div>
         )}

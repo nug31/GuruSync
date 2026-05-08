@@ -52,9 +52,17 @@ export function LeaveManagement({ teachers, leaves, onUpdate, currentTeacherId }
       // Determine initial pending status based on role
       const initialStatus = role === 'hod' ? 'pending_koor_hod' : 'pending_hod';
       
+      const teacherId = isAdmin ? formData.teacher_id : currentTeacherId;
+      
+      if (!teacherId) {
+        alert('Gagal: ID Guru tidak ditemukan. Pastikan profil Anda sudah terhubung dengan data guru.');
+        setLoading(false);
+        return;
+      }
+
       const submissionData = isAdmin ? formData : {
         ...formData,
-        teacher_id: currentTeacherId!,
+        teacher_id: teacherId,
         status: editingLeave ? formData.status : initialStatus as Leave['status']
       };
 
@@ -572,7 +580,7 @@ export function LeaveManagement({ teachers, leaves, onUpdate, currentTeacherId }
                   </button>
                   <button
                     type="submit"
-                    disabled={loading}
+                    disabled={loading || (!isAdmin && !currentTeacherId)}
                     className="px-8 py-3 rounded-xl bg-primary text-on-primary font-bold shadow-lg shadow-primary/20 hover:scale-[1.02] transition-all flex items-center gap-2 disabled:opacity-50 disabled:hover:scale-100"
                   >
                     <span className="material-symbols-outlined text-[20px]">check_circle</span>
