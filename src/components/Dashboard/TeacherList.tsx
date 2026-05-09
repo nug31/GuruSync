@@ -194,11 +194,16 @@ export function TeacherList({ teachers, leaves, onEdit, onDelete, onRefresh }: T
           }
 
           if (typeof val === 'number') {
-            const date = XLSX.SSF.parse_date_code(val);
-            // date object from SSF has y, m, d
-            const month = String(date.m).padStart(2, '0');
-            const day = String(date.d).padStart(2, '0');
-            return `${date.y}-${month}-${day}`;
+            try {
+              const date = XLSX.SSF.parse_date_code(val);
+              if (date) {
+                const month = String(date.m).padStart(2, '0');
+                const day = String(date.d).padStart(2, '0');
+                return `${date.y}-${month}-${day}`;
+              }
+            } catch (e) {
+              console.error('Error parsing date code:', e);
+            }
           }
 
           if (typeof val === 'string') {
