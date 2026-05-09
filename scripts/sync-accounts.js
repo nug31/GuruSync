@@ -31,10 +31,22 @@ async function syncAccounts() {
     let updatedCount = 0;
 
     for (const teacher of teachers) {
-      // CRITICAL: Skip if NIK is missing (to avoid collision on dummy email)
-      if (!teacher.nik || teacher.nik.trim() === '' || teacher.nik === '-') {
-        console.warn(`⚠️ Melewati ${teacher.name} karena NIK kosong.`);
-        continue;
+      let nik = teacher.nik?.trim();
+      
+      // Fallback if NIK is missing
+      if (!nik || nik === '' || nik === '-') {
+        if (teacher.birth_date) {
+          // Format birth_date (YYYY-MM-DD) to DDMMYY
+          const date = new Date(teacher.birth_date);
+          const d = String(date.getDate()).padStart(2, '0');
+          const m = String(date.getMonth() + 1).padStart(2, '0');
+          const y = String(date.getFullYear()).slice(-2);
+          nik = `${d}${m}${y}`;
+          console.log(`🎂 Menggunakan tanggal lahir sebagai NIK fallback untuk ${teacher.name}: ${nik}`);
+        } else {
+          console.warn(`⚠️ Melewati ${teacher.name} karena NIK dan Tanggal Lahir kosong.`);
+          continue;
+        }
       }
 
       let email = teacher.email;
@@ -42,7 +54,7 @@ async function syncAccounts() {
 
       // Fallback if email is missing
       if (!email || email.trim() === '') {
-        email = `${teacher.nik.trim()}@gurusync.net`;
+        email = `${nik}@gurusync.net`;
         needsEmailUpdate = true;
         console.log(`📧 Menghasilkan email fallback untuk ${teacher.name}: ${email}`);
       }
@@ -54,9 +66,9 @@ async function syncAccounts() {
         console.log(`➕ Membuat akun baru untuk: ${teacher.name} (${email})`);
         const { data: newUser, error: createError } = await supabase.auth.admin.createUser({
           email: email,
-          password: teacher.nik.trim(), // default password is NIK
+          password: nik, // default password is NIK (or DOB fallback)
           email_confirm: true,
-          user_metadata: { name: teacher.name, nik: teacher.nik }
+          user_metadata: { name: teacher.name, nik: nik }
         });
 
         if (createError) {
@@ -69,7 +81,7 @@ async function syncAccounts() {
         userId = existingUser.id;
         console.log(`🔄 Memperbarui akun: ${teacher.name} (${email})`);
         await supabase.auth.admin.updateUserById(userId, {
-          user_metadata: { name: teacher.name, nik: teacher.nik }
+          user_metadata: { name: teacher.name, nik: nik }
         });
         updatedCount++;
       }
@@ -79,7 +91,7 @@ async function syncAccounts() {
         id: userId,
         email: email,
         name: teacher.name,
-        nik: teacher.nik,
+        nik: nik,
         role: 'teacher'
       });
 

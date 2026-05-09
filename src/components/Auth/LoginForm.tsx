@@ -51,14 +51,14 @@ export function LoginForm() {
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              NIK atau Email
+              NIK, Email, atau Tanggal Lahir (6 digit)
             </label>
             <input
               type="text"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              placeholder="Masukkan NIK atau Email"
+              placeholder="NIK / Email / Tgl Lahir (DDMMYY)"
               required
             />
           </div>
