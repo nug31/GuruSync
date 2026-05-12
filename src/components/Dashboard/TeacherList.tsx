@@ -4,6 +4,8 @@ import { supabase } from '../../lib/supabase';
 import { differenceInDays, parseISO, format, parse, isValid } from 'date-fns';
 import { id, enUS } from 'date-fns/locale';
 import * as XLSX from 'xlsx';
+import JSZip from 'jszip';
+import QRCode from 'qrcode';
 import type { Teacher, Leave } from '../../types';
 import { TeacherCardBack } from './TeacherCardBack';
 
@@ -21,6 +23,7 @@ export function TeacherList({ teachers, leaves, onEdit, onDelete, onRefresh }: T
   const [showQRModal, setShowQRModal] = useState<Teacher | null>(null);
   const [showPrintModal, setShowPrintModal] = useState<Teacher | null>(null);
   const [importing, setImporting] = useState(false);
+  const [downloadingAll, setDownloadingAll] = useState(false);
   const qrRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -114,6 +117,49 @@ export function TeacherList({ teachers, leaves, onEdit, onDelete, onRefresh }: T
     };
 
     img.src = 'data:image/svg+xml;base64,' + btoa(unescape(encodeURIComponent(svgData)));
+  };
+
+  const handleDownloadAllQR = async () => {
+    if (filteredTeachers.length === 0) {
+      alert('Tidak ada data guru untuk didownload');
+      return;
+    }
+
+    if (!confirm(`Apakah Anda yakin ingin mendownload ${filteredTeachers.length} QR Code?`)) {
+      return;
+    }
+
+    setDownloadingAll(true);
+    const zip = new JSZip();
+    const qrFolder = zip.folder("qr-codes");
+
+    try {
+      for (const teacher of filteredTeachers) {
+        const url = getProfileUrl(teacher.id);
+        // Generate QR code as Data URL (PNG)
+        const qrDataUrl = await QRCode.toDataURL(url, {
+          width: 600,
+          margin: 2,
+          errorCorrectionLevel: 'H'
+        });
+        
+        // Remove the data:image/png;base64, prefix
+        const base64Data = qrDataUrl.replace(/^data:image\/png;base64,/, "");
+        qrFolder?.file(`qr-${teacher.nik}.png`, base64Data, { base64: true });
+      }
+
+      const content = await zip.generateAsync({ type: "blob" });
+      const link = document.createElement('a');
+      link.href = URL.createObjectURL(content);
+      link.download = `qr-codes-${format(new Date(), 'yyyyMMdd-HHmm')}.zip`;
+      link.click();
+      URL.revokeObjectURL(link.href);
+    } catch (error) {
+      console.error('Error generating ZIP:', error);
+      alert('Gagal mendownload QR codes');
+    } finally {
+      setDownloadingAll(false);
+    }
   };
 
   const handleExportExcel = () => {
@@ -363,6 +409,15 @@ export function TeacherList({ teachers, leaves, onEdit, onDelete, onRefresh }: T
            )}
            <button onClick={handleExportExcel} className="flex-1 flex items-center justify-center gap-1 bg-surface-container-low text-on-surface-variant hover:text-primary hover:bg-surface-container transition-colors text-xs font-bold py-1 px-1 rounded-sm" title="Export Data">
              <span className="material-symbols-outlined text-sm">download</span> Exp
+           </button>
+           <button 
+             onClick={handleDownloadAllQR} 
+             disabled={downloadingAll}
+             className={`flex-1 flex items-center justify-center gap-1 bg-surface-container-low text-on-surface-variant hover:text-primary hover:bg-surface-container transition-colors text-xs font-bold py-1 px-1 rounded-sm ${downloadingAll ? 'animate-pulse' : ''}`} 
+             title="Download All QR"
+           >
+             <span className="material-symbols-outlined text-sm">{downloadingAll ? 'sync' : 'qr_code_2'}</span> 
+             {downloadingAll ? '...' : 'QR All'}
            </button>
         </div>
       </section>
