@@ -109,7 +109,8 @@ export function TeacherList({ teachers, leaves, onEdit, onDelete, onRefresh }: T
           const url = URL.createObjectURL(blob);
           const link = document.createElement('a');
           link.href = url;
-          link.download = `qr-${teacher.nik}.png`;
+          const sanitizedName = teacher.name.replace(/[^a-z0-9]/gi, '_').toLowerCase();
+          link.download = `${sanitizedName}-${teacher.nik}.png`;
           link.click();
           URL.revokeObjectURL(url);
         }
@@ -143,9 +144,12 @@ export function TeacherList({ teachers, leaves, onEdit, onDelete, onRefresh }: T
           errorCorrectionLevel: 'H'
         });
         
+        // Sanitize name for filename
+        const sanitizedName = teacher.name.replace(/[^a-z0-9]/gi, '_').toLowerCase();
+        
         // Remove the data:image/png;base64, prefix
         const base64Data = qrDataUrl.replace(/^data:image\/png;base64,/, "");
-        qrFolder?.file(`qr-${teacher.nik}.png`, base64Data, { base64: true });
+        qrFolder?.file(`${sanitizedName}-${teacher.nik}.png`, base64Data, { base64: true });
       }
 
       const content = await zip.generateAsync({ type: "blob" });
