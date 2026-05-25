@@ -589,15 +589,51 @@ export function TeacherList({ teachers, leaves, onEdit, onDelete, onRefresh }: T
                   <TeacherCardBack teacher={showPrintModal} />
                 </div>
                 <button
-                  onClick={() => {
-                    const card = document.querySelector('.id-card-back') as HTMLElement;
-                    if (!card) return;
-                    html2canvas(card, { scale: 4, useCORS: true, backgroundColor: null }).then(canvas => {
+                  onClick={async () => {
+                    const originalContainer = document.querySelector('.id-card-back-container') as HTMLElement;
+                    if (!originalContainer) return;
+                    
+                    // Create a temporary container off-screen to prevent modal overflow clipping
+                    const tempWrapper = document.createElement('div');
+                    tempWrapper.style.position = 'fixed';
+                    tempWrapper.style.top = '-9999px';
+                    tempWrapper.style.left = '-9999px';
+                    // Ensure the wrapper is large enough so it doesn't clip its children
+                    tempWrapper.style.width = '1000px'; 
+                    tempWrapper.style.height = '1000px';
+                    tempWrapper.style.zIndex = '-9999';
+                    
+                    // Clone the entire container (including the <style> tags)
+                    const clone = originalContainer.cloneNode(true) as HTMLElement;
+                    
+                    // Hide the visual overlay in the clone so it doesn't mess with layout
+                    const overlay = clone.querySelector('.print\\:hidden');
+                    if (overlay) {
+                      (overlay as HTMLElement).style.display = 'none';
+                    }
+                    
+                    tempWrapper.appendChild(clone);
+                    document.body.appendChild(tempWrapper);
+                    
+                    // Find the actual card element inside the clone
+                    const cardToCapture = clone.querySelector('.id-card-back') as HTMLElement;
+                    
+                    try {
+                      const canvas = await html2canvas(cardToCapture, { 
+                        scale: 4, 
+                        useCORS: true, 
+                        backgroundColor: null,
+                        logging: false
+                      });
                       const link = document.createElement('a');
                       link.href = canvas.toDataURL('image/png');
                       link.download = `ID_Card_Belakang_${showPrintModal.name.replace(/\s+/g, '_')}.png`;
                       link.click();
-                    });
+                    } catch (error) {
+                      console.error("Failed to capture ID card:", error);
+                    } finally {
+                      document.body.removeChild(tempWrapper);
+                    }
                   }}
                   className="px-4 py-2 bg-secondary text-on-secondary text-xs font-bold rounded-sm hover:bg-secondary/90 transition-colors flex items-center gap-2 print:hidden"
                 >
