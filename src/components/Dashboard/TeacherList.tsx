@@ -8,7 +8,6 @@ import JSZip from 'jszip';
 import QRCode from 'qrcode';
 import type { Teacher, Leave } from '../../types';
 import { TeacherCardBack } from './TeacherCardBack';
-import { TeacherCardFront } from './TeacherCardFront';
 import html2canvas from 'html2canvas';interface TeacherListProps {
   teachers: Teacher[];
   leaves: Leave[];
@@ -583,30 +582,7 @@ export function TeacherList({ teachers, leaves, onEdit, onDelete, onRefresh }: T
               <p className="text-sm font-serif italic text-on-surface-variant mt-2">Anda dapat mengunduh gambar PNG berkualitas tinggi atau langsung mencetaknya.</p>
             </div>
 
-            <div className="flex flex-col lg:flex-row justify-center items-center gap-12 mb-8 id-card-print-area">
-              <div className="flex flex-col items-center gap-4">
-                <p className="font-bold text-sm text-on-surface-variant print:hidden">Bagian Depan (KTP Size)</p>
-                <div>
-                  <TeacherCardFront teacher={showPrintModal} />
-                </div>
-                <button
-                  onClick={() => {
-                    const card = document.getElementById('id-card-front-element');
-                    if (!card) return;
-                    html2canvas(card, { scale: 4, useCORS: true, backgroundColor: null }).then(canvas => {
-                      const link = document.createElement('a');
-                      link.href = canvas.toDataURL('image/png');
-                      link.download = `ID_Card_Depan_${showPrintModal.name.replace(/\s+/g, '_')}.png`;
-                      link.click();
-                    });
-                  }}
-                  className="px-4 py-2 bg-secondary text-on-secondary text-xs font-bold rounded-sm hover:bg-secondary/90 transition-colors flex items-center gap-2 print:hidden"
-                >
-                  <span className="material-symbols-outlined text-sm">download</span>
-                  Download Gambar Depan
-                </button>
-              </div>
-
+            <div className="flex flex-col items-center justify-center mb-8 id-card-print-area">
               <div className="flex flex-col items-center gap-4">
                 <p className="font-bold text-sm text-on-surface-variant print:hidden">Bagian Belakang (QR Code)</p>
                 <div>
