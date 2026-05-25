@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+
+<html class="light" lang="id"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Teacher Verification - GuruSync</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif:wght@400;700&amp;family=Inter:wght@400;500;600&amp;family=Public+Sans:wght@400;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "surface-dim": "#dbdadb",
+                        "surface": "#faf9fa",
+                        "surface-container-high": "#e9e8e9",
+                        "surface-variant": "#e3e2e3",
+                        "secondary-container": "#dfe3e8",
+                        "on-tertiary-fixed": "#211b00",
+                        "background": "#faf9fa",
+                        "surface-bright": "#faf9fa",
+                        "on-surface": "#1b1c1d",
+                        "on-primary": "#ffffff",
+                        "on-error-container": "#93000a",
+                        "on-secondary-fixed-variant": "#42474b",
+                        "surface-tint": "#2259bf",
+                        "secondary-fixed-dim": "#c2c7cc",
+                        "outline": "#737784",
+                        "on-secondary": "#ffffff",
+                        "secondary": "#5a5f63",
+                        "secondary-fixed": "#dfe3e8",
+                        "primary-fixed": "#d9e2ff",
+                        "on-tertiary-fixed-variant": "#524600",
+                        "on-primary-container": "#e7ebff",
+                        "on-background": "#1b1c1d",
+                        "on-primary-fixed-variant": "#00419d",
+                        "surface-container": "#efedee",
+                        "primary": "#094cb2",
+                        "tertiary-fixed-dim": "#dcc661",
+                        "on-tertiary": "#ffffff",
+                        "on-secondary-container": "#606569",
+                        "tertiary-fixed": "#f9e37a",
+                        "on-secondary-fixed": "#171c20",
+                        "on-tertiary-container": "#4a3f00",
+                        "error": "#ba1a1a",
+                        "outline-variant": "#c3c6d5",
+                        "on-primary-fixed": "#001946",
+                        "primary-fixed-dim": "#b1c5ff",
+                        "tertiary-container": "#bfab49",
+                        "inverse-primary": "#b1c5ff",
+                        "surface-container-lowest": "#ffffff",
+                        "inverse-on-surface": "#f2f0f1",
+                        "surface-container-low": "#f5f3f4",
+                        "primary-container": "#3366cc",
+                        "on-error": "#ffffff",
+                        "tertiary": "#6d5e00",
+                        "surface-container-highest": "#e3e2e3",
+                        "inverse-surface": "#303031",
+                        "on-surface-variant": "#434653",
+                        "error-container": "#ffdad6"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.125rem",
+                        "lg": "0.25rem",
+                        "xl": "0.5rem",
+                        "full": "0.75rem"
+                    },
+                    "fontFamily": {
+                        "headline": ["Noto Serif"],
+                        "display": ["Noto Serif"],
+                        "body": ["Inter"],
+                        "label": ["Public Sans"]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+            display: inline-block;
+            vertical-align: middle;
+        }
+        .verified-badge-gradient {
+            background: linear-gradient(135deg, #094cb2 0%, #3366cc 100%);
+        }
+        .seal-watermark {
+            opacity: 0.03;
+            pointer-events: none;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) rotate(-15deg);
+            z-index: 0;
+            width: 80%;
+        }
+    </style>
+</head>
+<body class="bg-surface font-body text-on-surface selection:bg-primary-fixed selection:text-on-primary-fixed overflow-x-hidden">
+<!-- Top Navigation Anchor (As per Shared Components, though focused for verification) -->
+<nav class="flex justify-between items-center w-full px-6 py-4 sticky top-0 z-50 bg-surface-container-lowest/80 backdrop-blur-xl">
+<div class="font-headline text-xl font-bold text-primary tracking-tight">GuruSync</div>
+<div class="flex items-center gap-4">
+<span class="material-symbols-outlined text-primary" data-icon="verified_user" style="font-variation-settings: 'FILL' 1;">verified_user</span>
+<span class="font-label text-xs uppercase tracking-widest text-primary font-bold">Official Verification</span>
+</div>
+</nav>
+<main class="max-w-md mx-auto px-6 py-8 relative">
+<!-- Verification Watermark Background -->
+<div class="seal-watermark flex flex-col items-center">
+<span class="material-symbols-outlined text-[200px]" data-icon="verified">verified</span>
+<p class="font-headline text-4xl font-bold text-center mt-4">OFFICIAL GURUSYNC CREDENTIAL</p>
+</div>
+<div class="relative z-10">
+<!-- Header Badge Section -->
+<div class="flex justify-center mb-8">
+<div class="verified-badge-gradient text-on-primary px-5 py-2 rounded-full flex items-center gap-2 shadow-xl shadow-primary/20">
+<span class="material-symbols-outlined text-lg" data-icon="new_releases" style="font-variation-settings: 'FILL' 1;">new_releases</span>
+<span class="font-label text-xs font-bold tracking-widest uppercase">Verified Profile</span>
+</div>
+</div>
+<!-- Profile Portrait Card -->
+<div class="bg-surface-container-lowest p-2 rounded-full mx-auto w-56 h-56 mb-8 relative group">
+<div class="w-full h-full rounded-full overflow-hidden border-4 border-surface-container-high shadow-lg">
+<img alt="Siti Aminah, M.Pd" class="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida/ADBb0ugqEb7ZCuFvodeUya7NH1uPL854oaU92WIzMtQ5fnowwXYvosma4tVTgR2jdjOiVL_Ec4g608ougKoBx2DRaA74g6eK66viFy7Rm2GyWIQvSG018485hWETgyUskjM4i2N3zCUMOiOuTD0tV_LBXRO5tCEK35WS72QBeKnFybY2bLxGYZDT2NGTqwK2yndwQspxDPHScu-54_CjatZSrIo1JusslI51yr9_dK82-dXdLnMO17MOoKvtkg"/>
+</div>
+<!-- Status Indicator -->
+<div class="absolute bottom-4 right-4 bg-surface-container-lowest p-1 rounded-full">
+<div class="bg-tertiary flex items-center gap-1.5 px-3 py-1 rounded-full">
+<span class="w-2 h-2 rounded-full bg-white animate-pulse"></span>
+<span class="font-label text-[10px] font-bold text-white uppercase tracking-tighter">Aktif</span>
+</div>
+</div>
+</div>
+<!-- Identity Header -->
+<div class="text-center mb-10">
+<h1 class="font-headline text-3xl font-bold text-on-surface mb-2 leading-tight">Siti Aminah, M.Pd</h1>
+<p class="font-label text-sm uppercase tracking-[0.2em] text-primary font-semibold">Guru Madya</p>
+</div>
+<!-- Information Bento Grid Style -->
+<div class="space-y-4">
+<!-- Primary Credentials Card -->
+<div class="bg-surface-container-low rounded-xl p-6 relative overflow-hidden">
+<div class="flex items-start justify-between mb-6">
+<div>
+<p class="font-label text-[10px] uppercase tracking-widest text-on-surface-variant mb-1">Employee ID (NIP)</p>
+<p class="font-body text-lg font-semibold tracking-wide">19880412 201201 2 003</p>
+</div>
+<span class="material-symbols-outlined text-surface-variant text-4xl" data-icon="badge">badge</span>
+</div>
+<div class="pt-4 border-t border-outline-variant/20">
+<p class="font-label text-[10px] uppercase tracking-widest text-on-surface-variant mb-1">Department</p>
+<p class="font-headline text-lg italic text-on-surface">Teknologi Informasi &amp; Komunikasi</p>
+</div>
+</div>
+<!-- Academic Section -->
+<div class="bg-surface-container-highest/40 backdrop-blur-sm rounded-xl p-6">
+<div class="flex items-center gap-4 mb-4">
+<div class="w-10 h-10 rounded-lg bg-primary-container/10 flex items-center justify-center">
+<span class="material-symbols-outlined text-primary" data-icon="school">school</span>
+</div>
+<p class="font-label text-[10px] uppercase tracking-widest text-on-surface-variant">Academic Background</p>
+</div>
+<div class="space-y-1">
+<p class="font-headline text-lg font-bold">Magister Teknologi Pendidikan</p>
+<p class="font-body text-sm text-on-surface-variant">Universitas Indonesia</p>
+</div>
+</div>
+<!-- Verification Footer Details -->
+<div class="bg-surface-dim/30 border border-outline-variant/10 rounded-xl p-6">
+<div class="flex flex-col gap-4">
+<div class="flex justify-between items-center">
+<span class="font-label text-xs text-on-surface-variant">Verified on</span>
+<span class="font-body text-xs font-semibold">October 24, 2023</span>
+</div>
+<div class="flex justify-between items-center">
+<span class="font-label text-xs text-on-surface-variant">Authority</span>
+<span class="font-body text-xs font-semibold">Kemendikbudristek RI</span>
+</div>
+<div class="flex justify-between items-center">
+<span class="font-label text-xs text-on-surface-variant">Token</span>
+<span class="font-body text-[10px] text-primary/60 font-mono tracking-tighter">GURUSYNC-AUTH-77A9-BF21-2023</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Footer / Verification Seal -->
+<div class="mt-12 text-center flex flex-col items-center">
+<div class="w-24 h-24 mb-4 opacity-40">
+<img alt="Official Seal" class="grayscale" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCykK_KQ6COx2HMp2Qx3HIVAkicmYikT7FGfMovA0ZujdnrQ_sh1nkejZu5lSC8fFUuupKXHG6gKRbJ9oOV5dupfVEgVzWgJ3pQUrLvCkRCXkjFk2MQHmCMbk52iOyLMUqmnR59__Hc_hlVs7WFIrVWIge5BlaY-giQRp6Up2d9Q0xSF3cNrKnM5wmF2bOVSCQJVXDCmo0ET_irLrFSb5Z2fZ5n_r0k2uA3TUiLSlCy4rAhvO75XURxs1hwjnoUhZPZoxEw7Sghlw"/>
+</div>
+<p class="font-label text-[10px] uppercase tracking-[0.3em] text-on-surface-variant mb-6">Alexandria Editorial Sync — Digital Curator v4.2</p>
+<!-- Action for PDF version or similar -->
+<button class="w-full py-4 px-6 rounded-full bg-surface-container-high text-primary font-label text-sm font-bold uppercase tracking-widest hover:bg-surface-variant transition-all flex items-center justify-center gap-3">
+<span class="material-symbols-outlined text-lg" data-icon="download">download</span>
+                    Download Digital Credential
+                </button>
+</div>
+</div>
+</main>
+<!-- Bottom Disclaimer (Mobile Friendly) -->
+<footer class="mt-12 mb-8 px-8 text-center">
+<p class="font-body text-[10px] text-outline leading-relaxed max-w-xs mx-auto">
+            This page was generated via an encrypted QR link for verification purposes.
+            The data shown is synced in real-time with the Alexandria Editorial Database.
+        </p>
+</footer>
+</body></html>

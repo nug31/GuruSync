@@ -1,0 +1,407 @@
+<!DOCTYPE html>
+
+<html class="light" lang="id"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,400&amp;family=Inter:wght@300;400;500;600;700&amp;family=Public+Sans:wght@600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #faf9fa;
+            color: #1b1c1d;
+        }
+        h1, h2, h3, h4, h5, h6, .font-serif {
+            font-family: 'Noto Serif', serif;
+        }
+        .font-label {
+            font-family: 'Public Sans', sans-serif;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 300, 'GRAD' 0, 'opsz' 24;
+        }
+        .editorial-border {
+            border-color: #c3c6d5;
+        }
+    </style>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                "on-tertiary-fixed-variant": "#524600",
+                "inverse-primary": "#b1c5ff",
+                "inverse-surface": "#303031",
+                "on-surface-variant": "#434653",
+                "on-primary-container": "#e7ebff",
+                "error": "#ba1a1a",
+                "surface-bright": "#faf9fa",
+                "surface-container-high": "#e9e8e9",
+                "tertiary-fixed": "#f9e37a",
+                "on-error-container": "#93000a",
+                "surface-variant": "#e3e2e3",
+                "primary-fixed-dim": "#b1c5ff",
+                "on-secondary-fixed-variant": "#42474b",
+                "on-secondary-container": "#606569",
+                "background": "#faf9fa",
+                "surface": "#faf9fa",
+                "secondary-container": "#dfe3e8",
+                "on-tertiary-fixed": "#211b00",
+                "primary-container": "#3366cc",
+                "tertiary-fixed-dim": "#dcc661",
+                "on-tertiary": "#ffffff",
+                "on-surface": "#1b1c1d",
+                "tertiary": "#6d5e00",
+                "surface-container-highest": "#e3e2e3",
+                "inverse-on-surface": "#f2f0f1",
+                "surface-container": "#efedee",
+                "secondary": "#5a5f63",
+                "on-secondary-fixed": "#171c20",
+                "on-primary": "#ffffff",
+                "on-background": "#1b1c1d",
+                "surface-container-lowest": "#ffffff",
+                "on-tertiary-container": "#4a3f00",
+                "surface-tint": "#2259bf",
+                "on-primary-fixed-variant": "#00419d",
+                "outline": "#737784",
+                "error-container": "#ffdad6",
+                "secondary-fixed-dim": "#c2c7cc",
+                "surface-container-low": "#f5f3f4",
+                "primary": "#094cb2",
+                "secondary-fixed": "#dfe3e8",
+                "outline-variant": "#c3c6d5",
+                "on-secondary": "#ffffff",
+                "surface-dim": "#dbdadb",
+                "on-error": "#ffffff",
+                "on-primary-fixed": "#001946",
+                "tertiary-container": "#bfab49",
+                "primary-fixed": "#d9e2ff"
+            },
+            "borderRadius": {
+                "DEFAULT": "0.125rem",
+                "lg": "0.25rem",
+                "xl": "0.5rem",
+                "full": "0.75rem"
+            },
+            "fontFamily": {
+                "headline": ["Noto Serif"],
+                "display": ["Noto Serif"],
+                "body": ["Inter"],
+                "label": ["Public Sans"]
+            }
+          }
+        }
+      }
+    </script>
+</head>
+<body class="bg-background text-on-surface">
+<!-- Sidebar (Alexandria Editorial) -->
+<aside class="h-full w-64 fixed left-0 top-0 hidden lg:flex flex-col bg-surface-container-lowest border-r border-outline-variant z-50 p-6 gap-8">
+<div class="flex items-center gap-3 px-2">
+<div class="w-10 h-10 rounded-sm bg-primary flex items-center justify-center text-on-primary">
+<span class="material-symbols-outlined">school</span>
+</div>
+<div>
+<h1 class="font-display text-xl font-bold tracking-tight text-primary leading-tight">GuruSync</h1>
+<p class="font-label text-[10px] text-on-surface-variant">Archival Services</p>
+</div>
+</div>
+<nav class="flex flex-col gap-1 flex-1">
+<a class="flex items-center gap-3 px-3 py-2 text-sm font-medium text-on-surface-variant hover:text-primary hover:bg-surface-container transition-colors rounded-sm" href="#">
+<span class="material-symbols-outlined text-xl">dashboard</span>
+                Dashboard
+            </a>
+<a class="flex items-center gap-3 px-3 py-2 text-sm font-semibold text-on-primary bg-primary rounded-sm shadow-sm" href="#">
+<span class="material-symbols-outlined text-xl">groups</span>
+                Teachers
+            </a>
+<a class="flex items-center gap-3 px-3 py-2 text-sm font-medium text-on-surface-variant hover:text-primary hover:bg-surface-container transition-colors rounded-sm" href="#">
+<span class="material-symbols-outlined text-xl">event_busy</span>
+                Leave Requests
+            </a>
+<a class="flex items-center gap-3 px-3 py-2 text-sm font-medium text-on-surface-variant hover:text-primary hover:bg-surface-container transition-colors rounded-sm" href="#">
+<span class="material-symbols-outlined text-xl">calendar_month</span>
+                Schedules
+            </a>
+<a class="flex items-center gap-3 px-3 py-2 text-sm font-medium text-on-surface-variant hover:text-primary hover:bg-surface-container transition-colors rounded-sm" href="#">
+<span class="material-symbols-outlined text-xl">analytics</span>
+                Reports
+            </a>
+<a class="flex items-center gap-3 px-3 py-2 text-sm font-medium text-on-surface-variant hover:text-primary hover:bg-surface-container transition-colors rounded-sm" href="#">
+<span class="material-symbols-outlined text-xl">settings</span>
+                Settings
+            </a>
+</nav>
+<div class="mt-auto flex flex-col gap-1 border-t border-outline-variant pt-6">
+<a class="flex items-center gap-3 px-3 py-2 text-sm font-medium text-on-surface-variant hover:text-primary transition-colors" href="#">
+<span class="material-symbols-outlined text-xl">help</span>
+                Help Center
+            </a>
+<a class="flex items-center gap-3 px-3 py-2 text-sm font-medium text-error hover:bg-error-container/30 transition-colors rounded-sm" href="#">
+<span class="material-symbols-outlined text-xl">logout</span>
+                Logout
+            </a>
+</div>
+</aside>
+<!-- Main Content -->
+<div class="lg:ml-64 min-h-screen flex flex-col">
+<!-- Top Navigation -->
+<header class="fixed top-0 right-0 w-full lg:w-[calc(100%-16rem)] z-40 bg-surface/95 backdrop-blur-sm border-b border-outline-variant flex justify-between items-center px-8 h-20">
+<div class="flex items-center gap-4 lg:hidden">
+<span class="material-symbols-outlined text-primary text-2xl">school</span>
+<span class="font-display text-xl font-bold text-primary tracking-tight">GuruSync</span>
+</div>
+<div class="hidden md:flex items-center bg-surface-container-low px-4 py-2 border border-outline-variant w-96">
+<span class="material-symbols-outlined text-on-surface-variant text-lg">search</span>
+<input class="bg-transparent border-none focus:ring-0 text-sm w-full placeholder:text-on-surface-variant/50 ml-2" placeholder="Search archives..." type="text"/>
+</div>
+<div class="flex items-center gap-6">
+<div class="flex items-center gap-4">
+<button class="p-2 hover:bg-surface-container rounded-sm transition-colors relative">
+<span class="material-symbols-outlined text-on-surface-variant">notifications</span>
+<span class="absolute top-2 right-2 w-1.5 h-1.5 bg-error rounded-full"></span>
+</button>
+<button class="p-2 hover:bg-surface-container rounded-sm transition-colors">
+<span class="material-symbols-outlined text-on-surface-variant">dark_mode</span>
+</button>
+</div>
+<div class="h-8 w-[1px] bg-outline-variant"></div>
+<div class="flex items-center gap-3">
+<div class="text-right hidden sm:block">
+<p class="text-sm font-bold leading-none">Admin User</p>
+<p class="font-label text-[9px] text-on-surface-variant mt-1">Headmaster</p>
+</div>
+<img alt="User Profile" class="w-10 h-10 rounded-sm border border-outline-variant grayscale hover:grayscale-0 transition-all duration-500 object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuB5Ptjh1pHA1sfcvyip97Xp_NSdknc8TA5pOzehvKIaxImc9B9BY-ZaKpchxFLwffFZf2wXaqYdRF0cJw1FYKXxBJHDOneOcTiJ1GWCea502e2dUR7T7-Da3rqIRNew80osxxlXDbaaZyU-An9K9uA879nGkso2hlDBJbxarHdJ6YLMrTkz1yI7ylVLdigqyIZ4DRTkXpTxQFoAXm1CXRzh02bagzJMzG17-tWsSUbRqISFSJnGvlZGiQXGWj43cWsGL75VFt6IvA"/>
+</div>
+</div>
+</header>
+<!-- Page Content -->
+<main class="mt-20 p-8 flex-1 overflow-x-hidden">
+<!-- Header Section -->
+<div class="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-12 border-b border-outline-variant pb-8">
+<div>
+<nav class="flex items-center gap-2 text-on-surface-variant/70 font-label text-[10px] mb-4">
+<span>Management</span>
+<span class="material-symbols-outlined text-[10px]">chevron_right</span>
+<span class="text-primary font-bold">Teachers Registry</span>
+</nav>
+<h2 class="font-display text-4xl text-on-surface font-bold tracking-tight mb-4">Manajemen Data Guru</h2>
+<p class="font-serif italic text-lg text-on-surface-variant/80 max-w-3xl">Kelola informasi profil, status kepegawaian, dan riwayat pelatihan staf pengajar dalam satu dashboard terintegrasi.</p>
+</div>
+<button class="flex items-center justify-center gap-3 bg-primary text-on-primary px-8 py-3 rounded-sm font-bold text-sm hover:bg-primary/90 transition-all shadow-sm">
+<span class="material-symbols-outlined text-lg">person_add</span>
+                    Tambah Guru Baru
+                </button>
+</div>
+<!-- Filters -->
+<section class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
+<div class="md:col-span-2 bg-surface-container-lowest border border-outline-variant p-2 flex items-center gap-3">
+<div class="px-2 text-on-surface-variant">
+<span class="material-symbols-outlined">search</span>
+</div>
+<input class="flex-1 bg-transparent border-none focus:ring-0 text-sm text-on-surface placeholder:text-on-surface-variant/40" placeholder="Search by name, NIP, or department..." type="text"/>
+</div>
+<div class="bg-surface-container-lowest border border-outline-variant px-4 py-2 flex items-center justify-between">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-sm text-on-surface-variant">work</span>
+<span class="font-label text-[10px] text-on-surface-variant">Jabatan</span>
+</div>
+<select class="bg-transparent border-none focus:ring-0 text-sm font-bold text-primary cursor-pointer">
+<option>Semua Jabatan</option>
+<option>Guru Tetap</option>
+<option>Guru Honorer</option>
+</select>
+</div>
+<div class="bg-surface-container-lowest border border-outline-variant px-4 py-2 flex items-center justify-between">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-sm text-on-surface-variant">filter_list</span>
+<span class="font-label text-[10px] text-on-surface-variant">Departemen</span>
+</div>
+<select class="bg-transparent border-none focus:ring-0 text-sm font-bold text-primary cursor-pointer">
+<option>Semua Dept</option>
+<option>Sains</option>
+<option>Bahasa</option>
+</select>
+</div>
+</section>
+<!-- Table -->
+<div class="bg-surface-container-lowest border border-outline-variant overflow-hidden">
+<div class="overflow-x-auto">
+<table class="w-full text-left border-collapse">
+<thead>
+<tr class="bg-surface-container-low border-b border-outline-variant">
+<th class="px-6 py-4 font-label text-[10px] text-on-surface-variant">Profil Guru</th>
+<th class="px-6 py-4 font-label text-[10px] text-on-surface-variant">Jabatan / Dept</th>
+<th class="px-6 py-4 font-label text-[10px] text-on-surface-variant">Riwayat Pelatihan</th>
+<th class="px-6 py-4 font-label text-[10px] text-on-surface-variant">Status SP</th>
+<th class="px-6 py-4 font-label text-[10px] text-on-surface-variant text-right">Actions</th>
+</tr>
+</thead>
+<tbody class="divide-y divide-outline-variant/30">
+<!-- Teacher Row 1 -->
+<tr class="group hover:bg-surface-container-low transition-colors">
+<td class="px-6 py-6">
+<div class="flex items-center gap-4">
+<div class="relative">
+<img alt="Guru Profile" class="w-12 h-12 rounded-sm object-cover border border-outline-variant grayscale group-hover:grayscale-0 transition-all duration-500" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBpujkPMvO1vXmTtGdJuTYvnhvBK3sVzzvvJ1wedUR34ygET-ZOJTaInh0IumiWHHQGYXc7gNK6aFYhN34aDvhU7JwBAd89hS7UHn7fSe9q7bG_EKxguW7xIF7kwoYix5nfqepSL3Kb0EquVStr232owE5oq9_fVktirW9drfkBe5pzO1-s58JjO743dKTgb7Y4TCF0lxDkJeFihAYoPALDVw4pG1qGFVQMzKC4y71b9iQEPk9Mkr_FFkEez7Ph3qO9xlg772QEfg"/>
+<span class="absolute -bottom-1 -right-1 w-3 h-3 bg-emerald-500 border border-white rounded-full"></span>
+</div>
+<div>
+<p class="font-serif text-base font-bold text-on-surface">Siti Aminah, M.Pd</p>
+<p class="text-xs text-on-surface-variant mt-0.5">NIP: 19850612 201001 2 015</p>
+</div>
+</div>
+</td>
+<td class="px-6 py-6">
+<p class="text-sm font-semibold text-primary">Guru Madya</p>
+<p class="text-xs text-on-surface-variant mt-0.5">Matematika</p>
+</td>
+<td class="px-6 py-6">
+<div class="flex flex-wrap gap-2">
+<span class="px-2 py-0.5 bg-secondary-container text-on-secondary-container text-[9px] font-bold uppercase tracking-wider rounded-sm">Kurikulum Merdeka</span>
+<span class="px-2 py-0.5 bg-secondary-container text-on-secondary-container text-[9px] font-bold uppercase tracking-wider rounded-sm">ICT Advanced</span>
+</div>
+</td>
+<td class="px-6 py-6">
+<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">Clean Record</span>
+</td>
+<td class="px-6 py-6 text-right">
+<div class="flex items-center justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+<button class="p-2 hover:bg-primary/5 text-on-surface-variant hover:text-primary rounded-sm transition-colors" title="View Detail">
+<span class="material-symbols-outlined text-lg">visibility</span>
+</button>
+<button class="p-2 hover:bg-primary/5 text-on-surface-variant hover:text-primary rounded-sm transition-colors" title="Edit Data">
+<span class="material-symbols-outlined text-lg">edit</span>
+</button>
+<button class="p-2 hover:bg-error/5 text-on-surface-variant hover:text-error rounded-sm transition-colors" title="Delete">
+<span class="material-symbols-outlined text-lg">delete</span>
+</button>
+</div>
+</td>
+</tr>
+<!-- Teacher Row 2 -->
+<tr class="group hover:bg-surface-container-low transition-colors">
+<td class="px-6 py-6">
+<div class="flex items-center gap-4">
+<div class="relative">
+<img alt="Guru Profile" class="w-12 h-12 rounded-sm object-cover border border-outline-variant grayscale group-hover:grayscale-0 transition-all duration-500" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCNtzkPJMEvRLzpVvcsO3YQ41FQRUluN6yUAo1q2baGL1btc4bxlBNNay9ZGGAvUaZ1oQi67ZIz0HSW8LyLR5i2Zh9EUmmmkSRKf-YpBWLPLC0qJMO_8kBuqWRiyk0i3JzQSv76C8AVMulqnrV6BkHvMUG54epgOdFrw18E97SbT0SayqAWbTRiMmBALRsxyeIqRwXX055zUKCtnUHgVDpNQ1vKrpaiGURFqEzlMR7_q0XXYKtIQz8JCqlIfrUvL-eIDPHgcKvfsA"/>
+<span class="absolute -bottom-1 -right-1 w-3 h-3 bg-emerald-500 border border-white rounded-full"></span>
+</div>
+<div>
+<p class="font-serif text-base font-bold text-on-surface">Drs. Bambang Wijaya</p>
+<p class="text-xs text-on-surface-variant mt-0.5">NIP: 19780104 200501 1 003</p>
+</div>
+</div>
+</td>
+<td class="px-6 py-6">
+<p class="text-sm font-semibold text-primary">Kepala Laboratorium</p>
+<p class="text-xs text-on-surface-variant mt-0.5">Fisika / Sains</p>
+</td>
+<td class="px-6 py-6">
+<div class="flex flex-wrap gap-2">
+<span class="px-2 py-0.5 bg-secondary-container text-on-secondary-container text-[9px] font-bold uppercase tracking-wider rounded-sm">Safety Protocol</span>
+</div>
+</td>
+<td class="px-6 py-6">
+<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-amber-50 text-amber-700 border border-amber-200">SP 1 (Late Submission)</span>
+</td>
+<td class="px-6 py-6 text-right">
+<div class="flex items-center justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+<button class="p-2 hover:bg-primary/5 text-on-surface-variant hover:text-primary rounded-sm transition-colors">
+<span class="material-symbols-outlined text-lg">visibility</span>
+</button>
+<button class="p-2 hover:bg-primary/5 text-on-surface-variant hover:text-primary rounded-sm transition-colors">
+<span class="material-symbols-outlined text-lg">edit</span>
+</button>
+<button class="p-2 hover:bg-error/5 text-on-surface-variant hover:text-error rounded-sm transition-colors">
+<span class="material-symbols-outlined text-lg">delete</span>
+</button>
+</div>
+</td>
+</tr>
+<!-- Teacher Row 3 -->
+<tr class="group hover:bg-surface-container-low transition-colors">
+<td class="px-6 py-6">
+<div class="flex items-center gap-4">
+<div class="relative">
+<img alt="Guru Profile" class="w-12 h-12 rounded-sm object-cover border border-outline-variant grayscale group-hover:grayscale-0 transition-all duration-500" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCQYn4VxKQwEYdR7zw2zw4pGOk1aAIt4Li2N3JEzs7EFmRPTg_vBQuc30MOSUiOMcGJhciveqVgtV8_FqcAFx7ZCgooHdVDqQyMtE9yMsWN4X3BjhF2oP4YBOeLzWNgPyoB7UMtWbPnOJdl5zap3i_0C-3b8hYUywWXEphIFKf6OcYpOvoK33SmQf9agQl36pRFY-mx9vmSZBXvp3KRESBRNpxk6AnfJY3zJKJOt85RlNpZwv290HyQeHcaLLrBTXh0ntCnYLjSUQ"/>
+<span class="absolute -bottom-1 -right-1 w-3 h-3 bg-amber-500 border border-white rounded-full"></span>
+</div>
+<div>
+<p class="font-serif text-base font-bold text-on-surface">Rina Kartika, S.Pd</p>
+<p class="text-xs text-on-surface-variant mt-0.5">NIP: 19921120 201802 2 001</p>
+</div>
+</div>
+</td>
+<td class="px-6 py-6">
+<p class="text-sm font-semibold text-primary">Guru Pertama</p>
+<p class="text-xs text-on-surface-variant mt-0.5">Bahasa Inggris</p>
+</td>
+<td class="px-6 py-6">
+<div class="flex flex-wrap gap-2">
+<span class="px-2 py-0.5 bg-secondary-container text-on-secondary-container text-[9px] font-bold uppercase tracking-wider rounded-sm">TEFL Certification</span>
+<span class="px-2 py-0.5 bg-secondary-container text-on-secondary-container text-[9px] font-bold uppercase tracking-wider rounded-sm">Public Speaking</span>
+</div>
+</td>
+<td class="px-6 py-6">
+<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">Clean Record</span>
+</td>
+<td class="px-6 py-6 text-right">
+<div class="flex items-center justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+<button class="p-2 hover:bg-primary/5 text-on-surface-variant hover:text-primary rounded-sm transition-colors">
+<span class="material-symbols-outlined text-lg">visibility</span>
+</button>
+<button class="p-2 hover:bg-primary/5 text-on-surface-variant hover:text-primary rounded-sm transition-colors">
+<span class="material-symbols-outlined text-lg">edit</span>
+</button>
+<button class="p-2 hover:bg-error/5 text-on-surface-variant hover:text-error rounded-sm transition-colors">
+<span class="material-symbols-outlined text-lg">delete</span>
+</button>
+</div>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+<!-- Pagination -->
+<div class="px-8 py-6 bg-surface-container-low border-t border-outline-variant flex flex-col sm:flex-row items-center justify-between gap-6">
+<p class="text-sm text-on-surface-variant italic font-serif">Menampilkan <span class="font-bold text-on-surface">1 - 3</span> dari <span class="font-bold text-on-surface">128</span> Guru dalam Registry</p>
+<div class="flex items-center gap-2">
+<button class="w-8 h-8 flex items-center justify-center border border-outline-variant hover:bg-primary hover:text-on-primary transition-colors text-on-surface-variant">
+<span class="material-symbols-outlined text-sm">chevron_left</span>
+</button>
+<button class="w-8 h-8 flex items-center justify-center bg-primary text-on-primary font-bold text-xs">1</button>
+<button class="w-8 h-8 flex items-center justify-center border border-outline-variant hover:bg-primary hover:text-on-primary transition-colors text-on-surface-variant text-xs">2</button>
+<button class="w-8 h-8 flex items-center justify-center border border-outline-variant hover:bg-primary hover:text-on-primary transition-colors text-on-surface-variant text-xs">3</button>
+<button class="w-8 h-8 flex items-center justify-center border border-outline-variant hover:bg-primary hover:text-on-primary transition-colors text-on-surface-variant">
+<span class="material-symbols-outlined text-sm">chevron_right</span>
+</button>
+</div>
+</div>
+</div>
+</main>
+</div>
+<!-- Mobile Navigation -->
+<nav class="fixed bottom-0 left-0 w-full z-50 lg:hidden bg-surface-container-lowest border-t border-outline-variant flex justify-around items-center h-20 px-4">
+<a class="flex flex-col items-center justify-center text-on-surface-variant" href="#">
+<span class="material-symbols-outlined">home</span>
+<span class="font-label text-[8px] mt-1">Home</span>
+</a>
+<a class="flex flex-col items-center justify-center text-primary" href="#">
+<span class="material-symbols-outlined">groups</span>
+<span class="font-label text-[8px] mt-1">Teachers</span>
+</a>
+<a class="flex flex-col items-center justify-center text-on-surface-variant" href="#">
+<span class="material-symbols-outlined">event_note</span>
+<span class="font-label text-[8px] mt-1">Leaves</span>
+</a>
+<a class="flex flex-col items-center justify-center text-on-surface-variant" href="#">
+<span class="material-symbols-outlined">person</span>
+<span class="font-label text-[8px] mt-1">Profile</span>
+</a>
+</nav>
+</body></html>

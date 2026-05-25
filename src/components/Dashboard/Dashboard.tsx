@@ -7,9 +7,13 @@ import { TeacherProfile } from '../Profile/TeacherProfile';
 import { LeaveManagement } from './LeaveManagement';
 import { Statistics } from './Statistics';
 import { AdminManagement } from './AdminManagement';
-import type { Teacher, Leave } from '../../types';
+import { StudentManagement } from './StudentManagement';
+import { TaskManagement } from './TaskManagement';
+import { ExamManagement } from './ExamManagement';
+import { StudentDashboard } from './StudentDashboard';
+import type { Teacher, Leave, Student } from '../../types';
 
-type View = 'dashboard' | 'teachers' | 'leaves' | 'admins';
+type View = 'dashboard' | 'teachers' | 'leaves' | 'admins' | 'students' | 'tasks' | 'exams';
 
 export function Dashboard() {
   const { user, profile, loading: authLoading, signOut } = useAuth();
@@ -21,8 +25,11 @@ export function Dashboard() {
   const [editingTeacher, setEditingTeacher] = useState<Teacher | null>(null);
 
   const isAdmin = profile?.role === 'admin';
+  const isStudent = profile?.role === 'student';
+  const isTeacher = profile?.role === 'teacher' || ['hod', 'koordinator_hod', 'wakasek', 'kepsek'].includes(profile?.role || '');
+  
   const userName = isAdmin ? profile?.name : (teachers.find(t => t.user_id === user?.id)?.name || profile?.name);
-  const userRole = isAdmin ? 'Admin' : 'Guru';
+  const userRole = isAdmin ? 'Admin' : isStudent ? 'Siswa' : 'Guru';
 
   useEffect(() => {
     if (!authLoading) {
@@ -137,6 +144,45 @@ export function Dashboard() {
                 <span>Manajemen Admin</span>
               </button>
             )}
+
+            {(isAdmin || isTeacher) && (
+              <>
+                <div className="mt-6 mb-2 px-4 text-[10px] font-black text-on-surface-variant/40 uppercase tracking-widest">Akademik</div>
+                <button
+                  onClick={() => setView('students')}
+                  className={`flex items-center gap-4 px-4 py-3 transition-colors text-left rounded-lg ${
+                    view === 'students'
+                      ? 'bg-primary text-on-primary font-semibold'
+                      : 'text-on-surface-variant hover:text-primary hover:bg-surface-container-low'
+                  }`}
+                >
+                  <span className="material-symbols-outlined text-[20px]">school</span>
+                  <span>Data Siswa</span>
+                </button>
+                <button
+                  onClick={() => setView('tasks')}
+                  className={`flex items-center gap-4 px-4 py-3 transition-colors text-left rounded-lg ${
+                    view === 'tasks'
+                      ? 'bg-primary text-on-primary font-semibold'
+                      : 'text-on-surface-variant hover:text-primary hover:bg-surface-container-low'
+                  }`}
+                >
+                  <span className="material-symbols-outlined text-[20px]">assignment</span>
+                  <span>Manajemen Tugas</span>
+                </button>
+                <button
+                  onClick={() => setView('exams')}
+                  className={`flex items-center gap-4 px-4 py-3 transition-colors text-left rounded-lg ${
+                    view === 'exams'
+                      ? 'bg-primary text-on-primary font-semibold'
+                      : 'text-on-surface-variant hover:text-primary hover:bg-surface-container-low'
+                  }`}
+                >
+                  <span className="material-symbols-outlined text-[20px]">quiz</span>
+                  <span>Bank Ujian</span>
+                </button>
+              </>
+            )}
           </nav>
           
           <div className="mt-auto pt-8 border-t border-outline-variant flex flex-col gap-1">
@@ -177,7 +223,11 @@ export function Dashboard() {
       {/* Main Content Canvas */}
       <main className="lg:ml-72 pt-20 min-h-screen px-4 lg:px-12 pb-24">
         {view === 'dashboard' && (
-          <Statistics teachers={teachers} leaves={leaves} />
+          isStudent ? (
+            <StudentDashboard />
+          ) : (
+            <Statistics teachers={teachers} leaves={leaves} />
+          )
         )}
 
         {view === 'teachers' && (
@@ -256,6 +306,24 @@ export function Dashboard() {
             <AdminManagement />
           </div>
         )}
+
+        {view === 'students' && (isAdmin || isTeacher) && (
+          <div className="py-8">
+            <StudentManagement />
+          </div>
+        )}
+
+        {view === 'tasks' && (isAdmin || isTeacher) && (
+          <div className="py-8">
+            <TaskManagement />
+          </div>
+        )}
+
+        {view === 'exams' && (isAdmin || isTeacher) && (
+          <div className="py-8">
+            <ExamManagement />
+          </div>
+        )}
       </main>
 
       {/* BottomNavBar for Mobile */}
@@ -289,6 +357,24 @@ export function Dashboard() {
             <span className="material-symbols-outlined" data-icon="admin_panel_settings">admin_panel_settings</span>
             <span className="label-caps text-[9px] mt-1">Admin</span>
           </button>
+        )}
+        {(isAdmin || isTeacher) && (
+          <>
+            <button 
+              onClick={() => setView('students')}
+              className={`flex flex-col items-center justify-center transition-colors ${view === 'students' ? 'text-primary' : 'text-on-surface-variant'}`}
+            >
+              <span className="material-symbols-outlined" data-icon="school">school</span>
+              <span className="label-caps text-[9px] mt-1">Siswa</span>
+            </button>
+            <button 
+              onClick={() => setView('tasks')}
+              className={`flex flex-col items-center justify-center transition-colors ${view === 'tasks' ? 'text-primary' : 'text-on-surface-variant'}`}
+            >
+              <span className="material-symbols-outlined" data-icon="assignment">assignment</span>
+              <span className="label-caps text-[9px] mt-1">Tugas</span>
+            </button>
+          </>
         )}
       </nav>
 

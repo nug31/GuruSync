@@ -36,10 +36,66 @@ export interface Leave {
 export interface Profile {
   id: string;
   email: string;
-  role: 'admin' | 'teacher' | 'hod' | 'koordinator_hod' | 'wakasek' | 'kepsek';
+  role: 'admin' | 'teacher' | 'hod' | 'koordinator_hod' | 'wakasek' | 'kepsek' | 'student';
   nik?: string;
   avatar_url?: string;
   name?: string;
+  created_at: string;
+}
+
+export interface Student {
+  id: string;
+  user_id: string | null;
+  name: string;
+  nis: string;
+  class: string;
+  email: string;
+  phone?: string;
+  birth_date?: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface Task {
+  id: string;
+  teacher_id: string;
+  title: string;
+  description?: string;
+  subject: string;
+  class: string;
+  deadline?: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface StudentTask {
+  id: string;
+  student_id: string;
+  task_id: string;
+  status: 'pending' | 'completed';
+  submitted_at?: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface Exam {
+  id: string;
+  teacher_id: string;
+  title: string;
+  subject: string;
+  duration_minutes: number;
+  is_active: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface Question {
+  id: string;
+  exam_id: string;
+  question_text: string;
+  options: string[];
+  correct_answer: string;
+  points: number;
   created_at: string;
 }
 

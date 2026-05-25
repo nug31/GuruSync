@@ -1,0 +1,398 @@
+<!DOCTYPE html>
+
+<html class="light" lang="id"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>GuruSync - Dashboard Guru</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif:ital,wght@0,400;0,700;1,400&amp;family=Inter:wght@400;500;600&amp;family=Public+Sans:wght@600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "on-tertiary-fixed-variant": "#524600",
+                        "inverse-primary": "#b1c5ff",
+                        "inverse-surface": "#303031",
+                        "on-surface-variant": "#434653",
+                        "on-primary-container": "#e7ebff",
+                        "error": "#ba1a1a",
+                        "surface-bright": "#faf9fa",
+                        "surface-container-high": "#e9e8e9",
+                        "tertiary-fixed": "#f9e37a",
+                        "on-error-container": "#93000a",
+                        "surface-variant": "#e3e2e3",
+                        "primary-fixed-dim": "#b1c5ff",
+                        "on-secondary-fixed-variant": "#42474b",
+                        "on-secondary-container": "#606569",
+                        "background": "#faf9fa",
+                        "surface": "#faf9fa",
+                        "secondary-container": "#dfe3e8",
+                        "on-tertiary-fixed": "#211b00",
+                        "primary-container": "#3366cc",
+                        "tertiary-fixed-dim": "#dcc661",
+                        "on-tertiary": "#ffffff",
+                        "on-surface": "#1b1c1d",
+                        "tertiary": "#6d5e00",
+                        "surface-container-highest": "#e3e2e3",
+                        "inverse-on-surface": "#f2f0f1",
+                        "surface-container": "#efedee",
+                        "secondary": "#5a5f63",
+                        "on-secondary-fixed": "#171c20",
+                        "on-primary": "#ffffff",
+                        "on-background": "#1b1c1d",
+                        "surface-container-lowest": "#ffffff",
+                        "on-tertiary-container": "#4a3f00",
+                        "surface-tint": "#2259bf",
+                        "on-primary-fixed-variant": "#00419d",
+                        "outline": "#737784",
+                        "error-container": "#ffdad6",
+                        "secondary-fixed-dim": "#c2c7cc",
+                        "surface-container-low": "#f5f3f4",
+                        "primary": "#094cb2",
+                        "secondary-fixed": "#dfe3e8",
+                        "outline-variant": "#c3c6d5",
+                        "on-secondary": "#ffffff",
+                        "surface-dim": "#dbdadb",
+                        "on-error": "#ffffff",
+                        "on-primary-fixed": "#001946",
+                        "tertiary-container": "#bfab49",
+                        "primary-fixed": "#d9e2ff"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.125rem",
+                        "lg": "0.25rem",
+                        "xl": "0.5rem",
+                        "full": "0.75rem"
+                    },
+                    "fontFamily": {
+                        "headline": ["Noto Serif"],
+                        "display": ["Noto Serif"],
+                        "body": ["Inter"],
+                        "label": ["Public Sans"]
+                    }
+                },
+            },
+        }
+    </script>
+<style>
+        body {
+            background-color: #faf9fa;
+            font-family: 'Inter', sans-serif;
+            color: #1b1c1d;
+        }
+        h1, h2, h3, h4, .font-serif {
+            font-family: 'Noto Serif', serif;
+        }
+        .editorial-border {
+            border-bottom: 2px solid #1b1c1d;
+        }
+        .card-premium {
+            background-color: #ffffff;
+            border: 1px solid #e3e2e3;
+            transition: all 0.3s ease;
+        }
+        .card-premium:hover {
+            border-color: #094cb2;
+        }
+        .status-badge {
+            font-family: 'Public Sans', sans-serif;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            font-size: 0.7rem;
+        }
+    </style>
+</head>
+<body class="bg-background text-on-surface">
+<!-- Sidebar -->
+<aside class="h-full w-72 fixed left-0 top-0 hidden lg:flex flex-col bg-surface-container-lowest border-r border-outline-variant z-50">
+<div class="flex flex-col p-8 h-full">
+<div class="mb-12">
+<h1 class="text-3xl font-bold text-primary tracking-tight">GuruSync</h1>
+<p class="font-label text-xs uppercase tracking-widest text-on-surface-variant mt-1">Institutional Portal</p>
+</div>
+<nav class="flex-1 flex flex-col gap-2">
+<a class="bg-primary text-on-primary rounded px-4 py-3 flex items-center gap-4 transition-all" href="#">
+<span class="material-symbols-outlined text-[20px]">dashboard</span>
+<span class="font-medium">Dashboard</span>
+</a>
+<a class="text-on-surface-variant hover:text-primary hover:bg-surface-container-low rounded px-4 py-3 flex items-center gap-4 transition-all" href="#">
+<span class="material-symbols-outlined text-[20px]">groups</span>
+<span>Guru</span>
+</a>
+<a class="text-on-surface-variant hover:text-primary hover:bg-surface-container-low rounded px-4 py-3 flex items-center gap-4 transition-all" href="#">
+<span class="material-symbols-outlined text-[20px]">event_busy</span>
+<span>Pengajuan Cuti</span>
+</a>
+<a class="text-on-surface-variant hover:text-primary hover:bg-surface-container-low rounded px-4 py-3 flex items-center gap-4 transition-all" href="#">
+<span class="material-symbols-outlined text-[20px]">calendar_month</span>
+<span>Jadwal Akademik</span>
+</a>
+<a class="text-on-surface-variant hover:text-primary hover:bg-surface-container-low rounded px-4 py-3 flex items-center gap-4 transition-all" href="#">
+<span class="material-symbols-outlined text-[20px]">analytics</span>
+<span>Laporan</span>
+</a>
+</nav>
+<button class="mt-8 bg-on-surface text-surface py-4 px-6 rounded font-bold flex items-center justify-center gap-2 hover:bg-primary transition-colors">
+<span class="material-symbols-outlined text-[20px]">add</span>
+<span>Buat Pengajuan</span>
+</button>
+<div class="mt-auto pt-8 border-t border-outline-variant flex flex-col gap-1">
+<a class="text-on-surface-variant hover:text-primary px-4 py-2 flex items-center gap-3 text-sm" href="#">
+<span class="material-symbols-outlined text-[18px]">help</span>
+<span>Bantuan</span>
+</a>
+<a class="text-on-surface-variant hover:text-error px-4 py-2 flex items-center gap-3 text-sm" href="#">
+<span class="material-symbols-outlined text-[18px]">logout</span>
+<span>Keluar Sesi</span>
+</a>
+</div>
+</div>
+</aside>
+<!-- Header -->
+<header class="fixed top-0 right-0 w-full lg:w-[calc(100%-18rem)] z-40 bg-surface-container-lowest/80 backdrop-blur-md border-b border-outline-variant">
+<div class="flex justify-between items-center px-10 h-20">
+<div class="flex items-center gap-6">
+<div class="lg:hidden">
+<span class="material-symbols-outlined text-on-surface">menu</span>
+</div>
+<div class="relative hidden sm:block">
+<span class="material-symbols-outlined absolute left-0 top-1/2 -translate-y-1/2 text-on-surface-variant">search</span>
+<input class="bg-transparent border-none focus:ring-0 pl-8 pr-4 py-2 text-sm w-64 placeholder:text-on-surface-variant/50" placeholder="Pencarian arsip..." type="text"/>
+</div>
+</div>
+<div class="flex items-center gap-6">
+<button class="p-2 text-on-surface-variant hover:text-primary transition-colors relative">
+<span class="material-symbols-outlined">notifications</span>
+<span class="absolute top-2 right-2 w-1.5 h-1.5 bg-error rounded-full"></span>
+</button>
+<div class="h-6 w-[1px] bg-outline-variant"></div>
+<div class="flex items-center gap-4">
+<div class="text-right hidden md:block">
+<p class="font-bold text-sm leading-none">Siti Aminah</p>
+<p class="font-label text-[10px] uppercase tracking-widest text-on-surface-variant mt-1">Guru Madya</p>
+</div>
+<img alt="Profile" class="w-10 h-10 rounded-full grayscale hover:grayscale-0 transition-all border border-outline-variant" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCZaAypB_XfDcv8MeGo1uGBcg6gjCbRWvvOpzZT3nDD_TdTSJYdYX4PMgqDFdh2IthwFPdhqIw2SEHN5aSo2UGEzH7AyyKf0ftCb6FL9MFh1Agl-C7csJ-F50m32UaabKJY5hUy4O3LtVC1EC4fUkWCxrf65My86PgtTIZtMBb_VvDLWtU3EfBDnpCy2cAF7SQazThTQxh49ZMCTYaCpzEpKXramUa-_KrpJRmQUjdXnJnL-wotukqWp4B-SD0VG6ohbmBI8dN_oQ"/>
+</div>
+</div>
+</div>
+</header>
+<!-- Main -->
+<main class="pt-32 pb-20 lg:ml-72 px-10 max-w-7xl mx-auto">
+<!-- Welcome section -->
+<section class="mb-16">
+<div class="flex flex-col md:flex-row md:items-baseline justify-between border-b-2 border-on-surface pb-6">
+<div>
+<h2 class="text-5xl font-serif font-bold text-on-surface italic">Halo, Siti Aminah</h2>
+<p class="text-xl text-on-surface-variant mt-3 font-serif">Ringkasan profil akademik dan administratif Anda.</p>
+</div>
+<div class="mt-6 md:mt-0 font-label text-sm uppercase tracking-widest flex items-center gap-2">
+<span class="material-symbols-outlined text-[18px]">calendar_today</span>
+                    Selasa, 24 Oktober 2023
+                </div>
+</div>
+</section>
+<div class="grid grid-cols-1 lg:grid-cols-12 gap-12">
+<!-- Left: Stats & Profile -->
+<div class="lg:col-span-8 flex flex-col gap-16">
+<!-- Stats -->
+<div class="grid grid-cols-1 sm:grid-cols-3 gap-8">
+<div class="p-8 bg-surface-container-low border border-outline-variant rounded">
+<p class="font-label text-[11px] uppercase tracking-[0.2em] text-on-surface-variant mb-6">Sisa Saldo Cuti</p>
+<div class="flex items-baseline gap-2">
+<span class="text-4xl font-serif font-bold">8</span>
+<span class="text-on-surface-variant">/ 12 Hari</span>
+</div>
+<div class="mt-6 h-1 bg-surface-container-high w-full">
+<div class="h-full bg-primary" style="width: 66%"></div>
+</div>
+</div>
+<div class="p-8 bg-surface-container-low border border-outline-variant rounded">
+<p class="font-label text-[11px] uppercase tracking-[0.2em] text-on-surface-variant mb-6">Cuti Diambil</p>
+<div class="flex items-baseline gap-2">
+<span class="text-4xl font-serif font-bold">4</span>
+<span class="text-on-surface-variant">Hari</span>
+</div>
+<p class="text-[11px] text-on-surface-variant mt-4 italic">Tahun Ajaran 2023</p>
+</div>
+<div class="p-8 bg-surface-container-low border border-outline-variant rounded">
+<p class="font-label text-[11px] uppercase tracking-[0.2em] text-on-surface-variant mb-6">Sertifikasi</p>
+<div class="flex items-baseline gap-2">
+<span class="text-4xl font-serif font-bold">5</span>
+<span class="text-on-surface-variant">Aktif</span>
+</div>
+<p class="text-[11px] text-on-surface-variant mt-4 italic">2 Dalam Proses</p>
+</div>
+</div>
+<!-- Personal Detail -->
+<div>
+<div class="flex items-center justify-between border-b border-on-surface/10 pb-4 mb-8">
+<h3 class="text-2xl font-serif font-bold">Detail Personal</h3>
+<button class="text-primary font-label text-xs uppercase tracking-widest flex items-center gap-2 hover:underline">
+<span class="material-symbols-outlined text-[16px]">edit</span> Edit
+                        </button>
+</div>
+<div class="grid grid-cols-1 sm:grid-cols-2 gap-x-12 gap-y-8">
+<div>
+<p class="font-label text-[10px] uppercase tracking-widest text-on-surface-variant mb-1">NIP</p>
+<p class="text-lg font-serif">19880512 201503 2 001</p>
+</div>
+<div>
+<p class="font-label text-[10px] uppercase tracking-widest text-on-surface-variant mb-1">Jabatan Akademik</p>
+<p class="text-lg font-serif">Guru Madya</p>
+</div>
+<div>
+<p class="font-label text-[10px] uppercase tracking-widest text-on-surface-variant mb-1">Departemen</p>
+<p class="text-lg font-serif">Matematika &amp; Sains</p>
+</div>
+<div>
+<p class="font-label text-[10px] uppercase tracking-widest text-on-surface-variant mb-1">Terdaftar Sejak</p>
+<p class="text-lg font-serif">1 Maret 2015</p>
+</div>
+<div>
+<p class="font-label text-[10px] uppercase tracking-widest text-on-surface-variant mb-1">Email Institusi</p>
+<p class="text-lg font-serif underline decoration-primary/30">siti.aminah@gurusync.edu</p>
+</div>
+<div>
+<p class="font-label text-[10px] uppercase tracking-widest text-on-surface-variant mb-1">Penempatan</p>
+<p class="text-lg font-serif">Gedung Utama, Lantai 3</p>
+</div>
+</div>
+</div>
+<!-- Leave History -->
+<div>
+<div class="flex items-center justify-between border-b border-on-surface/10 pb-4 mb-6">
+<h3 class="text-2xl font-serif font-bold">Riwayat Cuti</h3>
+<button class="text-on-surface-variant font-label text-[10px] uppercase tracking-widest hover:text-primary">Arsip Lengkap</button>
+</div>
+<div class="overflow-hidden border border-outline-variant rounded">
+<table class="w-full text-left">
+<thead class="bg-surface-container-low border-b border-outline-variant">
+<tr>
+<th class="p-4 font-label text-[10px] uppercase tracking-widest text-on-surface-variant">Jenis</th>
+<th class="p-4 font-label text-[10px] uppercase tracking-widest text-on-surface-variant">Durasi</th>
+<th class="p-4 font-label text-[10px] uppercase tracking-widest text-on-surface-variant">Diajukan</th>
+<th class="p-4 font-label text-[10px] uppercase tracking-widest text-on-surface-variant text-right">Status</th>
+</tr>
+</thead>
+<tbody class="divide-y divide-outline-variant">
+<tr class="hover:bg-surface-container-lowest transition-colors">
+<td class="p-4">
+<p class="font-serif font-bold">Cuti Sakit</p>
+<p class="text-xs text-on-surface-variant italic">Izin rawat jalan</p>
+</td>
+<td class="p-4 font-serif italic text-on-surface">2 Hari</td>
+<td class="p-4 text-xs text-on-surface-variant">15 Okt 2023</td>
+<td class="p-4 text-right">
+<span class="status-badge px-2 py-1 bg-green-50 text-green-700 border border-green-200 rounded-sm">Approved</span>
+</td>
+</tr>
+<tr class="hover:bg-surface-container-lowest transition-colors">
+<td class="p-4">
+<p class="font-serif font-bold">Cuti Tahunan</p>
+<p class="text-xs text-on-surface-variant italic">Libur keluarga</p>
+</td>
+<td class="p-4 font-serif italic text-on-surface">3 Hari</td>
+<td class="p-4 text-xs text-on-surface-variant">22 Okt 2023</td>
+<td class="p-4 text-right">
+<span class="status-badge px-2 py-1 bg-amber-50 text-amber-700 border border-amber-200 rounded-sm">Pending</span>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</div>
+<!-- Right: Identity & Certs -->
+<div class="lg:col-span-4 flex flex-col gap-12">
+<!-- ID Card (Editorial Style) -->
+<div class="border-2 border-on-surface p-1 rounded-sm">
+<div class="bg-surface-container-lowest p-8 border border-outline-variant flex flex-col items-center">
+<div class="w-full flex justify-between border-b border-on-surface/10 pb-4 mb-8">
+<span class="font-label text-[10px] uppercase tracking-[0.3em] font-bold">Academic Identity</span>
+<span class="material-symbols-outlined text-[18px]">verified</span>
+</div>
+<div class="w-40 h-40 border-2 border-on-surface p-2 mb-6 grayscale">
+<img alt="Portrait" class="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuD4o7KzJ0Dp1ich-f4sg8FCsdXwPRvkml8cVFCwzVXePBYy9UrLQLl8X2MQDdVJteKlRb15QckfHvcw1wgdsFZVfn-zALCPxoxLpQQhLkuW2ll9tdAA4uRFLZ7JBkhGw3WRxmb9iDmrV7Kg2zz5KUHmyANHYN4uD4VZ317EZ0oiSVpDs8p9yxhCiNox-ar60EM271g5b-yr5cPpIWjZUdpeZaEjJf-VBoLV9sClmQO0-FWrl6z0GD0kPlut0UoL7K8qnk-s6IG10A"/>
+</div>
+<h4 class="text-2xl font-serif font-bold text-center">Siti Aminah, M.Pd.</h4>
+<p class="font-label text-[10px] uppercase tracking-[0.2em] text-on-surface-variant mt-2">NIP: 198805122015032001</p>
+<div class="my-8 p-4 border border-outline-variant bg-white">
+<img alt="QR" class="w-32 h-32 opacity-90" src="https://lh3.googleusercontent.com/aida-public/AB6AXuA-u08l52YAsE63UBR9RpfIroVythFAxatSWbloXx3zn3obGNMw99OE_NvY-T6b_5-7LRYzy2800Z1vxdj8-g9X8Cv3HbvxLIT2kZkk9v5evRYLqqeZo2kqLPySWAITU--rN0QIaxTQ3wOpI7BBrhTTWr2d74OiiTrTE46yE_X1QmLbjsUb3O9nHD2qGPGluxXG3ay8F2V4Kpap_uhykRI82IxupOZqibnUzher38SyrTNG1SBp5t74rRhihoo9HMf3GLc9m1gVdQ"/>
+</div>
+<p class="text-[11px] text-center italic text-on-surface-variant px-4 mb-8">Pindai kode ini untuk keperluan administrasi institusi dan verifikasi kehadiran harian.</p>
+<button class="w-full py-3 bg-surface-container-high border border-outline text-on-surface font-label text-[10px] uppercase tracking-widest hover:bg-on-surface hover:text-white transition-all">
+                            Simpan ke Perangkat
+                        </button>
+</div>
+</div>
+<!-- Certifications -->
+<div class="p-8 border border-outline-variant bg-surface-container-lowest">
+<h3 class="text-xl font-serif font-bold mb-6 italic">Sertifikasi &amp; Keahlian</h3>
+<div class="flex flex-wrap gap-2 mb-8">
+<span class="px-3 py-1 bg-primary/5 text-primary border border-primary/10 text-[10px] font-label uppercase tracking-wider">Pedagogi Digital</span>
+<span class="px-3 py-1 bg-secondary/5 text-secondary border border-secondary/10 text-[10px] font-label uppercase tracking-wider">Analisis Data</span>
+<span class="px-3 py-1 bg-tertiary/5 text-tertiary border border-tertiary/10 text-[10px] font-label uppercase tracking-wider">STEM</span>
+</div>
+<div class="space-y-4">
+<div class="flex items-start gap-4 p-3 hover:bg-surface-container-low transition-colors group">
+<span class="material-symbols-outlined text-primary mt-0.5">workspace_premium</span>
+<div>
+<p class="text-sm font-bold font-serif leading-tight">Pendidik Profesional</p>
+<p class="font-label text-[10px] uppercase tracking-widest text-on-surface-variant mt-1">Kemendikbud • 2022</p>
+</div>
+</div>
+<div class="flex items-start gap-4 p-3 hover:bg-surface-container-low transition-colors group border-t border-outline-variant pt-4">
+<span class="material-symbols-outlined text-secondary mt-0.5">language</span>
+<div>
+<p class="text-sm font-bold font-serif leading-tight">TOEFL ITP Score 580</p>
+<p class="font-label text-[10px] uppercase tracking-widest text-on-surface-variant mt-1">English First • 2023</p>
+</div>
+</div>
+</div>
+<button class="w-full mt-8 flex items-center justify-center gap-2 text-primary font-label text-[10px] uppercase tracking-widest group">
+                        Portfolio Lengkap 
+                        <span class="material-symbols-outlined text-[16px] group-hover:translate-x-1 transition-transform">arrow_forward</span>
+</button>
+</div>
+<!-- Tautan Cepat -->
+<div class="p-8 border border-on-surface bg-surface-container-low">
+<h3 class="text-xl font-serif font-bold mb-6">Tautan Cepat</h3>
+<div class="grid grid-cols-2 gap-4">
+<a class="p-4 border border-outline-variant bg-white text-center hover:border-primary transition-all group" href="#">
+<span class="material-symbols-outlined text-on-surface-variant group-hover:text-primary mb-2 block">description</span>
+<span class="font-label text-[10px] uppercase tracking-widest">Slip Gaji</span>
+</a>
+<a class="p-4 border border-outline-variant bg-white text-center hover:border-secondary transition-all group" href="#">
+<span class="material-symbols-outlined text-on-surface-variant group-hover:text-secondary mb-2 block">menu_book</span>
+<span class="font-label text-[10px] uppercase tracking-widest">Kurikulum</span>
+</a>
+</div>
+</div>
+</div>
+</div>
+</main>
+<!-- Mobile Navigation -->
+<nav class="fixed bottom-0 left-0 w-full z-50 lg:hidden bg-surface-container-lowest border-t border-outline-variant shadow-lg">
+<div class="flex justify-around items-center h-16">
+<a class="flex flex-col items-center justify-center text-primary" href="#">
+<span class="material-symbols-outlined">dashboard</span>
+<span class="font-label text-[9px] uppercase tracking-widest mt-1">Dash</span>
+</a>
+<a class="flex flex-col items-center justify-center text-on-surface-variant" href="#">
+<span class="material-symbols-outlined">groups</span>
+<span class="font-label text-[9px] uppercase tracking-widest mt-1">Guru</span>
+</a>
+<a class="flex flex-col items-center justify-center text-on-surface-variant" href="#">
+<span class="material-symbols-outlined">event_note</span>
+<span class="font-label text-[9px] uppercase tracking-widest mt-1">Cuti</span>
+</a>
+<a class="flex flex-col items-center justify-center text-on-surface-variant" href="#">
+<span class="material-symbols-outlined">person</span>
+<span class="font-label text-[9px] uppercase tracking-widest mt-1">Profil</span>
+</a>
+</div>
+</nav>
+</body></html>
