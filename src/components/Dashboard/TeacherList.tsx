@@ -1,11 +1,11 @@
 import { useState, useMemo, useRef } from 'react';
-import { QRCodeSVG } from 'qrcode.react';
+import Barcode from 'react-barcode';
 import { supabase } from '../../lib/supabase';
 import { differenceInDays, parseISO, format, parse, isValid } from 'date-fns';
 import { id, enUS } from 'date-fns/locale';
 import * as XLSX from 'xlsx';
 import JSZip from 'jszip';
-import QRCode from 'qrcode';
+import JsBarcode from 'jsbarcode';
 import type { Teacher, Leave } from '../../types';
 import { TeacherCardBack } from './TeacherCardBack';
 import html2canvas from 'html2canvas';interface TeacherListProps {
@@ -136,12 +136,16 @@ export function TeacherList({ teachers, leaves, onEdit, onDelete, onRefresh }: T
     try {
       for (const teacher of filteredTeachers) {
         const url = getProfileUrl(teacher.id);
-        // Generate QR code as Data URL (PNG)
-        const qrDataUrl = await QRCode.toDataURL(url, {
-          width: 600,
-          margin: 2,
-          errorCorrectionLevel: 'H'
+        // Generate Barcode as Data URL (PNG)
+        const canvas = document.createElement('canvas');
+        JsBarcode(canvas, url, {
+          format: "CODE128",
+          width: 2,
+          height: 100,
+          displayValue: false,
+          margin: 10
         });
+        const qrDataUrl = canvas.toDataURL('image/png');
         
         // Sanitize name for filename
         const sanitizedName = teacher.name.replace(/[^a-z0-9]/gi, '_').toLowerCase();
@@ -417,10 +421,10 @@ export function TeacherList({ teachers, leaves, onEdit, onDelete, onRefresh }: T
              onClick={handleDownloadAllQR} 
              disabled={downloadingAll}
              className={`flex-1 flex items-center justify-center gap-1 bg-surface-container-low text-on-surface-variant hover:text-primary hover:bg-surface-container transition-colors text-xs font-bold py-1 px-1 rounded-sm ${downloadingAll ? 'animate-pulse' : ''}`} 
-             title="Download All QR"
+             title="Download All Barcode"
            >
-             <span className="material-symbols-outlined text-sm">{downloadingAll ? 'sync' : 'qr_code_2'}</span> 
-             {downloadingAll ? '...' : 'QR All'}
+             <span className="material-symbols-outlined text-sm">{downloadingAll ? 'sync' : 'barcode'}</span> 
+             {downloadingAll ? '...' : 'Barcode All'}
            </button>
         </div>
       </section>
@@ -493,8 +497,8 @@ export function TeacherList({ teachers, leaves, onEdit, onDelete, onRefresh }: T
                       <button onClick={() => setShowPrintModal(teacher)} className="p-2 hover:bg-primary/5 text-on-surface-variant hover:text-primary rounded-sm transition-colors flex items-center justify-center" title="Print ID Card">
                         <span className="material-symbols-outlined text-lg">badge</span>
                       </button>
-                      <button onClick={() => setShowQRModal(teacher)} className="p-2 hover:bg-primary/5 text-on-surface-variant hover:text-primary rounded-sm transition-colors flex items-center justify-center" title="QR Code">
-                        <span className="material-symbols-outlined text-lg">qr_code_2</span>
+                      <button onClick={() => setShowQRModal(teacher)} className="p-2 hover:bg-primary/5 text-on-surface-variant hover:text-primary rounded-sm transition-colors flex items-center justify-center" title="Barcode">
+                        <span className="material-symbols-outlined text-lg">barcode</span>
                       </button>
                       {onEdit && (
                         <button onClick={() => onEdit(teacher)} className="p-2 hover:bg-primary/5 text-on-surface-variant hover:text-primary rounded-sm transition-colors flex items-center justify-center" title="Edit Data">
@@ -533,7 +537,7 @@ export function TeacherList({ teachers, leaves, onEdit, onDelete, onRefresh }: T
         <div className="fixed inset-0 bg-on-surface/50 backdrop-blur-sm flex items-center justify-center p-4 z-50">
           <div className="bg-surface-container-lowest border border-outline-variant rounded-sm shadow-xl max-w-md w-full p-8">
             <div className="flex justify-between items-center mb-6 border-b border-outline-variant pb-4">
-              <h3 className="font-display text-xl font-bold text-primary">QR Code Identity</h3>
+              <h3 className="font-display text-xl font-bold text-primary">Barcode Identity</h3>
               <button
                 onClick={() => setShowQRModal(null)}
                 className="text-on-surface-variant hover:text-error transition-colors flex items-center justify-center"
@@ -547,12 +551,13 @@ export function TeacherList({ teachers, leaves, onEdit, onDelete, onRefresh }: T
                 <p className="font-serif font-bold text-lg text-on-surface">{showQRModal.name}</p>
                 <p className="font-label text-[10px] text-on-surface-variant uppercase tracking-widest mt-1">NIP: {showQRModal.nik}</p>
               </div>
-              <div ref={qrRef} className="flex justify-center bg-white p-4 border border-outline-variant mx-auto w-fit">
-                <QRCodeSVG
+              <div ref={qrRef} className="flex justify-center bg-white p-4 border border-outline-variant mx-auto w-fit max-w-full overflow-hidden">
+                <Barcode
                   value={getProfileUrl(showQRModal.id)}
-                  size={200}
-                  level="H"
-                  includeMargin={false}
+                  width={1.5}
+                  height={80}
+                  displayValue={false}
+                  margin={0}
                 />
               </div>
               <button
@@ -584,7 +589,7 @@ export function TeacherList({ teachers, leaves, onEdit, onDelete, onRefresh }: T
 
             <div className="flex flex-col items-center justify-center mb-8 id-card-print-area">
               <div className="flex flex-col items-center gap-4">
-                <p className="font-bold text-sm text-on-surface-variant print:hidden">Bagian Belakang (QR Code)</p>
+                <p className="font-bold text-sm text-on-surface-variant print:hidden">Bagian Belakang (Barcode)</p>
                 <div>
                   <TeacherCardBack teacher={showPrintModal} />
                 </div>

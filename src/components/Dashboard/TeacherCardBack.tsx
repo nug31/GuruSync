@@ -1,4 +1,4 @@
-import { QRCodeSVG } from 'qrcode.react';
+import Barcode from 'react-barcode';
 import type { Teacher } from '../../types';
 import { Info } from 'lucide-react';
 
@@ -59,14 +59,16 @@ export function TeacherCardBack({ teacher }: TeacherCardBackProps) {
           border-radius: 3.18mm;
         }
 
-        .qr-area {
+        .barcode-area {
           background: white;
-          padding: 10px;
-          border-radius: 12px;
+          padding: 8px;
+          border-radius: 8px;
           display: flex;
           align-items: center;
           justify-content: center;
           z-index: 10;
+          width: 90%;
+          overflow: hidden;
         }
 
         .cyber-lines {
@@ -149,14 +151,18 @@ export function TeacherCardBack({ teacher }: TeacherCardBackProps) {
               </span>
             </div>
 
-            <div className="flex-grow flex items-center justify-center">
-              <div className="qr-area shadow-lg">
-                <QRCodeSVG
-                  value={profileUrl}
-                  size={120}
-                  level="H"
-                  marginSize={0}
-                />
+            <div className="flex-grow flex items-center justify-center w-full">
+              <div className="barcode-area shadow-lg">
+                <div style={{ transform: 'scale(0.8)', transformOrigin: 'center' }}>
+                  <Barcode
+                    value={profileUrl}
+                    width={1.2}
+                    height={40}
+                    displayValue={false}
+                    margin={0}
+                    background="transparent"
+                  />
+                </div>
               </div>
             </div>
 
