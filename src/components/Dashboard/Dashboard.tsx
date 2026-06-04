@@ -145,44 +145,7 @@ export function Dashboard() {
               </button>
             )}
 
-            {(isAdmin || isTeacher) && (
-              <>
-                <div className="mt-6 mb-2 px-4 text-[10px] font-black text-on-surface-variant/40 uppercase tracking-widest">Akademik</div>
-                <button
-                  onClick={() => setView('students')}
-                  className={`flex items-center gap-4 px-4 py-3 transition-colors text-left rounded-lg ${
-                    view === 'students'
-                      ? 'bg-primary text-on-primary font-semibold'
-                      : 'text-on-surface-variant hover:text-primary hover:bg-surface-container-low'
-                  }`}
-                >
-                  <span className="material-symbols-outlined text-[20px]">school</span>
-                  <span>Data Siswa</span>
-                </button>
-                <button
-                  onClick={() => setView('tasks')}
-                  className={`flex items-center gap-4 px-4 py-3 transition-colors text-left rounded-lg ${
-                    view === 'tasks'
-                      ? 'bg-primary text-on-primary font-semibold'
-                      : 'text-on-surface-variant hover:text-primary hover:bg-surface-container-low'
-                  }`}
-                >
-                  <span className="material-symbols-outlined text-[20px]">assignment</span>
-                  <span>Manajemen Tugas</span>
-                </button>
-                <button
-                  onClick={() => setView('exams')}
-                  className={`flex items-center gap-4 px-4 py-3 transition-colors text-left rounded-lg ${
-                    view === 'exams'
-                      ? 'bg-primary text-on-primary font-semibold'
-                      : 'text-on-surface-variant hover:text-primary hover:bg-surface-container-low'
-                  }`}
-                >
-                  <span className="material-symbols-outlined text-[20px]">quiz</span>
-                  <span>Bank Ujian</span>
-                </button>
-              </>
-            )}
+
           </nav>
           
           <div className="mt-auto pt-8 border-t border-outline-variant flex flex-col gap-1">
@@ -358,24 +321,7 @@ export function Dashboard() {
             <span className="label-caps text-[9px] mt-1">Admin</span>
           </button>
         )}
-        {(isAdmin || isTeacher) && (
-          <>
-            <button 
-              onClick={() => setView('students')}
-              className={`flex flex-col items-center justify-center transition-colors ${view === 'students' ? 'text-primary' : 'text-on-surface-variant'}`}
-            >
-              <span className="material-symbols-outlined" data-icon="school">school</span>
-              <span className="label-caps text-[9px] mt-1">Siswa</span>
-            </button>
-            <button 
-              onClick={() => setView('tasks')}
-              className={`flex flex-col items-center justify-center transition-colors ${view === 'tasks' ? 'text-primary' : 'text-on-surface-variant'}`}
-            >
-              <span className="material-symbols-outlined" data-icon="assignment">assignment</span>
-              <span className="label-caps text-[9px] mt-1">Tugas</span>
-            </button>
-          </>
-        )}
+
       </nav>
 
       {showTeacherForm && (
