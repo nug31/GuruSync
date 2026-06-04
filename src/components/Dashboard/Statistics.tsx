@@ -67,9 +67,9 @@ export function Statistics({ teachers, leaves }: StatisticsProps) {
   return (
     <>
       {/* Welcome Section */}
-      <section className="py-8 lg:py-16">
-        <div className="max-w-4xl border-b border-on-surface/10 pb-8 mb-16">
-          <h1 className="text-4xl lg:text-6xl font-display text-on-surface mb-6 leading-tight">Welcome back, {userName}.</h1>
+      <section className="pt-4 pb-8 lg:pt-8 lg:pb-8">
+        <div className="max-w-4xl border-b border-on-surface/10 pb-4 mb-8">
+          <h1 className="text-4xl lg:text-6xl font-display text-on-surface mb-4 leading-tight">Welcome back, {userName}.</h1>
           <p className="text-lg lg:text-xl font-headline italic text-on-surface-variant max-w-2xl leading-relaxed">Here's a quick overview of what's happening at GuruSync Academy today.</p>
         </div>
         
