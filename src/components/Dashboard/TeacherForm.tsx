@@ -26,6 +26,8 @@ export function TeacherForm({ teacher, onClose }: TeacherFormProps) {
     training_history: '',
     sp_level: 'Tidak ada',
   });
+  const [avatarFile, setAvatarFile] = useState<File | null>(null);
+  const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
@@ -48,8 +50,23 @@ export function TeacherForm({ teacher, onClose }: TeacherFormProps) {
         training_history: teacher.training_history || '',
         sp_level: teacher.sp_level || 'Tidak ada',
       });
+      setAvatarPreview(teacher.avatar_url || null);
     }
   }, [teacher]);
+
+  const handleAvatarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const maxSize = 2 * 1024 * 1024; // 2MB
+      if (file.size > maxSize) {
+        setError('Ukuran foto terlalu besar. Maksimal 2MB.');
+        return;
+      }
+      setAvatarFile(file);
+      setAvatarPreview(URL.createObjectURL(file));
+      setError('');
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -57,15 +74,30 @@ export function TeacherForm({ teacher, onClose }: TeacherFormProps) {
     setLoading(true);
 
     try {
+      let finalAvatarUrl = teacher?.avatar_url || null;
+
+      if (avatarFile) {
+        const fileExt = avatarFile.name.split('.').pop();
+        const fileName = `${Date.now()}-${Math.random()}.${fileExt}`;
+        const { error: uploadError } = await supabase.storage.from('avatars').upload(fileName, avatarFile);
+        
+        if (uploadError) throw uploadError;
+        
+        const { data: { publicUrl } } = supabase.storage.from('avatars').getPublicUrl(fileName);
+        finalAvatarUrl = publicUrl;
+      }
+
+      const dataToSave = { ...formData, avatar_url: finalAvatarUrl };
+
       if (teacher) {
         const { error: updateError } = await (supabase.from('teachers') as any)
-          .update(formData)
+          .update(dataToSave)
           .eq('id', teacher.id);
 
         if (updateError) throw updateError;
       } else {
         const { error: insertError } = await (supabase.from('teachers') as any)
-          .insert([formData]);
+          .insert([dataToSave]);
 
         if (insertError) throw insertError;
       }
@@ -99,6 +131,30 @@ export function TeacherForm({ teacher, onClose }: TeacherFormProps) {
               {error}
             </div>
           )}
+
+          {/* Avatar Upload */}
+          <div className="flex flex-col items-center mb-6">
+            <div className="relative group mb-2 cursor-pointer">
+              <div className="w-24 h-24 rounded-full overflow-hidden border-2 border-gray-200 bg-gray-50 flex items-center justify-center">
+                {avatarPreview ? (
+                  <img src={avatarPreview} alt="Preview" className="w-full h-full object-cover" />
+                ) : (
+                  <span className="material-symbols-outlined text-4xl text-gray-400">person</span>
+                )}
+              </div>
+              <label className="absolute inset-0 bg-black/50 rounded-full opacity-0 group-hover:opacity-100 flex flex-col items-center justify-center cursor-pointer transition-opacity">
+                <span className="material-symbols-outlined text-white mb-1">photo_camera</span>
+                <span className="text-[10px] text-white font-medium uppercase tracking-wider">Ubah</span>
+                <input 
+                  type="file" 
+                  className="hidden" 
+                  accept="image/*" 
+                  onChange={handleAvatarChange} 
+                />
+              </label>
+            </div>
+            <p className="text-xs text-gray-500">Klik foto untuk mengubah (Maks. 2MB)</p>
+          </div>
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
