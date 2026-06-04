@@ -344,20 +344,7 @@ export function TeacherProfile({ teacherId }: TeacherProfileProps) {
             </button>
           </div>
 
-          {/* Tautan Cepat */}
-          <div className="p-8 border border-on-surface bg-surface-container-low">
-            <h3 className="text-xl font-serif font-bold mb-6">Tautan Cepat</h3>
-            <div className="grid grid-cols-2 gap-4">
-              <button className="p-4 border border-outline-variant bg-white text-center hover:border-primary transition-all group">
-                <span className="material-symbols-outlined text-on-surface-variant group-hover:text-primary mb-2 block">description</span>
-                <span className="font-label text-[10px] uppercase tracking-widest">Slip Gaji</span>
-              </button>
-              <button className="p-4 border border-outline-variant bg-white text-center hover:border-secondary transition-all group">
-                <span className="material-symbols-outlined text-on-surface-variant group-hover:text-secondary mb-2 block">menu_book</span>
-                <span className="font-label text-[10px] uppercase tracking-widest">Kurikulum</span>
-              </button>
-            </div>
-          </div>
+
         </div>
       </div>
     </div>
