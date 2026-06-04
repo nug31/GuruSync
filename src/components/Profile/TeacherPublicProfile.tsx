@@ -136,6 +136,73 @@ export function TeacherPublicProfile({ teacherId }: TeacherPublicProfileProps) {
               </div>
             )}
 
+            {/* Contact Information */}
+            {(teacher.email || teacher.phone || teacher.address) && (
+              <div className="bg-surface-container-low rounded-xl p-6 relative overflow-hidden border border-outline-variant/20">
+                <div className="flex items-center gap-4 mb-4">
+                  <div className="w-10 h-10 rounded-lg bg-secondary-container/20 flex items-center justify-center">
+                    <span className="material-symbols-outlined text-secondary">contact_mail</span>
+                  </div>
+                  <p className="font-label text-[10px] uppercase tracking-widest text-on-surface-variant">Contact Information</p>
+                </div>
+                <div className="space-y-3">
+                  {teacher.email && (
+                    <div className="flex items-center gap-3">
+                      <span className="material-symbols-outlined text-on-surface-variant text-sm">mail</span>
+                      <p className="font-body text-sm">{teacher.email}</p>
+                    </div>
+                  )}
+                  {teacher.phone && (
+                    <div className="flex items-center gap-3">
+                      <span className="material-symbols-outlined text-on-surface-variant text-sm">call</span>
+                      <p className="font-body text-sm">{teacher.phone}</p>
+                    </div>
+                  )}
+                  {teacher.address && (
+                    <div className="flex items-start gap-3">
+                      <span className="material-symbols-outlined text-on-surface-variant text-sm mt-0.5">location_on</span>
+                      <p className="font-body text-sm">{teacher.address}</p>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+
+            {/* Personal Details */}
+            {(teacher.birth_place || teacher.birth_date || teacher.gender || teacher.join_date) && (
+              <div className="bg-surface-container-low rounded-xl p-6 relative overflow-hidden border border-outline-variant/20">
+                <div className="flex items-center gap-4 mb-4">
+                  <div className="w-10 h-10 rounded-lg bg-tertiary-container/20 flex items-center justify-center">
+                    <span className="material-symbols-outlined text-tertiary">info</span>
+                  </div>
+                  <p className="font-label text-[10px] uppercase tracking-widest text-on-surface-variant">Personal Details</p>
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  {(teacher.birth_place || teacher.birth_date) && (
+                    <div>
+                      <p className="font-label text-[10px] uppercase tracking-widest text-on-surface-variant mb-1">Place & Date of Birth</p>
+                      <p className="font-body text-sm">
+                        {teacher.birth_place}{teacher.birth_place && teacher.birth_date ? ', ' : ''}
+                        {teacher.birth_date ? format(new Date(teacher.birth_date), 'dd MMM yyyy') : ''}
+                      </p>
+                    </div>
+                  )}
+                  {teacher.gender && (
+                    <div>
+                      <p className="font-label text-[10px] uppercase tracking-widest text-on-surface-variant mb-1">Gender</p>
+                      <p className="font-body text-sm capitalize">{teacher.gender}</p>
+                    </div>
+                  )}
+                  {teacher.join_date && (
+                    <div>
+                      <p className="font-label text-[10px] uppercase tracking-widest text-on-surface-variant mb-1">Join Date</p>
+                      <p className="font-body text-sm">{format(new Date(teacher.join_date), 'dd MMM yyyy')}</p>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+
             {/* Verification Footer Details */}
             <div className="bg-surface-dim/30 border border-outline-variant/10 rounded-xl p-6">
               <div className="flex flex-col gap-4">
