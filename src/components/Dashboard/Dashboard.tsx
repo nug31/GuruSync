@@ -212,7 +212,7 @@ export function Dashboard() {
                 </button>
               </div>
             ) : (
-              <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-12 border-b border-outline-variant pb-8">
+              <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-4 border-b border-outline-variant pb-4">
                 <div>
                   <nav className="flex items-center gap-2 text-on-surface-variant/70 font-label text-[10px] mb-4">
                     <span>Personal</span>

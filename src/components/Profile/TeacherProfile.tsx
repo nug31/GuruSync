@@ -124,10 +124,10 @@ export function TeacherProfile({ teacherId }: TeacherProfileProps) {
   const remainingAnnualLeaves = Math.max(0, annualLeaveQuota - usedAnnualLeaves);
 
   return (
-    <div className="min-h-screen bg-background selection:bg-primary-container/20 pb-20 p-8 lg:p-12">
+    <div className="min-h-screen bg-background selection:bg-primary-container/20 pb-20 p-6 lg:p-8">
       {/* Welcome section */}
-      <section className="mb-16 mt-4">
-        <div className="flex flex-col md:flex-row md:items-baseline justify-between border-b-2 border-on-surface pb-8">
+      <section className="mb-8 mt-2">
+        <div className="flex flex-col md:flex-row md:items-baseline justify-between border-b-2 border-on-surface pb-6">
           <div>
             <h2 className="text-5xl font-serif font-bold text-on-surface italic tracking-tight">Halo, {teacher.name.split(',')[0]}</h2>
             <p className="text-xl text-on-surface-variant mt-3 font-serif">Ringkasan profil akademik dan administratif Anda.</p>
