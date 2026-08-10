@@ -19,6 +19,7 @@ import html2canvas from 'html2canvas';interface TeacherListProps {
 export function TeacherList({ teachers, leaves, onEdit, onDelete, onRefresh }: TeacherListProps) {
   const [searchTerm, setSearchTerm] = useState('');
   const [subjectFilter, setSubjectFilter] = useState('');
+  const [workUnitFilter, setWorkUnitFilter] = useState('');
   const [showQRModal, setShowQRModal] = useState<Teacher | null>(null);
   const [showPrintModal, setShowPrintModal] = useState<Teacher | null>(null);
   const [importing, setImporting] = useState(false);
@@ -30,6 +31,12 @@ export function TeacherList({ teachers, leaves, onEdit, onDelete, onRefresh }: T
     return Array.from(new Set(teachers.map((t) => t.subject))).sort();
   }, [teachers]);
 
+  const workUnits = useMemo(() => {
+    return Array.from(
+      new Set(teachers.map((t) => t.work_unit).filter((w): w is string => !!w))
+    ).sort();
+  }, [teachers]);
+
   const filteredTeachers = useMemo(() => {
     return teachers.filter((teacher) => {
       const matchesSearch =
@@ -39,9 +46,11 @@ export function TeacherList({ teachers, leaves, onEdit, onDelete, onRefresh }: T
 
       const matchesSubject = !subjectFilter || teacher.subject === subjectFilter;
 
-      return matchesSearch && matchesSubject;
+      const matchesWorkUnit = !workUnitFilter || teacher.work_unit === workUnitFilter;
+
+      return matchesSearch && matchesSubject && matchesWorkUnit;
     });
-  }, [teachers, searchTerm, subjectFilter]);
+  }, [teachers, searchTerm, subjectFilter, workUnitFilter]);
 
   const getWorkDuration = (joinDate: string) => {
     const days = differenceInDays(new Date(), parseISO(joinDate));
@@ -365,14 +374,14 @@ export function TeacherList({ teachers, leaves, onEdit, onDelete, onRefresh }: T
   return (
     <div className="space-y-6">
       {/* Filters */}
-      <section className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
+      <section className="grid grid-cols-1 md:grid-cols-5 gap-4 mb-8">
         <div className="md:col-span-2 bg-surface-container-lowest border border-outline-variant p-2 flex items-center gap-3">
           <div className="px-2 text-on-surface-variant flex items-center justify-center">
             <span className="material-symbols-outlined">search</span>
           </div>
           <input
             type="text"
-            placeholder="Search by name, NIK, or email..."
+            placeholder="Cari nama, NIK, atau email..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             className="flex-1 bg-transparent border-none focus:ring-0 text-sm text-on-surface placeholder:text-on-surface-variant/40"
@@ -393,6 +402,25 @@ export function TeacherList({ teachers, leaves, onEdit, onDelete, onRefresh }: T
             {subjects.map((subject) => (
               <option key={subject} value={subject}>
                 {subject}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        <div className="bg-surface-container-lowest border border-outline-variant px-4 py-2 flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <span className="material-symbols-outlined text-sm text-on-surface-variant">location_city</span>
+            <span className="font-label text-[10px] text-on-surface-variant">Bertugas</span>
+          </div>
+          <select
+            value={workUnitFilter}
+            onChange={(e) => setWorkUnitFilter(e.target.value)}
+            className="bg-transparent border-none focus:ring-0 text-sm font-bold text-primary cursor-pointer w-full text-right"
+          >
+            <option value="">Semua Sekolah</option>
+            {workUnits.map((unit) => (
+              <option key={unit} value={unit}>
+                {unit}
               </option>
             ))}
           </select>
