@@ -33,6 +33,39 @@ export interface Leave {
   updated_at: string;
 }
 
+export type PermissionType =
+  | 'Sakit'
+  | 'Cuti'
+  | 'Tugas Luar'
+  | 'Izin Keluar & Kembali'
+  | 'Tidak Masuk'
+  | 'Terlambat'
+  | 'Izin Datang Terlambat'
+  | 'Pulang Cepat';
+
+export type PermissionStatus =
+  | 'pending_hod'
+  | 'pending_wakasek'
+  | 'pending_kepsek'
+  | 'approved'
+  | 'rejected';
+
+export interface Permission {
+  id: string;
+  teacher_id: string;
+  permission_type: PermissionType;
+  start_date: string;
+  end_date: string;
+  start_time?: string;
+  end_time?: string;
+  reason: string;
+  attachment_url?: string;
+  status: PermissionStatus;
+  rejection_note?: string;
+  created_at: string;
+  updated_at: string;
+}
+
 export interface Profile {
   id: string;
   email: string;

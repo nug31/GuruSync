@@ -11,15 +11,17 @@ import { StudentManagement } from './StudentManagement';
 import { TaskManagement } from './TaskManagement';
 import { ExamManagement } from './ExamManagement';
 import { StudentDashboard } from './StudentDashboard';
-import type { Teacher, Leave, Student } from '../../types';
+import { PermissionManagement } from './PermissionManagement';
+import type { Teacher, Leave, Permission } from '../../types';
 
-type View = 'dashboard' | 'teachers' | 'leaves' | 'admins' | 'students' | 'tasks' | 'exams';
+type View = 'dashboard' | 'teachers' | 'leaves' | 'permissions' | 'admins' | 'students' | 'tasks' | 'exams';
 
 export function Dashboard() {
   const { user, profile, loading: authLoading, signOut } = useAuth();
   const [view, setView] = useState<View>('dashboard');
   const [teachers, setTeachers] = useState<Teacher[]>([]);
   const [leaves, setLeaves] = useState<Leave[]>([]);
+  const [permissions, setPermissions] = useState<Permission[]>([]);
   const [loading, setLoading] = useState(true);
   const [showTeacherForm, setShowTeacherForm] = useState(false);
   const [editingTeacher, setEditingTeacher] = useState<Teacher | null>(null);
@@ -42,14 +44,17 @@ export function Dashboard() {
     try {
       let teachersQuery = supabase.from('teachers').select('*');
       let leavesQuery = supabase.from('leaves').select('*');
+      let permissionsQuery = supabase.from('permissions').select('*');
 
-      const [teachersRes, leavesRes] = await Promise.all([
+      const [teachersRes, leavesRes, permissionsRes] = await Promise.all([
         teachersQuery.order('name'),
         leavesQuery.order('created_at', { ascending: false }),
+        permissionsQuery.order('created_at', { ascending: false }),
       ]);
 
       if (teachersRes.data) setTeachers(teachersRes.data);
       if (leavesRes.data) setLeaves(leavesRes.data);
+      if (permissionsRes.data) setPermissions(permissionsRes.data);
     } catch (error) {
       console.error('Error loading data:', error);
     } finally {
@@ -129,6 +134,18 @@ export function Dashboard() {
             >
               <span className="material-symbols-outlined text-[20px]">event_busy</span>
               <span>{isAdmin ? 'Manajemen Cuti' : 'Pengajuan Cuti'}</span>
+            </button>
+
+            <button
+              onClick={() => setView('permissions')}
+              className={`flex items-center gap-4 px-4 py-3 transition-colors text-left rounded-lg ${
+                view === 'permissions'
+                  ? 'bg-primary text-on-primary font-semibold'
+                  : 'text-on-surface-variant hover:text-primary hover:bg-surface-container-low'
+              }`}
+            >
+              <span className="material-symbols-outlined text-[20px]">assignment_late</span>
+              <span>{isAdmin ? 'Manajemen Izin' : 'Pengajuan Izin'}</span>
             </button>
 
             {isAdmin && (
@@ -261,6 +278,17 @@ export function Dashboard() {
           </div>
         )}
 
+        {view === 'permissions' && (
+          <div className="py-8">
+            <PermissionManagement
+              teachers={teachers}
+              permissions={permissions}
+              onUpdate={loadData}
+              currentTeacherId={teachers.find(t => t.user_id === user?.id)?.id}
+            />
+          </div>
+        )}
+
         {view === 'admins' && isAdmin && (
           <div className="py-8">
             <h2 className="text-3xl font-display text-on-surface mb-8">
@@ -311,6 +339,13 @@ export function Dashboard() {
         >
           <span className="material-symbols-outlined" data-icon="event_note">event_note</span>
           <span className="label-caps text-[9px] mt-1">Cuti</span>
+        </button>
+        <button 
+          onClick={() => setView('permissions')}
+          className={`flex flex-col items-center justify-center transition-colors ${view === 'permissions' ? 'text-primary' : 'text-on-surface-variant'}`}
+        >
+          <span className="material-symbols-outlined" data-icon="assignment_late">assignment_late</span>
+          <span className="label-caps text-[9px] mt-1">Izin</span>
         </button>
         {isAdmin && (
           <button 
