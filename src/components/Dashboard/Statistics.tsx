@@ -72,118 +72,147 @@ export function Statistics({ teachers, permissions }: StatisticsProps) {
   return (
     <>
       {/* Welcome Section */}
-      <section className="pt-4 pb-8 lg:pt-8 lg:pb-8">
-        <div className="max-w-4xl border-b border-on-surface/10 pb-4 mb-8">
-          <h1 className="text-4xl lg:text-6xl font-display text-on-surface mb-4 leading-tight">Welcome back, {userName}.</h1>
-          <p className="text-lg lg:text-xl font-headline italic text-on-surface-variant max-w-2xl leading-relaxed">Here's a quick overview of what's happening at GuruSync Academy today.</p>
+      <section className="pt-4 pb-8 lg:pt-6 lg:pb-8">
+        <div className="max-w-4xl mb-8">
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-50 text-primary text-xs font-semibold mb-3 border border-blue-100">
+            <span className="w-2 h-2 rounded-full bg-primary animate-pulse"></span>
+            Portal Administrasi GuruSync
+          </div>
+          <h1 className="text-3xl lg:text-5xl font-extrabold text-on-surface mb-2 tracking-tight">
+            Selamat Datang, {userName}
+          </h1>
+          <p className="text-base lg:text-lg text-on-surface-variant max-w-2xl">
+            Berikut adalah ringkasan aktivitas kepegawaian dan perizinan guru hari ini.
+          </p>
         </div>
         
         {/* Statistics Grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-0 border-t border-l border-outline-variant">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 mb-10">
           {/* Card 1 */}
-          <div className="p-8 border-r border-b border-outline-variant bg-surface-container-lowest transition-colors hover:bg-surface-bright">
-            <div className="flex justify-between items-start mb-12">
-              <div className="text-primary">
-                <span className="material-symbols-outlined text-3xl" data-icon="groups">groups</span>
+          <div className="p-6 rounded-2xl border border-slate-200/80 bg-white shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 flex flex-col justify-between">
+            <div className="flex justify-between items-start mb-6">
+              <div className="w-12 h-12 rounded-xl bg-blue-50 text-primary flex items-center justify-center">
+                <span className="material-symbols-outlined text-2xl" data-icon="groups">groups</span>
               </div>
-              <span className="text-emerald-700 label-caps text-[10px] flex items-center gap-1">
-                <span className="material-symbols-outlined text-[14px]" data-icon="trending_up">trending_up</span>
+              <span className="text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded-full text-[11px] font-bold flex items-center gap-1">
+                <span className="material-symbols-outlined text-[13px]" data-icon="trending_up">trending_up</span>
                 Aktif
               </span>
             </div>
-            <p className="label-caps text-on-surface-variant text-xs mb-2">Total Guru</p>
-            <p className="text-4xl font-display text-on-surface">{stats.totalTeachers}</p>
+            <div>
+              <p className="text-on-surface-variant text-xs font-bold uppercase tracking-wider mb-1">Total Guru</p>
+              <p className="text-3xl font-extrabold text-on-surface">{stats.totalTeachers}</p>
+            </div>
           </div>
           
           {/* Card 2 */}
-          <div className="p-8 border-r border-b border-outline-variant bg-surface-container-lowest transition-colors hover:bg-surface-bright">
-            <div className="flex justify-between items-start mb-12">
-              <div className="text-secondary">
-                <span className="material-symbols-outlined text-3xl" data-icon="event_note">event_note</span>
+          <div className="p-6 rounded-2xl border border-slate-200/80 bg-white shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 flex flex-col justify-between">
+            <div className="flex justify-between items-start mb-6">
+              <div className="w-12 h-12 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center">
+                <span className="material-symbols-outlined text-2xl" data-icon="event_note">event_note</span>
               </div>
-              <span className="text-on-surface-variant label-caps text-[10px] italic">Saat ini</span>
+              <span className="text-on-surface-variant bg-slate-100 px-2.5 py-1 rounded-full text-[11px] font-semibold">Saat ini</span>
             </div>
-            <p className="label-caps text-on-surface-variant text-xs mb-2">Izin Aktif</p>
-            <p className="text-4xl font-display text-on-surface">{stats.activePermissions}</p>
+            <div>
+              <p className="text-on-surface-variant text-xs font-bold uppercase tracking-wider mb-1">Izin Hari Ini</p>
+              <p className="text-3xl font-extrabold text-on-surface">{stats.activePermissions}</p>
+            </div>
           </div>
           
           {/* Card 3 */}
-          <div className="p-8 border-r border-b border-outline-variant bg-surface-container-lowest transition-colors hover:bg-surface-bright">
-            <div className="flex justify-between items-start mb-12">
-              <div className="text-tertiary">
-                <span className="material-symbols-outlined text-3xl" data-icon="pending_actions">pending_actions</span>
+          <div className="p-6 rounded-2xl border border-slate-200/80 bg-white shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 flex flex-col justify-between">
+            <div className="flex justify-between items-start mb-6">
+              <div className="w-12 h-12 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center">
+                <span className="material-symbols-outlined text-2xl" data-icon="pending_actions">pending_actions</span>
               </div>
-              {stats.pendingPermissions > 0 && (
-                <span className="text-error label-caps text-[10px] flex items-center gap-1">
-                  <span className="material-symbols-outlined text-[14px]" data-icon="warning">warning</span>
-                  Perlu Aksi
+              {stats.pendingPermissions > 0 ? (
+                <span className="text-rose-700 bg-rose-50 px-2.5 py-1 rounded-full text-[11px] font-bold flex items-center gap-1">
+                  <span className="w-1.5 h-1.5 rounded-full bg-rose-500 animate-ping"></span>
+                  Perlu Respon
                 </span>
+              ) : (
+                <span className="text-slate-500 bg-slate-100 px-2.5 py-1 rounded-full text-[11px] font-semibold">Clear</span>
               )}
             </div>
-            <p className="label-caps text-on-surface-variant text-xs mb-2">Menunggu Persetujuan</p>
-            <p className="text-4xl font-display text-on-surface">{stats.pendingPermissions}</p>
+            <div>
+              <p className="text-on-surface-variant text-xs font-bold uppercase tracking-wider mb-1">Menunggu Persetujuan</p>
+              <p className="text-3xl font-extrabold text-on-surface">{stats.pendingPermissions}</p>
+            </div>
           </div>
           
           {/* Card 4 */}
-          <div className="p-8 border-r border-b border-outline-variant bg-surface-container-lowest transition-colors hover:bg-surface-bright">
-            <div className="flex justify-between items-start mb-12">
-              <div className="text-primary-container">
-                <span className="material-symbols-outlined text-3xl" data-icon="school">school</span>
+          <div className="p-6 rounded-2xl border border-slate-200/80 bg-white shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 flex flex-col justify-between">
+            <div className="flex justify-between items-start mb-6">
+              <div className="w-12 h-12 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center">
+                <span className="material-symbols-outlined text-2xl" data-icon="schedule">schedule</span>
               </div>
-              <span className="text-primary label-caps text-[10px] italic">Tahun</span>
+              <span className="text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded-full text-[11px] font-bold">Rata-rata</span>
             </div>
-            <p className="label-caps text-on-surface-variant text-xs mb-2">Rata-rata Masa Kerja</p>
-            <p className="text-4xl font-display text-on-surface">{stats.avgWorkDuration}</p>
+            <div>
+              <p className="text-on-surface-variant text-xs font-bold uppercase tracking-wider mb-1">Masa Kerja</p>
+              <p className="text-3xl font-extrabold text-on-surface">{stats.avgWorkDuration}</p>
+            </div>
           </div>
         </div>
       </section>
 
       {/* Content Sections */}
-      <div className="grid grid-cols-1 xl:grid-cols-3 gap-16 mt-8">
+      {/* Content Sections */}
+      <div className="grid grid-cols-1 xl:grid-cols-3 gap-8 mt-2">
         {/* Table Section */}
-        <div className="xl:col-span-2 space-y-8">
-          <div className="flex items-baseline justify-between border-b border-outline-variant pb-4">
-            <h3 className="text-3xl font-display text-on-surface">Recent Permission Requests</h3>
+        <div className="xl:col-span-2 bg-white rounded-3xl border border-slate-200/80 p-6 sm:p-8 shadow-sm">
+          <div className="flex items-center justify-between pb-6 border-b border-slate-100 mb-6">
+            <div>
+              <h3 className="text-xl font-bold text-on-surface">Pengajuan Izin Terbaru</h3>
+              <p className="text-xs text-on-surface-variant mt-1">Daftar permohonan izin guru yang baru masuk</p>
+            </div>
+            <span className="px-3 py-1 rounded-full bg-slate-100 text-slate-600 text-xs font-bold">
+              {recentPermissions.length} Data
+            </span>
           </div>
           
           <div className="overflow-x-auto w-full">
-            <table className="w-full text-left min-w-[600px]">
+            <table className="w-full text-left min-w-[550px]">
               <thead>
-                <tr className="border-b border-on-surface/10">
-                  <th className="px-4 py-4 label-caps text-on-surface-variant text-[11px]">Teacher</th>
-                  <th className="px-4 py-4 label-caps text-on-surface-variant text-[11px]">Permission Type</th>
-                  <th className="px-4 py-4 label-caps text-on-surface-variant text-[11px]">Date Range</th>
-                  <th className="px-4 py-4 label-caps text-on-surface-variant text-[11px]">Status</th>
+                <tr className="border-b border-slate-100 text-[11px] font-bold text-on-surface-variant uppercase tracking-wider">
+                  <th className="pb-4">Nama Guru</th>
+                  <th className="pb-4">Jenis Izin</th>
+                  <th className="pb-4">Periode</th>
+                  <th className="pb-4 text-right">Status</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-outline-variant">
+              <tbody className="divide-y divide-slate-100">
                 {recentPermissions.map((permission) => {
                   const teacher = teachers.find(t => t.id === permission.teacher_id);
-                  const isPending = permission.status.includes('pending');
-                  const statusColors: Record<string, string> = {
-                    pending_hod: 'border-tertiary text-tertiary-container bg-tertiary/5',
-                    pending_wakasek: 'border-tertiary text-tertiary-container bg-tertiary/5',
-                    pending_kepsek: 'border-tertiary text-tertiary-container bg-tertiary/5',
-                    approved: 'border-emerald-700 text-emerald-800 bg-emerald-50',
-                    rejected: 'border-error text-error bg-error-container/20'
+                  const statusBadges: Record<string, { label: string; cls: string }> = {
+                    pending_hod: { label: 'Menunggu HOD', cls: 'bg-amber-50 text-amber-700 border-amber-200' },
+                    pending_wakasek: { label: 'Menunggu Wakasek', cls: 'bg-amber-50 text-amber-700 border-amber-200' },
+                    pending_kepsek: { label: 'Menunggu Kepsek', cls: 'bg-amber-50 text-amber-700 border-amber-200' },
+                    approved: { label: 'Disetujui', cls: 'bg-emerald-50 text-emerald-700 border-emerald-200' },
+                    rejected: { label: 'Ditolak', cls: 'bg-rose-50 text-rose-700 border-rose-200' }
                   };
+                  const badge = statusBadges[permission.status] || { label: permission.status, cls: 'bg-slate-100 text-slate-600 border-slate-200' };
+
                   return (
-                    <tr key={permission.id} className="hover:bg-surface-container-low transition-colors">
-                      <td className="px-4 py-6">
-                        <div className="flex items-center gap-4">
-                          <div className="w-10 h-10 bg-primary-fixed text-primary font-display flex items-center justify-center text-sm border border-outline-variant">
+                    <tr key={permission.id} className="hover:bg-slate-50/80 transition-colors">
+                      <td className="py-4">
+                        <div className="flex items-center gap-3">
+                          <div className="w-9 h-9 rounded-full bg-blue-100 text-primary font-bold flex items-center justify-center text-xs">
                             {teacher?.name?.charAt(0).toUpperCase()}
                           </div>
-                          <span className="text-base font-semibold italic text-on-surface whitespace-nowrap">{teacher?.name}</span>
+                          <div>
+                            <span className="text-sm font-bold text-on-surface block">{teacher?.name || 'Guru'}</span>
+                            <span className="text-xs text-on-surface-variant">{teacher?.subject || '-'}</span>
+                          </div>
                         </div>
                       </td>
-                      <td className="px-4 py-6 text-on-surface-variant font-headline capitalize">{permission.permission_type}</td>
-                      <td className="px-4 py-6 text-on-surface-variant font-headline whitespace-nowrap">
-                        {format(new Date(permission.start_date), 'MMM dd')} - {format(new Date(permission.end_date), 'MMM dd')}
+                      <td className="py-4 text-sm font-semibold text-slate-700">{permission.permission_type}</td>
+                      <td className="py-4 text-xs text-on-surface-variant font-medium whitespace-nowrap">
+                        {format(new Date(permission.start_date), 'dd MMM')} - {format(new Date(permission.end_date), 'dd MMM yyyy')}
                       </td>
-                      <td className="px-4 py-6">
-                        <span className={`px-3 py-1 label-caps text-[10px] border whitespace-nowrap ${statusColors[permission.status] || ''}`}>
-                          {isPending ? 'Menunggu' : permission.status === 'approved' ? 'Disetujui' : 'Ditolak'}
+                      <td className="py-4 text-right">
+                        <span className={`inline-block px-2.5 py-1 text-[11px] font-bold rounded-full border whitespace-nowrap ${badge.cls}`}>
+                          {badge.label}
                         </span>
                       </td>
                     </tr>
@@ -191,7 +220,9 @@ export function Statistics({ teachers, permissions }: StatisticsProps) {
                 })}
                 {recentPermissions.length === 0 && (
                   <tr>
-                    <td colSpan={4} className="px-4 py-8 text-center text-on-surface-variant font-body">Belum ada data pengajuan izin.</td>
+                    <td colSpan={4} className="py-12 text-center text-on-surface-variant text-sm italic">
+                      Belum ada data pengajuan izin terbaru.
+                    </td>
                   </tr>
                 )}
               </tbody>
@@ -200,35 +231,41 @@ export function Statistics({ teachers, permissions }: StatisticsProps) {
         </div>
 
         {/* Charts Section */}
-        <div className="space-y-8">
-           <div className="border-b border-outline-variant pb-4">
-            <h3 className="text-3xl font-display text-on-surface">Analytics</h3>
-          </div>
-          
-          <div className="bg-surface-container-lowest border border-outline-variant p-6 h-64">
-             <h4 className="label-caps text-on-surface-variant text-xs mb-4">Pengajuan per Bulan</h4>
-             <ResponsiveContainer width="100%" height="100%">
-              <LineChart data={permissionsByMonth}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#e3e2e3" />
-                <XAxis dataKey="month" tick={{ fontSize: 10, fill: '#434653' }} />
-                <YAxis tick={{ fontSize: 10, fill: '#434653' }} />
-                <Tooltip contentStyle={{ backgroundColor: '#faf9fa', borderColor: '#c3c6d5' }} />
-                <Line type="monotone" dataKey="count" stroke="#094cb2" strokeWidth={2} dot={{ r: 4 }} />
-              </LineChart>
-            </ResponsiveContainer>
+        <div className="space-y-6">
+          <div className="bg-white rounded-3xl border border-slate-200/80 p-6 shadow-sm">
+             <div className="flex items-center justify-between mb-4">
+               <h4 className="text-sm font-bold text-on-surface uppercase tracking-wider">Tren Izin per Bulan</h4>
+               <span className="w-2 h-2 rounded-full bg-primary"></span>
+             </div>
+             <div className="h-56">
+               <ResponsiveContainer width="100%" height="100%">
+                <LineChart data={permissionsByMonth}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
+                  <XAxis dataKey="month" tick={{ fontSize: 10, fill: '#64748b' }} axisLine={false} tickLine={false} />
+                  <YAxis tick={{ fontSize: 10, fill: '#64748b' }} axisLine={false} tickLine={false} />
+                  <Tooltip contentStyle={{ backgroundColor: '#ffffff', borderRadius: '12px', border: '1px solid #e2e8f0', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.05)' }} />
+                  <Line type="monotone" dataKey="count" stroke="#2563eb" strokeWidth={3} dot={{ r: 4, fill: '#2563eb', strokeWidth: 2, stroke: '#ffffff' }} activeDot={{ r: 6 }} />
+                </LineChart>
+              </ResponsiveContainer>
+             </div>
           </div>
 
-          <div className="bg-surface-container-lowest border border-outline-variant p-6 h-64">
-             <h4 className="label-caps text-on-surface-variant text-xs mb-4">Status Izin</h4>
-             <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={permissionsByStatus}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#e3e2e3" />
-                <XAxis dataKey="status" tick={{ fontSize: 10, fill: '#434653' }} />
-                <YAxis tick={{ fontSize: 10, fill: '#434653' }} />
-                <Tooltip contentStyle={{ backgroundColor: '#faf9fa', borderColor: '#c3c6d5' }} />
-                <Bar dataKey="count" fill="#094cb2" />
-              </BarChart>
-            </ResponsiveContainer>
+          <div className="bg-white rounded-3xl border border-slate-200/80 p-6 shadow-sm">
+             <div className="flex items-center justify-between mb-4">
+               <h4 className="text-sm font-bold text-on-surface uppercase tracking-wider">Distribusi Status Izin</h4>
+               <span className="w-2 h-2 rounded-full bg-indigo-500"></span>
+             </div>
+             <div className="h-56">
+               <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={permissionsByStatus}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" vertical={false} />
+                  <XAxis dataKey="status" tick={{ fontSize: 10, fill: '#64748b' }} axisLine={false} tickLine={false} />
+                  <YAxis tick={{ fontSize: 10, fill: '#64748b' }} axisLine={false} tickLine={false} />
+                  <Tooltip contentStyle={{ backgroundColor: '#ffffff', borderRadius: '12px', border: '1px solid #e2e8f0', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.05)' }} />
+                  <Bar dataKey="count" fill="#3b82f6" radius={[6, 6, 0, 0]} />
+                </BarChart>
+              </ResponsiveContainer>
+             </div>
           </div>
         </div>
       </div>

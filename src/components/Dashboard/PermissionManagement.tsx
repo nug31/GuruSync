@@ -810,20 +810,6 @@ export function PermissionManagement({ teachers, permissions, onUpdate, currentT
                   </div>
                 </div>
 
-                {/* Lampiran URL */}
-                <div>
-                  <label className="text-[10px] font-label uppercase tracking-widest text-on-surface-variant/60 mb-2 font-bold block">
-                    URL Lampiran <span className="text-on-surface-variant/40 normal-case">(opsional — misal: link Google Drive)</span>
-                  </label>
-                  <input
-                    type="url"
-                    value={formData.attachment_url}
-                    onChange={e => setFormData({ ...formData, attachment_url: e.target.value })}
-                    className="w-full bg-surface-container-low px-4 py-3 rounded-xl border border-outline-variant/20 focus:ring-primary focus:border-primary text-on-surface text-sm"
-                    placeholder="https://..."
-                  />
-                </div>
-
                 {/* Status override (admin only) */}
                 {isAdmin && (
                   <div>
