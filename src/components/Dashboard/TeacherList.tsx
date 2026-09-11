@@ -6,17 +6,16 @@ import { id, enUS } from 'date-fns/locale';
 import * as XLSX from 'xlsx';
 import JSZip from 'jszip';
 import QRCode from 'qrcode';
-import type { Teacher, Leave } from '../../types';
+import type { Teacher } from '../../types';
 import { TeacherCardBack } from './TeacherCardBack';
 import html2canvas from 'html2canvas';interface TeacherListProps {
   teachers: Teacher[];
-  leaves: Leave[];
   onEdit?: (teacher: Teacher) => void;
   onDelete?: () => void;
   onRefresh?: () => void;
 }
 
-export function TeacherList({ teachers, leaves, onEdit, onDelete, onRefresh }: TeacherListProps) {
+export function TeacherList({ teachers, onEdit, onDelete, onRefresh }: TeacherListProps) {
   const [searchTerm, setSearchTerm] = useState('');
   const [subjectFilter, setSubjectFilter] = useState('');
   const [workUnitFilter, setWorkUnitFilter] = useState('');
@@ -61,20 +60,6 @@ export function TeacherList({ teachers, leaves, onEdit, onDelete, onRefresh }: T
       return `${years} tahun ${months} bulan`;
     }
     return `${months} bulan`;
-  };
-
-  const getTeacherLeaves = (teacherId: string) => {
-    return leaves.filter((leave) => leave.teacher_id === teacherId);
-  };
-
-  const getActiveLeaves = (teacherId: string) => {
-    return leaves.filter(
-      (leave) =>
-        leave.teacher_id === teacherId &&
-        leave.status === 'approved' &&
-        new Date(leave.start_date) <= new Date() &&
-        new Date(leave.end_date) >= new Date()
-    );
   };
 
   const handleDelete = async (teacher: Teacher) => {
@@ -190,8 +175,7 @@ export function TeacherList({ teachers, leaves, onEdit, onDelete, onRefresh }: T
         'Telepon': t.phone,
         'Alamat': t.address || '',
         'Status SP': t.sp_level || 'Tidak ada',
-        'Riwayat Training': t.training_history || '',
-        'Total Cuti': (t as any).leaves?.length || 0
+        'Riwayat Training': t.training_history || ''
       };
     });
 
@@ -478,9 +462,6 @@ export function TeacherList({ teachers, leaves, onEdit, onDelete, onRefresh }: T
                           <div className="w-12 h-12 rounded-sm bg-surface-container flex items-center justify-center border border-outline-variant">
                             <span className="material-symbols-outlined text-on-surface-variant">person</span>
                           </div>
-                        )}
-                        {getActiveLeaves(teacher.id).length > 0 && (
-                          <span className="absolute -bottom-1 -right-1 w-3 h-3 bg-amber-500 border border-white rounded-full" title="Sedang Cuti"></span>
                         )}
                       </div>
                       <div>

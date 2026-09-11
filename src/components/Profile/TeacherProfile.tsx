@@ -9,7 +9,7 @@ import {
 } from 'lucide-react';
 import { format, parseISO, differenceInDays } from 'date-fns';
 import { id } from 'date-fns/locale';
-import type { Teacher, Leave } from '../../types';
+import type { Teacher, Permission } from '../../types';
 
 interface TeacherProfileProps {
   teacherId: string;
@@ -17,7 +17,7 @@ interface TeacherProfileProps {
 
 export function TeacherProfile({ teacherId }: TeacherProfileProps) {
   const [teacher, setTeacher] = useState<Teacher | null>(null);
-  const [leaves, setLeaves] = useState<Leave[]>([]);
+  const [permissions, setPermissions] = useState<Permission[]>([]);
   const [loading, setLoading] = useState(true);
   const [uploading, setUploading] = useState(false);
   const { user, profile } = useAuth();
@@ -65,12 +65,12 @@ export function TeacherProfile({ teacherId }: TeacherProfileProps) {
   const loadTeacherData = async () => {
     setLoading(true);
     try {
-      const [teacherRes, leavesRes] = await Promise.all([
+      const [teacherRes, permsRes] = await Promise.all([
         supabase.from('teachers').select('*').eq('id', teacherId).maybeSingle(),
-        supabase.from('leaves').select('*').eq('teacher_id', teacherId).order('start_date', { ascending: false }),
+        supabase.from('permissions').select('*').eq('teacher_id', teacherId).order('start_date', { ascending: false }),
       ]);
       if (teacherRes.data) setTeacher(teacherRes.data as any);
-      if (leavesRes.data) setLeaves(leavesRes.data as any);
+      if (permsRes.data) setPermissions(permsRes.data as any);
     } catch (error) {
       console.error('Error loading data:', error);
     } finally {
@@ -108,31 +108,31 @@ export function TeacherProfile({ teacherId }: TeacherProfileProps) {
     );
   }
 
-  const activeLeave = leaves.find(l => 
-    l.status === 'approved' && new Date(l.start_date) <= new Date() && new Date(l.end_date) >= new Date()
+  const activePermission = permissions.find(p => 
+    p.status === 'approved' && new Date(p.start_date) <= new Date() && new Date(p.end_date) >= new Date()
   );
 
   const annualLeaveQuota = teacher.annual_leave_quota ?? 12;
   const currentYear = new Date().getFullYear();
-  const usedAnnualLeaves = leaves
-    .filter(l => 
-      l.leave_type === 'Cuti Tahunan' && 
-      l.status === 'approved' &&
-      new Date(l.start_date).getFullYear() === currentYear
+  const usedAnnualLeaves = permissions
+    .filter(p => 
+      p.permission_type === 'Cuti' && 
+      p.status === 'approved' &&
+      new Date(p.start_date).getFullYear() === currentYear
     )
-    .reduce((total, l) => total + (differenceInDays(parseISO(l.end_date), parseISO(l.start_date)) + 1), 0);
+    .reduce((total, p) => total + (differenceInDays(parseISO(p.end_date), parseISO(p.start_date)) + 1), 0);
   const remainingAnnualLeaves = Math.max(0, annualLeaveQuota - usedAnnualLeaves);
 
   return (
-    <div className="min-h-screen bg-background selection:bg-primary-container/20 pb-20 p-6 lg:p-8">
+    <div className="min-h-screen bg-background selection:bg-primary-container/20 pb-20 p-4 sm:p-6 lg:p-8">
       {/* Welcome section */}
       <section className="mb-8 mt-2">
-        <div className="flex flex-col md:flex-row md:items-baseline justify-between border-b-2 border-on-surface pb-6">
+        <div className="flex flex-col md:flex-row md:items-baseline justify-between border-b-2 border-on-surface pb-6 gap-4">
           <div>
-            <h2 className="text-5xl font-serif font-bold text-on-surface italic tracking-tight">Halo, {teacher.name.split(',')[0]}</h2>
-            <p className="text-xl text-on-surface-variant mt-3 font-serif">Ringkasan profil akademik dan administratif Anda.</p>
+            <h2 className="text-3xl sm:text-5xl font-serif font-bold text-on-surface italic tracking-tight">Halo, {teacher.name.split(',')[0]}</h2>
+            <p className="text-base sm:text-xl text-on-surface-variant mt-2 sm:mt-3 font-serif">Ringkasan profil akademik dan administratif Anda.</p>
           </div>
-          <div className="mt-6 md:mt-0 font-label text-sm uppercase tracking-widest flex items-center gap-2">
+          <div className="mt-4 md:mt-0 font-label text-xs sm:text-sm uppercase tracking-widest flex items-center gap-2 text-on-surface-variant">
             <span className="material-symbols-outlined text-[18px]">calendar_today</span>
             {format(new Date(), 'EEEE, d MMMM yyyy', { locale: id })}
           </div>
@@ -210,47 +210,49 @@ export function TeacherProfile({ teacherId }: TeacherProfileProps) {
             </div>
           </div>
 
-          {/* Leave History */}
+          {/* Leave & Permission History */}
           <div>
             <div className="flex items-center justify-between border-b border-on-surface/10 pb-4 mb-6">
-              <h3 className="text-2xl font-serif font-bold">Riwayat Cuti</h3>
-              <button className="text-on-surface-variant font-label text-[10px] uppercase tracking-widest hover:text-primary">Arsip Lengkap</button>
+              <h3 className="text-xl sm:text-2xl font-serif font-bold">Riwayat Izin & Cuti</h3>
+              <span className="text-on-surface-variant font-label text-[10px] uppercase tracking-widest">
+                {permissions.length} Pengajuan
+              </span>
             </div>
-            <div className="overflow-hidden border border-outline-variant rounded">
-              <table className="w-full text-left">
+            <div className="overflow-x-auto border border-outline-variant rounded">
+              <table className="w-full text-left min-w-[520px]">
                 <thead className="bg-surface-container-low border-b border-outline-variant">
                   <tr>
                     <th className="p-4 font-label text-[10px] uppercase tracking-widest text-on-surface-variant">Jenis</th>
-                    <th className="p-4 font-label text-[10px] uppercase tracking-widest text-on-surface-variant">Durasi</th>
+                    <th className="p-4 font-label text-[10px] uppercase tracking-widest text-on-surface-variant">Durasi / Waktu</th>
                     <th className="p-4 font-label text-[10px] uppercase tracking-widest text-on-surface-variant">Diajukan</th>
                     <th className="p-4 font-label text-[10px] uppercase tracking-widest text-on-surface-variant text-right">Status</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-outline-variant">
-                  {leaves.length === 0 ? (
+                  {permissions.length === 0 ? (
                     <tr>
-                      <td colSpan={4} className="p-8 text-center text-on-surface-variant italic">Belum ada riwayat cuti</td>
+                      <td colSpan={4} className="p-8 text-center text-on-surface-variant italic">Belum ada riwayat izin atau cuti</td>
                     </tr>
                   ) : (
-                    leaves.slice(0, 5).map((leave) => (
-                      <tr key={leave.id} className="hover:bg-surface-container-lowest transition-colors">
+                    permissions.slice(0, 5).map((p) => (
+                      <tr key={p.id} className="hover:bg-surface-container-lowest transition-colors">
                         <td className="p-4">
-                          <p className="font-serif font-bold">{leave.leave_type}</p>
-                          <p className="text-xs text-on-surface-variant italic">{leave.reason}</p>
+                          <p className="font-serif font-bold">{p.permission_type}</p>
+                          <p className="text-xs text-on-surface-variant italic truncate max-w-xs">{p.reason}</p>
                         </td>
                         <td className="p-4 font-serif italic text-on-surface">
-                          {differenceInDays(parseISO(leave.end_date), parseISO(leave.start_date)) + 1} Hari
+                          {p.start_time ? `${p.start_time} - ${p.end_time || ''}` : `${differenceInDays(parseISO(p.end_date), parseISO(p.start_date)) + 1} Hari`}
                         </td>
                         <td className="p-4 text-xs text-on-surface-variant">
-                          {format(parseISO(leave.created_at || leave.start_date), 'd MMM yyyy', { locale: id })}
+                          {format(parseISO(p.created_at || p.start_date), 'd MMM yyyy', { locale: id })}
                         </td>
                         <td className="p-4 text-right">
-                          <span className={`status-badge px-2 py-1 rounded-sm border ${
-                            leave.status === 'approved' ? 'bg-green-50 text-green-700 border-green-200' :
-                            leave.status === 'rejected' ? 'bg-red-50 text-red-700 border-red-200' :
+                          <span className={`status-badge px-2 py-1 rounded-sm border text-xs font-semibold ${
+                            p.status === 'approved' ? 'bg-green-50 text-green-700 border-green-200' :
+                            p.status === 'rejected' ? 'bg-red-50 text-red-700 border-red-200' :
                             'bg-amber-50 text-amber-700 border-amber-200'
                           }`}>
-                            {leave.status.charAt(0).toUpperCase() + leave.status.slice(1)}
+                            {p.status === 'approved' ? 'Disetujui' : p.status === 'rejected' ? 'Ditolak' : 'Menunggu'}
                           </span>
                         </td>
                       </tr>
@@ -266,11 +268,11 @@ export function TeacherProfile({ teacherId }: TeacherProfileProps) {
         <div className="lg:col-span-4 flex flex-col gap-12">
           {/* ID Card (Editorial Style) */}
           <div className="border-2 border-on-surface p-2 rounded-sm">
-            <div className="bg-surface-container-lowest p-8 border border-outline-variant flex flex-col items-center">
+            <div className="bg-surface-container-lowest p-6 sm:p-8 border border-outline-variant flex flex-col items-center">
               <div className="w-full flex justify-between border-b border-on-surface/10 pb-4 mb-8">
                 <span className="font-label text-[10px] uppercase tracking-[0.3em] font-bold">Academic Identity</span>
-                <span className={`material-symbols-outlined text-[18px] ${activeLeave ? 'text-error' : 'text-primary'}`}>
-                  {activeLeave ? 'event_busy' : 'verified'}
+                <span className={`material-symbols-outlined text-[18px] ${activePermission ? 'text-error' : 'text-primary'}`} title={activePermission ? 'Sedang Izin / Cuti' : 'Aktif'}>
+                  {activePermission ? 'event_busy' : 'verified'}
                 </span>
               </div>
               <div className="relative group">

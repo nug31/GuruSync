@@ -4,7 +4,6 @@ import { useAuth } from '../../contexts/AuthContext';
 import { TeacherList } from './TeacherList';
 import { TeacherForm } from './TeacherForm';
 import { TeacherProfile } from '../Profile/TeacherProfile';
-import { LeaveManagement } from './LeaveManagement';
 import { Statistics } from './Statistics';
 import { AdminManagement } from './AdminManagement';
 import { StudentManagement } from './StudentManagement';
@@ -12,15 +11,14 @@ import { TaskManagement } from './TaskManagement';
 import { ExamManagement } from './ExamManagement';
 import { StudentDashboard } from './StudentDashboard';
 import { PermissionManagement } from './PermissionManagement';
-import type { Teacher, Leave, Permission } from '../../types';
+import type { Teacher, Permission } from '../../types';
 
-type View = 'dashboard' | 'teachers' | 'leaves' | 'permissions' | 'admins' | 'students' | 'tasks' | 'exams';
+type View = 'dashboard' | 'teachers' | 'permissions' | 'admins' | 'students' | 'tasks' | 'exams';
 
 export function Dashboard() {
   const { user, profile, loading: authLoading, signOut } = useAuth();
   const [view, setView] = useState<View>('dashboard');
   const [teachers, setTeachers] = useState<Teacher[]>([]);
-  const [leaves, setLeaves] = useState<Leave[]>([]);
   const [permissions, setPermissions] = useState<Permission[]>([]);
   const [loading, setLoading] = useState(true);
   const [showTeacherForm, setShowTeacherForm] = useState(false);
@@ -43,17 +41,14 @@ export function Dashboard() {
     setLoading(true);
     try {
       let teachersQuery = supabase.from('teachers').select('*');
-      let leavesQuery = supabase.from('leaves').select('*');
       let permissionsQuery = supabase.from('permissions').select('*');
 
-      const [teachersRes, leavesRes, permissionsRes] = await Promise.all([
+      const [teachersRes, permissionsRes] = await Promise.all([
         teachersQuery.order('name'),
-        leavesQuery.order('created_at', { ascending: false }),
         permissionsQuery.order('created_at', { ascending: false }),
       ]);
 
       if (teachersRes.data) setTeachers(teachersRes.data);
-      if (leavesRes.data) setLeaves(leavesRes.data);
       if (permissionsRes.data) setPermissions(permissionsRes.data);
     } catch (error) {
       console.error('Error loading data:', error);
@@ -125,18 +120,6 @@ export function Dashboard() {
             </button>
             
             <button
-              onClick={() => setView('leaves')}
-              className={`flex items-center gap-4 px-4 py-3 transition-colors text-left rounded-lg ${
-                view === 'leaves'
-                  ? 'bg-primary text-on-primary font-semibold'
-                  : 'text-on-surface-variant hover:text-primary hover:bg-surface-container-low'
-              }`}
-            >
-              <span className="material-symbols-outlined text-[20px]">event_busy</span>
-              <span>{isAdmin ? 'Manajemen Cuti' : 'Pengajuan Cuti'}</span>
-            </button>
-
-            <button
               onClick={() => setView('permissions')}
               className={`flex items-center gap-4 px-4 py-3 transition-colors text-left rounded-lg ${
                 view === 'permissions'
@@ -206,7 +189,7 @@ export function Dashboard() {
           isStudent ? (
             <StudentDashboard />
           ) : (
-            <Statistics teachers={teachers} leaves={leaves} />
+            <Statistics teachers={teachers} permissions={permissions} />
           )
         )}
 
@@ -245,7 +228,6 @@ export function Dashboard() {
             {isAdmin ? (
               <TeacherList
                 teachers={teachers}
-                leaves={leaves}
                 onEdit={handleEditTeacher}
                 onDelete={loadData}
                 onRefresh={loadData}
@@ -261,20 +243,6 @@ export function Dashboard() {
                 )}
               </div>
             )}
-          </div>
-        )}
-
-        {view === 'leaves' && (
-          <div className="py-8">
-             <h2 className="text-3xl font-display text-on-surface mb-8">
-                {isAdmin ? 'Manajemen Cuti' : 'Pengajuan Cuti'}
-              </h2>
-            <LeaveManagement
-              teachers={teachers}
-              leaves={leaves}
-              onUpdate={loadData}
-              currentTeacherId={teachers.find(t => t.user_id === user?.id)?.id}
-            />
           </div>
         )}
 
@@ -332,13 +300,6 @@ export function Dashboard() {
         >
           <span className="material-symbols-outlined" data-icon="groups">groups</span>
           <span className="label-caps text-[9px] mt-1">Guru</span>
-        </button>
-        <button 
-          onClick={() => setView('leaves')}
-          className={`flex flex-col items-center justify-center transition-colors ${view === 'leaves' ? 'text-primary' : 'text-on-surface-variant'}`}
-        >
-          <span className="material-symbols-outlined" data-icon="event_note">event_note</span>
-          <span className="label-caps text-[9px] mt-1">Cuti</span>
         </button>
         <button 
           onClick={() => setView('permissions')}

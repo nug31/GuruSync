@@ -340,7 +340,7 @@ export function PermissionManagement({ teachers, permissions, onUpdate, currentT
 
       {/* Filter Tabs + Type Filter */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6 border-b border-outline-variant/30 pb-4">
-        <div className="flex items-center gap-1">
+        <div className="flex items-center gap-1 overflow-x-auto pb-1 max-w-full">
           {([
             { key: 'all', label: 'Semua' },
             { key: 'pending', label: 'Menunggu' },
@@ -350,7 +350,7 @@ export function PermissionManagement({ teachers, permissions, onUpdate, currentT
             <button
               key={tab.key}
               onClick={() => setActiveTab(tab.key)}
-              className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+              className={`px-3 sm:px-4 py-2 rounded-lg text-xs sm:text-sm font-medium transition-all whitespace-nowrap ${
                 activeTab === tab.key
                   ? 'bg-primary text-on-primary'
                   : 'text-on-surface-variant hover:bg-surface-container-high'
@@ -363,7 +363,7 @@ export function PermissionManagement({ teachers, permissions, onUpdate, currentT
         <select
           value={typeFilter}
           onChange={e => setTypeFilter(e.target.value as PermissionType | 'all')}
-          className="bg-surface-container-low px-4 py-2 rounded-xl border border-outline-variant/20 text-sm text-on-surface font-medium focus:ring-primary focus:border-primary"
+          className="bg-surface-container-low px-4 py-2 rounded-xl border border-outline-variant/20 text-sm text-on-surface font-medium focus:ring-primary focus:border-primary w-full sm:w-auto"
         >
           <option value="all">Semua Jenis</option>
           {PERMISSION_TYPES.map(t => (
@@ -665,13 +665,13 @@ export function PermissionManagement({ teachers, permissions, onUpdate, currentT
         <div className="fixed inset-0 bg-on-surface/50 backdrop-blur-sm flex items-center justify-center p-4 z-50">
           <div className="bg-surface-container-lowest rounded-3xl border border-outline-variant/30 shadow-2xl relative overflow-hidden max-w-2xl w-full max-h-[92vh] overflow-y-auto">
             <div className="h-2 bg-primary" />
-            <div className="p-8">
-              <div className="flex items-start justify-between mb-8 pb-6 border-b border-outline-variant/20">
+            <div className="p-5 sm:p-8">
+              <div className="flex items-start justify-between mb-6 sm:mb-8 pb-4 sm:pb-6 border-b border-outline-variant/20">
                 <div>
-                  <h4 className="text-2xl font-headline font-bold text-on-surface">
+                  <h4 className="text-xl sm:text-2xl font-headline font-bold text-on-surface">
                     {editingPermission ? 'Edit Pengajuan Izin' : 'Formulir Pengajuan Izin'}
                   </h4>
-                  <p className="text-sm text-on-surface-variant/70 mt-1">
+                  <p className="text-xs sm:text-sm text-on-surface-variant/70 mt-1">
                     Isi formulir dengan lengkap dan benar
                   </p>
                 </div>
@@ -741,7 +741,7 @@ export function PermissionManagement({ teachers, permissions, onUpdate, currentT
                 )}
 
                 {/* Tanggal */}
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
                     <label className="text-[10px] font-label uppercase tracking-widest text-on-surface-variant/60 mb-2 font-bold block">Tanggal Mulai</label>
                     <input
@@ -766,7 +766,7 @@ export function PermissionManagement({ teachers, permissions, onUpdate, currentT
 
                 {/* Jam (hanya untuk tipe berbasis waktu) */}
                 {isTimeBased(formData.permission_type) && (
-                  <div className="grid grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div>
                       <label className="text-[10px] font-label uppercase tracking-widest text-on-surface-variant/60 mb-2 font-bold block">
                         {formData.permission_type === 'Pulang Cepat' ? 'Jam Pulang' : 'Jam Masuk / Mulai'}

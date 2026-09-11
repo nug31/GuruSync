@@ -1,26 +1,26 @@
 import { useMemo } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
 import { differenceInDays, parseISO } from 'date-fns';
-import type { Teacher, Leave } from '../../types';
+import type { Teacher, Permission } from '../../types';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line } from 'recharts';
 import { format } from 'date-fns';
 import { id } from 'date-fns/locale';
 
 interface StatisticsProps {
   teachers: Teacher[];
-  leaves: Leave[];
+  permissions: Permission[];
 }
 
-export function Statistics({ teachers, leaves }: StatisticsProps) {
+export function Statistics({ teachers, permissions }: StatisticsProps) {
   const { profile } = useAuth();
   
   const stats = useMemo(() => {
     const totalTeachers = teachers.length;
-    const activeLeaves = leaves.filter(
-      (leave) =>
-        leave.status === 'approved' &&
-        new Date(leave.start_date) <= new Date() &&
-        new Date(leave.end_date) >= new Date()
+    const activePermissions = permissions.filter(
+      (permission) =>
+        permission.status === 'approved' &&
+        new Date(permission.start_date) <= new Date() &&
+        new Date(permission.end_date) >= new Date()
     ).length;
 
     const avgWorkDuration = teachers.length > 0
@@ -30,37 +30,42 @@ export function Statistics({ teachers, leaves }: StatisticsProps) {
         }, 0) / teachers.length
       : 0;
 
-    const pendingLeaves = leaves.filter((leave) => leave.status === 'pending').length;
+    const pendingPermissions = permissions.filter((permission) => permission.status === 'pending_hod' || permission.status === 'pending_wakasek' || permission.status === 'pending_kepsek').length;
 
     return {
       totalTeachers,
-      activeLeaves,
+      activePermissions,
       avgWorkDuration: avgWorkDuration.toFixed(1),
-      pendingLeaves,
+      pendingPermissions,
     };
-  }, [teachers, leaves]);
+  }, [teachers, permissions]);
 
-  const recentLeaves = useMemo(() => {
-    return [...leaves].sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()).slice(0, 5);
-  }, [leaves]);
+  const recentPermissions = useMemo(() => {
+    return [...permissions].sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()).slice(0, 5);
+  }, [permissions]);
 
-  const leavesByMonth = useMemo(() => {
+  const permissionsByMonth = useMemo(() => {
     const monthData: { [key: string]: number } = {};
-    leaves.forEach((leave) => {
-      const month = format(parseISO(leave.start_date), 'MMM yyyy', { locale: id });
+    permissions.forEach((permission) => {
+      const month = format(parseISO(permission.start_date), 'MMM yyyy', { locale: id });
       monthData[month] = (monthData[month] || 0) + 1;
     });
     return Object.entries(monthData).map(([month, count]) => ({ month, count })).slice(-12);
-  }, [leaves]);
+  }, [permissions]);
 
-  const leavesByStatus = useMemo(() => {
-    const statusData: { [key: string]: number } = { pending: 0, approved: 0, rejected: 0 };
-    leaves.forEach((leave) => { statusData[leave.status]++; });
-    return Object.entries(statusData).map(([status, count]) => ({
-      status: status === 'pending' ? 'Menunggu' : status === 'approved' ? 'Disetujui' : 'Ditolak',
-      count,
-    }));
-  }, [leaves]);
+  const permissionsByStatus = useMemo(() => {
+    const statusData: { [key: string]: number } = { pending_hod: 0, pending_wakasek: 0, pending_kepsek: 0, approved: 0, rejected: 0 };
+    permissions.forEach((permission) => { statusData[permission.status]++; });
+    
+    // Group pending statuses
+    const pendingTotal = statusData.pending_hod + statusData.pending_wakasek + statusData.pending_kepsek;
+    
+    return [
+      { status: 'Menunggu', count: pendingTotal },
+      { status: 'Disetujui', count: statusData.approved },
+      { status: 'Ditolak', count: statusData.rejected }
+    ];
+  }, [permissions]);
 
   const userName = profile?.name || profile?.email || 'User';
 
@@ -98,8 +103,8 @@ export function Statistics({ teachers, leaves }: StatisticsProps) {
               </div>
               <span className="text-on-surface-variant label-caps text-[10px] italic">Saat ini</span>
             </div>
-            <p className="label-caps text-on-surface-variant text-xs mb-2">Cuti Aktif</p>
-            <p className="text-4xl font-display text-on-surface">{stats.activeLeaves}</p>
+            <p className="label-caps text-on-surface-variant text-xs mb-2">Izin Aktif</p>
+            <p className="text-4xl font-display text-on-surface">{stats.activePermissions}</p>
           </div>
           
           {/* Card 3 */}
@@ -108,7 +113,7 @@ export function Statistics({ teachers, leaves }: StatisticsProps) {
               <div className="text-tertiary">
                 <span className="material-symbols-outlined text-3xl" data-icon="pending_actions">pending_actions</span>
               </div>
-              {stats.pendingLeaves > 0 && (
+              {stats.pendingPermissions > 0 && (
                 <span className="text-error label-caps text-[10px] flex items-center gap-1">
                   <span className="material-symbols-outlined text-[14px]" data-icon="warning">warning</span>
                   Perlu Aksi
@@ -116,7 +121,7 @@ export function Statistics({ teachers, leaves }: StatisticsProps) {
               )}
             </div>
             <p className="label-caps text-on-surface-variant text-xs mb-2">Menunggu Persetujuan</p>
-            <p className="text-4xl font-display text-on-surface">{stats.pendingLeaves}</p>
+            <p className="text-4xl font-display text-on-surface">{stats.pendingPermissions}</p>
           </div>
           
           {/* Card 4 */}
@@ -138,52 +143,55 @@ export function Statistics({ teachers, leaves }: StatisticsProps) {
         {/* Table Section */}
         <div className="xl:col-span-2 space-y-8">
           <div className="flex items-baseline justify-between border-b border-outline-variant pb-4">
-            <h3 className="text-3xl font-display text-on-surface">Recent Leave Requests</h3>
+            <h3 className="text-3xl font-display text-on-surface">Recent Permission Requests</h3>
           </div>
           
-          <div className="overflow-x-auto">
-            <table className="w-full text-left">
+          <div className="overflow-x-auto w-full">
+            <table className="w-full text-left min-w-[600px]">
               <thead>
                 <tr className="border-b border-on-surface/10">
                   <th className="px-4 py-4 label-caps text-on-surface-variant text-[11px]">Teacher</th>
-                  <th className="px-4 py-4 label-caps text-on-surface-variant text-[11px]">Leave Type</th>
+                  <th className="px-4 py-4 label-caps text-on-surface-variant text-[11px]">Permission Type</th>
                   <th className="px-4 py-4 label-caps text-on-surface-variant text-[11px]">Date Range</th>
                   <th className="px-4 py-4 label-caps text-on-surface-variant text-[11px]">Status</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-outline-variant">
-                {recentLeaves.map((leave) => {
-                  const teacher = teachers.find(t => t.id === leave.teacher_id);
+                {recentPermissions.map((permission) => {
+                  const teacher = teachers.find(t => t.id === permission.teacher_id);
+                  const isPending = permission.status.includes('pending');
                   const statusColors: Record<string, string> = {
-                    pending: 'border-tertiary text-tertiary-container bg-tertiary/5',
+                    pending_hod: 'border-tertiary text-tertiary-container bg-tertiary/5',
+                    pending_wakasek: 'border-tertiary text-tertiary-container bg-tertiary/5',
+                    pending_kepsek: 'border-tertiary text-tertiary-container bg-tertiary/5',
                     approved: 'border-emerald-700 text-emerald-800 bg-emerald-50',
                     rejected: 'border-error text-error bg-error-container/20'
                   };
                   return (
-                    <tr key={leave.id} className="hover:bg-surface-container-low transition-colors">
+                    <tr key={permission.id} className="hover:bg-surface-container-low transition-colors">
                       <td className="px-4 py-6">
                         <div className="flex items-center gap-4">
                           <div className="w-10 h-10 bg-primary-fixed text-primary font-display flex items-center justify-center text-sm border border-outline-variant">
                             {teacher?.name?.charAt(0).toUpperCase()}
                           </div>
-                          <span className="text-base font-semibold italic text-on-surface">{teacher?.name}</span>
+                          <span className="text-base font-semibold italic text-on-surface whitespace-nowrap">{teacher?.name}</span>
                         </div>
                       </td>
-                      <td className="px-4 py-6 text-on-surface-variant font-headline capitalize">{leave.leave_type.replace('_', ' ')}</td>
-                      <td className="px-4 py-6 text-on-surface-variant font-headline">
-                        {format(new Date(leave.start_date), 'MMM dd')} - {format(new Date(leave.end_date), 'MMM dd')}
+                      <td className="px-4 py-6 text-on-surface-variant font-headline capitalize">{permission.permission_type}</td>
+                      <td className="px-4 py-6 text-on-surface-variant font-headline whitespace-nowrap">
+                        {format(new Date(permission.start_date), 'MMM dd')} - {format(new Date(permission.end_date), 'MMM dd')}
                       </td>
                       <td className="px-4 py-6">
-                        <span className={`px-3 py-1 label-caps text-[10px] border ${statusColors[leave.status] || ''}`}>
-                          {leave.status}
+                        <span className={`px-3 py-1 label-caps text-[10px] border whitespace-nowrap ${statusColors[permission.status] || ''}`}>
+                          {isPending ? 'Menunggu' : permission.status === 'approved' ? 'Disetujui' : 'Ditolak'}
                         </span>
                       </td>
                     </tr>
                   );
                 })}
-                {recentLeaves.length === 0 && (
+                {recentPermissions.length === 0 && (
                   <tr>
-                    <td colSpan={4} className="px-4 py-8 text-center text-on-surface-variant font-body">Belum ada data pengajuan cuti.</td>
+                    <td colSpan={4} className="px-4 py-8 text-center text-on-surface-variant font-body">Belum ada data pengajuan izin.</td>
                   </tr>
                 )}
               </tbody>
@@ -200,7 +208,7 @@ export function Statistics({ teachers, leaves }: StatisticsProps) {
           <div className="bg-surface-container-lowest border border-outline-variant p-6 h-64">
              <h4 className="label-caps text-on-surface-variant text-xs mb-4">Pengajuan per Bulan</h4>
              <ResponsiveContainer width="100%" height="100%">
-              <LineChart data={leavesByMonth}>
+              <LineChart data={permissionsByMonth}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#e3e2e3" />
                 <XAxis dataKey="month" tick={{ fontSize: 10, fill: '#434653' }} />
                 <YAxis tick={{ fontSize: 10, fill: '#434653' }} />
@@ -211,9 +219,9 @@ export function Statistics({ teachers, leaves }: StatisticsProps) {
           </div>
 
           <div className="bg-surface-container-lowest border border-outline-variant p-6 h-64">
-             <h4 className="label-caps text-on-surface-variant text-xs mb-4">Status Cuti</h4>
+             <h4 className="label-caps text-on-surface-variant text-xs mb-4">Status Izin</h4>
              <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={leavesByStatus}>
+              <BarChart data={permissionsByStatus}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#e3e2e3" />
                 <XAxis dataKey="status" tick={{ fontSize: 10, fill: '#434653' }} />
                 <YAxis tick={{ fontSize: 10, fill: '#434653' }} />

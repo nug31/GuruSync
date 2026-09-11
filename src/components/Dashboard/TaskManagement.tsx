@@ -61,21 +61,21 @@ export function TaskManagement() {
 
   return (
     <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 bg-surface-container-low p-8 rounded-3xl border border-outline-variant shadow-sm">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 bg-surface-container-low p-6 sm:p-8 rounded-3xl border border-outline-variant shadow-sm">
         <div className="space-y-2">
           <div className="flex items-center gap-3 text-primary">
             <BookCheck className="w-6 h-6" />
             <span className="font-label text-xs font-bold uppercase tracking-[0.2em]">Assignment Control</span>
           </div>
-          <h2 className="text-4xl font-display font-bold text-on-surface tracking-tight">Manajemen Tugas</h2>
-          <p className="text-on-surface-variant/80 font-serif italic text-lg">Buat dan pantau pengerjaan tugas siswa sebelum ujian akhir.</p>
+          <h2 className="text-3xl sm:text-4xl font-display font-bold text-on-surface tracking-tight">Manajemen Tugas</h2>
+          <p className="text-on-surface-variant/80 font-serif italic text-base sm:text-lg">Buat dan pantau pengerjaan tugas siswa sebelum ujian akhir.</p>
         </div>
         <button
           onClick={() => {
             setEditingTask(null);
             setShowForm(true);
           }}
-          className="flex items-center justify-center gap-3 bg-primary text-on-primary px-8 py-4 rounded-2xl font-bold text-sm hover:scale-[1.02] active:scale-[0.98] transition-all shadow-lg shadow-primary/20"
+          className="flex items-center justify-center gap-3 bg-primary text-on-primary px-6 sm:px-8 py-3.5 sm:py-4 rounded-2xl font-bold text-sm hover:scale-[1.02] active:scale-[0.98] transition-all shadow-lg shadow-primary/20 w-full sm:w-auto"
         >
           <Plus className="w-5 h-5" />
           Tugas Baru
@@ -104,7 +104,7 @@ export function TaskManagement() {
                   <span className="px-3 py-1 bg-primary/10 text-primary text-[10px] font-black uppercase tracking-widest rounded-full">
                     {task.subject}
                   </span>
-                  <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                  <div className="flex gap-1 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity">
                     <button
                       onClick={() => {
                         setEditingTask(task);

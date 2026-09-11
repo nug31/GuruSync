@@ -52,8 +52,8 @@ export function ExamManagement() {
   };
 
   return (
-    <div className="space-y-12 animate-in fade-in slide-in-from-bottom-4 duration-700">
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-8 bg-surface-container-low p-10 rounded-[3rem] border border-outline-variant shadow-sm relative overflow-hidden">
+    <div className="space-y-8 sm:space-y-12 animate-in fade-in slide-in-from-bottom-4 duration-700">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 sm:gap-8 bg-surface-container-low p-6 sm:p-10 rounded-3xl sm:rounded-[3rem] border border-outline-variant shadow-sm relative overflow-hidden">
         <div className="absolute top-0 right-0 p-8 opacity-5">
            <HelpCircle className="w-64 h-64" />
         </div>
@@ -64,15 +64,15 @@ export function ExamManagement() {
             </div>
             <span className="font-label text-xs font-black uppercase tracking-[0.3em]">Evaluation Center</span>
           </div>
-          <h2 className="text-5xl font-display font-black text-on-surface tracking-tighter">Bank Ujian Akhir</h2>
-          <p className="text-on-surface-variant/80 font-serif italic text-xl max-w-2xl">Rancang instrumen penilaian komprehensif untuk mengukur capaian kompetensi siswa.</p>
+          <h2 className="text-3xl sm:text-5xl font-display font-black text-on-surface tracking-tighter">Bank Ujian Akhir</h2>
+          <p className="text-on-surface-variant/80 font-serif italic text-base sm:text-xl max-w-2xl">Rancang instrumen penilaian komprehensif untuk mengukur capaian kompetensi siswa.</p>
         </div>
         <button
           onClick={() => {
             setEditingExam(null);
             setShowForm(true);
           }}
-          className="flex items-center justify-center gap-4 bg-primary text-on-primary px-10 py-5 rounded-[1.5rem] font-black text-sm uppercase tracking-widest hover:scale-105 active:scale-95 transition-all shadow-2xl shadow-primary/30 relative z-10"
+          className="flex items-center justify-center gap-4 bg-primary text-on-primary px-6 sm:px-10 py-4 sm:py-5 rounded-2xl sm:rounded-[1.5rem] font-black text-sm uppercase tracking-widest hover:scale-105 active:scale-95 transition-all shadow-2xl shadow-primary/30 relative z-10 w-full sm:w-auto"
         >
           <Plus className="w-6 h-6" />
           Rancang Ujian
@@ -82,15 +82,15 @@ export function ExamManagement() {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         {loading ? (
           [1, 2].map(i => (
-            <div key={i} className="bg-surface-container-low h-80 rounded-[3rem] animate-pulse border border-outline-variant" />
+            <div key={i} className="bg-surface-container-low h-80 rounded-3xl sm:rounded-[3rem] animate-pulse border border-outline-variant" />
           ))
         ) : exams.length === 0 ? (
-          <div className="col-span-full py-32 text-center bg-surface-container-low/30 rounded-[3rem] border-2 border-dashed border-outline-variant">
-             <div className="w-24 h-24 bg-surface-container-high rounded-[2rem] flex items-center justify-center mx-auto mb-6 text-outline">
-                <FileText className="w-12 h-12" />
+          <div className="col-span-full py-20 sm:py-32 text-center bg-surface-container-low/30 rounded-3xl sm:rounded-[3rem] border-2 border-dashed border-outline-variant p-6">
+             <div className="w-20 sm:w-24 h-20 sm:h-24 bg-surface-container-high rounded-2xl sm:rounded-[2rem] flex items-center justify-center mx-auto mb-6 text-outline">
+                <FileText className="w-10 sm:w-12 h-10 sm:h-12" />
              </div>
-             <p className="text-on-surface-variant font-black text-2xl tracking-tight">Belum Ada Ujian Terpublikasi</p>
-             <p className="text-on-surface-variant/60 font-medium mt-2">Mulai dengan menekan tombol 'Rancang Ujian' di atas.</p>
+             <p className="text-on-surface-variant font-black text-xl sm:text-2xl tracking-tight">Belum Ada Ujian Terpublikasi</p>
+             <p className="text-on-surface-variant/60 font-medium mt-2 text-sm sm:text-base">Mulai dengan menekan tombol 'Rancang Ujian' di atas.</p>
           </div>
         ) : (
           exams.map((exam) => {
@@ -98,9 +98,9 @@ export function ExamManagement() {
             const teacher = teachers.find(t => t.id === exam.teacher_id);
 
             return (
-              <div key={exam.id} className="group bg-surface-container-lowest rounded-[3rem] border border-outline-variant shadow-sm hover:shadow-2xl hover:border-primary/40 transition-all p-10 flex flex-col justify-between">
+              <div key={exam.id} className="group bg-surface-container-lowest rounded-3xl sm:rounded-[3rem] border border-outline-variant shadow-sm hover:shadow-2xl hover:border-primary/40 transition-all p-6 sm:p-10 flex flex-col justify-between">
                 <div>
-                  <div className="flex justify-between items-start mb-8">
+                  <div className="flex justify-between items-start mb-6 sm:mb-8">
                     <div className="flex flex-col gap-2">
                        <span className="px-4 py-1.5 bg-secondary-container text-on-secondary-container text-[10px] font-black uppercase tracking-widest rounded-full self-start">
                         {exam.subject}
@@ -116,20 +116,20 @@ export function ExamManagement() {
                           setEditingExam(exam);
                           setShowForm(true);
                         }}
-                        className="w-12 h-12 bg-surface-container-high hover:bg-primary-container text-on-surface-variant hover:text-primary rounded-2xl flex items-center justify-center transition-all"
+                        className="w-10 h-10 sm:w-12 sm:h-12 bg-surface-container-high hover:bg-primary-container text-on-surface-variant hover:text-primary rounded-xl sm:rounded-2xl flex items-center justify-center transition-all"
                       >
-                        <Edit2 className="w-5 h-5" />
+                        <Edit2 className="w-4 h-4 sm:w-5 sm:h-5" />
                       </button>
                       <button
                         onClick={() => handleDelete(exam.id)}
-                        className="w-12 h-12 bg-surface-container-high hover:bg-error-container text-on-surface-variant hover:text-error rounded-2xl flex items-center justify-center transition-all"
+                        className="w-10 h-10 sm:w-12 sm:h-12 bg-surface-container-high hover:bg-error-container text-on-surface-variant hover:text-error rounded-xl sm:rounded-2xl flex items-center justify-center transition-all"
                       >
-                        <Trash2 className="w-5 h-5" />
+                        <Trash2 className="w-4 h-4 sm:w-5 sm:h-5" />
                       </button>
                     </div>
                   </div>
 
-                  <h3 className="text-3xl font-display font-black text-on-surface mb-4 leading-tight">
+                  <h3 className="text-2xl sm:text-3xl font-display font-black text-on-surface mb-4 leading-tight">
                     {exam.title}
                   </h3>
                   
