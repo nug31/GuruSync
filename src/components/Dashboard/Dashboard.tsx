@@ -301,7 +301,7 @@ export function Dashboard() {
       </main>
 
       {/* BottomNavBar for Mobile */}
-      <nav className="fixed bottom-0 left-0 w-full z-50 lg:hidden bg-white/95 backdrop-blur-md border-t border-slate-200/80 flex justify-around items-center h-16 px-4 shadow-lg">
+      <nav className="fixed bottom-0 left-0 w-full z-40 lg:hidden bg-white/95 backdrop-blur-md border-t border-slate-200/80 flex justify-around items-center h-16 px-4 shadow-lg">
         <button 
           onClick={() => setView('dashboard')}
           className={`flex flex-col items-center justify-center py-1 transition-colors ${view === 'dashboard' ? 'text-primary font-bold' : 'text-slate-400 hover:text-slate-700'}`}

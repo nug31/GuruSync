@@ -662,28 +662,33 @@ export function PermissionManagement({ teachers, permissions, onUpdate, currentT
 
       {/* Form Modal */}
       {showForm && (
-        <div className="fixed inset-0 bg-on-surface/50 backdrop-blur-sm flex items-center justify-center p-4 z-50">
-          <div className="bg-surface-container-lowest rounded-3xl border border-outline-variant/30 shadow-2xl relative overflow-hidden max-w-2xl w-full max-h-[92vh] overflow-y-auto">
-            <div className="h-2 bg-primary" />
-            <div className="p-5 sm:p-8">
-              <div className="flex items-start justify-between mb-6 sm:mb-8 pb-4 sm:pb-6 border-b border-outline-variant/20">
-                <div>
-                  <h4 className="text-xl sm:text-2xl font-headline font-bold text-on-surface">
-                    {editingPermission ? 'Edit Pengajuan Izin' : 'Formulir Pengajuan Izin'}
-                  </h4>
-                  <p className="text-xs sm:text-sm text-on-surface-variant/70 mt-1">
-                    Isi formulir dengan lengkap dan benar
-                  </p>
-                </div>
-                <button
-                  onClick={() => setShowForm(false)}
-                  className="p-2 hover:bg-surface-container-high rounded-full transition-all"
-                >
-                  <span className="material-symbols-outlined text-on-surface-variant">close</span>
-                </button>
+        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-3 sm:p-6 z-[100]">
+          <div className="bg-white rounded-3xl border border-slate-200/80 shadow-2xl relative overflow-hidden max-w-2xl w-full max-h-[88vh] sm:max-h-[90vh] flex flex-col my-auto animate-in fade-in zoom-in-95 duration-200">
+            <div className="h-1.5 bg-primary shrink-0" />
+            
+            {/* Modal Header */}
+            <div className="p-5 sm:p-6 pb-4 border-b border-slate-100 flex items-start justify-between shrink-0 bg-white">
+              <div>
+                <h4 className="text-xl sm:text-2xl font-bold text-on-surface">
+                  {editingPermission ? 'Edit Pengajuan Izin' : 'Formulir Pengajuan Izin'}
+                </h4>
+                <p className="text-xs sm:text-sm text-on-surface-variant mt-1">
+                  Isi formulir dengan lengkap dan benar
+                </p>
               </div>
+              <button
+                type="button"
+                onClick={() => setShowForm(false)}
+                className="p-2 hover:bg-slate-100 rounded-full transition-all text-slate-400 hover:text-slate-700"
+              >
+                <span className="material-symbols-outlined text-[20px]">close</span>
+              </button>
+            </div>
 
-              <form onSubmit={handleSubmit} className="space-y-6">
+            {/* Form Container */}
+            <form onSubmit={handleSubmit} className="flex-1 flex flex-col min-h-0">
+              {/* Scrollable Form Body */}
+              <div className="flex-1 overflow-y-auto p-5 sm:p-6 space-y-6">
                 {/* Teacher Selector (admin only) */}
                 {isAdmin ? (
                   <div>
@@ -691,7 +696,7 @@ export function PermissionManagement({ teachers, permissions, onUpdate, currentT
                     <select
                       value={formData.teacher_id}
                       onChange={e => setFormData({ ...formData, teacher_id: e.target.value })}
-                      className="w-full bg-surface-container-low px-4 py-3 rounded-xl border border-outline-variant/20 focus:ring-primary focus:border-primary text-on-surface font-bold text-sm"
+                      className="w-full bg-slate-50 px-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-primary/20 focus:border-primary text-on-surface font-bold text-sm"
                       required
                     >
                       <option value="">Pilih Guru</option>
@@ -699,9 +704,9 @@ export function PermissionManagement({ teachers, permissions, onUpdate, currentT
                     </select>
                   </div>
                 ) : (
-                  <div className="bg-surface-container-low p-4 rounded-xl border border-outline-variant/20">
+                  <div className="bg-slate-50 p-4 rounded-xl border border-slate-200">
                     <p className="text-[10px] font-label uppercase tracking-widest text-on-surface-variant/60 mb-1 font-bold">Mengajukan izin untuk:</p>
-                    <p className="text-base font-headline font-bold text-primary">{getTeacherName(currentTeacherId || '')}</p>
+                    <p className="text-base font-bold text-primary">{getTeacherName(currentTeacherId || '')}</p>
                   </div>
                 )}
 
@@ -716,8 +721,8 @@ export function PermissionManagement({ teachers, permissions, onUpdate, currentT
                         onClick={() => setFormData({ ...formData, permission_type: type })}
                         className={`flex flex-col items-center gap-1.5 p-3 rounded-xl border text-xs font-bold transition-all ${
                           formData.permission_type === type
-                            ? 'bg-primary text-on-primary border-primary shadow-sm'
-                            : 'bg-surface-container-low border-outline-variant/20 text-on-surface-variant hover:border-primary/40 hover:text-on-surface'
+                            ? 'bg-primary text-white border-primary shadow-sm'
+                            : 'bg-slate-50 border-slate-200 text-slate-600 hover:border-primary/40 hover:text-primary'
                         }`}
                       >
                         <span className="material-symbols-outlined text-[20px]">{TYPE_ICONS[type]}</span>
@@ -729,10 +734,8 @@ export function PermissionManagement({ teachers, permissions, onUpdate, currentT
 
                 {/* Approval hint */}
                 {formData.permission_type && (
-                  <div className={`flex items-center gap-3 px-4 py-3 rounded-xl text-sm ${
-                    needsKepsek(formData.permission_type) ? 'bg-primary-fixed/20 text-on-primary-fixed' : 'bg-surface-container text-on-surface-variant'
-                  }`}>
-                    <span className="material-symbols-outlined text-[18px]">info</span>
+                  <div className="flex items-center gap-3 px-4 py-3 rounded-xl text-xs sm:text-sm bg-blue-50 text-blue-800 border border-blue-100">
+                    <span className="material-symbols-outlined text-[18px] text-primary shrink-0">info</span>
                     <span>
                       Alur: Guru → HOD/MGMP → Wakasek
                       {needsKepsek(formData.permission_type) ? ' → Kepala Sekolah' : ''}
@@ -748,7 +751,7 @@ export function PermissionManagement({ teachers, permissions, onUpdate, currentT
                       type="date"
                       value={formData.start_date}
                       onChange={e => setFormData({ ...formData, start_date: e.target.value })}
-                      className="w-full bg-surface-container-low px-4 py-3 rounded-xl border border-outline-variant/20 focus:ring-primary focus:border-primary text-on-surface text-sm"
+                      className="w-full bg-slate-50 px-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-primary/20 focus:border-primary text-on-surface text-sm"
                       required
                     />
                   </div>
@@ -758,7 +761,7 @@ export function PermissionManagement({ teachers, permissions, onUpdate, currentT
                       type="date"
                       value={formData.end_date}
                       onChange={e => setFormData({ ...formData, end_date: e.target.value })}
-                      className="w-full bg-surface-container-low px-4 py-3 rounded-xl border border-outline-variant/20 focus:ring-primary focus:border-primary text-on-surface text-sm"
+                      className="w-full bg-slate-50 px-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-primary/20 focus:border-primary text-on-surface text-sm"
                       required
                     />
                   </div>
@@ -775,7 +778,7 @@ export function PermissionManagement({ teachers, permissions, onUpdate, currentT
                         type="time"
                         value={formData.start_time}
                         onChange={e => setFormData({ ...formData, start_time: e.target.value })}
-                        className="w-full bg-surface-container-low px-4 py-3 rounded-xl border border-outline-variant/20 focus:ring-primary focus:border-primary text-on-surface text-sm"
+                        className="w-full bg-slate-50 px-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:border-primary text-on-surface text-sm"
                       />
                     </div>
                     <div>
@@ -788,7 +791,7 @@ export function PermissionManagement({ teachers, permissions, onUpdate, currentT
                         type="time"
                         value={formData.end_time}
                         onChange={e => setFormData({ ...formData, end_time: e.target.value })}
-                        className="w-full bg-surface-container-low px-4 py-3 rounded-xl border border-outline-variant/20 focus:ring-primary focus:border-primary text-on-surface text-sm"
+                        className="w-full bg-slate-50 px-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:border-primary text-on-surface text-sm"
                       />
                     </div>
                   </div>
@@ -797,17 +800,14 @@ export function PermissionManagement({ teachers, permissions, onUpdate, currentT
                 {/* Alasan */}
                 <div>
                   <label className="text-[10px] font-label uppercase tracking-widest text-on-surface-variant/60 mb-2 font-bold block">Alasan / Keterangan</label>
-                  <div className="relative">
-                    <span className="absolute -top-3 -left-1 text-5xl text-primary/10 font-serif opacity-50">"</span>
-                    <textarea
-                      value={formData.reason}
-                      onChange={e => setFormData({ ...formData, reason: e.target.value })}
-                      rows={3}
-                      className="w-full relative z-10 px-5 py-3 bg-surface-container-low rounded-xl border-l-4 border-primary/20 border-y-0 border-r-0 focus:ring-primary text-on-surface font-headline italic leading-relaxed resize-none text-base"
-                      placeholder="Jelaskan alasan pengajuan secara rinci..."
-                      required
-                    />
-                  </div>
+                  <textarea
+                    value={formData.reason}
+                    onChange={e => setFormData({ ...formData, reason: e.target.value })}
+                    rows={3}
+                    className="w-full px-4 py-3 bg-slate-50 rounded-xl border border-slate-200 focus:ring-2 focus:ring-primary/20 focus:border-primary text-on-surface leading-relaxed resize-none text-sm"
+                    placeholder="Jelaskan alasan pengajuan secara rinci..."
+                    required
+                  />
                 </div>
 
                 {/* Status override (admin only) */}
@@ -817,7 +817,7 @@ export function PermissionManagement({ teachers, permissions, onUpdate, currentT
                     <select
                       value={formData.status}
                       onChange={e => setFormData({ ...formData, status: e.target.value as PermissionStatus })}
-                      className="w-full bg-surface-container-low px-4 py-3 rounded-xl border border-outline-variant/20 focus:ring-primary focus:border-primary text-on-surface font-bold text-sm"
+                      className="w-full bg-slate-50 px-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-primary/20 focus:border-primary text-on-surface font-bold text-sm"
                     >
                       <option value="pending_hod">Menunggu HOD</option>
                       <option value="pending_wakasek">Menunggu Wakasek</option>
@@ -827,35 +827,35 @@ export function PermissionManagement({ teachers, permissions, onUpdate, currentT
                     </select>
                   </div>
                 )}
+              </div>
 
-                {/* Actions */}
-                <div className="flex justify-end gap-3 pt-4 border-t border-outline-variant/20">
-                  <button
-                    type="button"
-                    onClick={() => setShowForm(false)}
-                    className="px-6 py-3 rounded-xl border border-error/30 text-error font-bold hover:bg-error/5 transition-all text-sm"
-                  >
-                    Batal
-                  </button>
-                  <button
-                    type="submit"
-                    disabled={loading || !formData.permission_type || (!isAdmin && !currentTeacherId)}
-                    className="px-8 py-3 rounded-xl bg-primary text-on-primary font-bold shadow-lg shadow-primary/20 hover:scale-[1.02] transition-all text-sm flex items-center gap-2 disabled:opacity-50 disabled:hover:scale-100"
-                  >
-                    <span className="material-symbols-outlined text-[18px]">check_circle</span>
-                    {loading ? 'Menyimpan...' : 'Simpan Pengajuan'}
-                  </button>
-                </div>
-              </form>
-            </div>
+              {/* Sticky Actions Footer */}
+              <div className="p-4 sm:p-5 border-t border-slate-100 bg-slate-50/90 backdrop-blur-sm flex flex-col-reverse sm:flex-row justify-end gap-3 shrink-0 rounded-b-3xl">
+                <button
+                  type="button"
+                  onClick={() => setShowForm(false)}
+                  className="w-full sm:w-auto px-6 py-3 rounded-xl border border-slate-200 bg-white text-slate-700 font-bold hover:bg-slate-100 transition-all text-sm"
+                >
+                  Batal
+                </button>
+                <button
+                  type="submit"
+                  disabled={loading || !formData.permission_type || (!isAdmin && !currentTeacherId)}
+                  className="w-full sm:w-auto px-8 py-3 rounded-xl bg-primary text-white font-bold shadow-lg shadow-primary/25 hover:bg-blue-700 active:scale-[0.98] transition-all text-sm flex items-center justify-center gap-2 disabled:opacity-50"
+                >
+                  <span className="material-symbols-outlined text-[18px]">check_circle</span>
+                  {loading ? 'Menyimpan...' : 'Simpan Pengajuan'}
+                </button>
+              </div>
+            </form>
           </div>
         </div>
       )}
 
       {/* Reject Modal */}
       {showRejectModal && (
-        <div className="fixed inset-0 bg-on-surface/50 backdrop-blur-sm flex items-center justify-center p-4 z-50">
-          <div className="bg-surface-container-lowest rounded-2xl border border-outline-variant/30 shadow-2xl p-8 max-w-md w-full">
+        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4 z-[100]">
+          <div className="bg-white rounded-3xl border border-slate-200 shadow-2xl p-6 sm:p-8 max-w-md w-full animate-in fade-in zoom-in-95 duration-200">
             <h4 className="text-xl font-headline font-bold text-on-surface mb-2">Tolak Pengajuan</h4>
             <p className="text-sm text-on-surface-variant mb-6">
               Tolak izin <strong>{showRejectModal.permission_type}</strong> dari{' '}
