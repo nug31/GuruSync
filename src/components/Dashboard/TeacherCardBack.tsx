@@ -14,7 +14,7 @@ export function TeacherCardBack({ teacher }: TeacherCardBackProps) {
       {/* Visual Overlay for Screen (not printed) */}
       <div className="hidden print:hidden lg:flex items-center justify-center p-8 bg-gray-100 rounded-xl border-2 border-dashed border-gray-300 mb-8">
         <div className="text-center">
-          <Info className="w-8 h-8 text-blue-500 mx-auto mb-2" />
+          <Info className="w-8 h-8 text-primary mx-auto mb-2" />
           <p className="text-sm font-medium text-gray-600">
             Pratinjau Cetak Sisi Belakang Kartu
           </p>
@@ -141,7 +141,7 @@ export function TeacherCardBack({ teacher }: TeacherCardBackProps) {
           
           <div className="z-10 flex flex-col items-center h-full w-full">
             <div className="text-center flex flex-col items-center mt-10">
-              <span className="text-[12px] font-bold tracking-[0.15em] text-blue-100">
+              <span className="text-[12px] font-bold tracking-[0.15em] text-primary-fixed">
                 SCAN FOR
               </span>
               <span className="text-[13px] font-bold tracking-[0.1em] text-white mt-[2px]">
@@ -161,7 +161,7 @@ export function TeacherCardBack({ teacher }: TeacherCardBackProps) {
             </div>
 
             <div className="text-center mb-8">
-              <p className="text-[8px] font-semibold tracking-[0.25em] text-blue-200">
+              <p className="text-[8px] font-semibold tracking-[0.25em] text-primary-fixed-dim">
                 SECURE &bull; DIGITAL &bull; VERIFIED
               </p>
             </div>

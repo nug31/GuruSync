@@ -164,7 +164,7 @@ export function TeacherForm({ teacher, onClose }: TeacherFormProps) {
               type="text"
               value={formData.name}
               onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
               required
             />
           </div>
@@ -177,7 +177,7 @@ export function TeacherForm({ teacher, onClose }: TeacherFormProps) {
               type="text"
               value={formData.nik}
               onChange={(e) => setFormData({ ...formData, nik: e.target.value })}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
               required
               disabled={!!teacher}
             />
@@ -191,7 +191,7 @@ export function TeacherForm({ teacher, onClose }: TeacherFormProps) {
               type="text"
               value={formData.subject}
               onChange={(e) => setFormData({ ...formData, subject: e.target.value })}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
               required
             />
           </div>
@@ -204,7 +204,7 @@ export function TeacherForm({ teacher, onClose }: TeacherFormProps) {
               type="email"
               value={formData.email}
               onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
               required
             />
           </div>
@@ -217,7 +217,7 @@ export function TeacherForm({ teacher, onClose }: TeacherFormProps) {
               type="tel"
               value={formData.phone}
               onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
               required
             />
           </div>
@@ -230,7 +230,7 @@ export function TeacherForm({ teacher, onClose }: TeacherFormProps) {
               type="date"
               value={formData.join_date}
               onChange={(e) => setFormData({ ...formData, join_date: e.target.value })}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
               required
             />
           </div>
@@ -243,7 +243,7 @@ export function TeacherForm({ teacher, onClose }: TeacherFormProps) {
               type="text"
               value={formData.birth_place}
               onChange={(e) => setFormData({ ...formData, birth_place: e.target.value })}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
               placeholder="Contoh: Jakarta"
               required
             />
@@ -257,7 +257,7 @@ export function TeacherForm({ teacher, onClose }: TeacherFormProps) {
               type="date"
               value={formData.birth_date}
               onChange={(e) => setFormData({ ...formData, birth_date: e.target.value })}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
               required
             />
           </div>
@@ -269,7 +269,7 @@ export function TeacherForm({ teacher, onClose }: TeacherFormProps) {
             <select
               value={formData.gender}
               onChange={(e) => setFormData({ ...formData, gender: e.target.value })}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
               required
             >
               <option value="Laki-laki">Laki-laki</option>
@@ -284,7 +284,7 @@ export function TeacherForm({ teacher, onClose }: TeacherFormProps) {
             <select
               value={formData.education}
               onChange={(e) => setFormData({ ...formData, education: e.target.value })}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
               required
             >
               <option value="" disabled>Pilih Pendidikan</option>
@@ -304,7 +304,7 @@ export function TeacherForm({ teacher, onClose }: TeacherFormProps) {
               type="text"
               value={formData.work_unit}
               onChange={(e) => setFormData({ ...formData, work_unit: e.target.value })}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
               placeholder="Contoh: SMKN 1 Jakarta"
               required
             />
@@ -319,7 +319,7 @@ export function TeacherForm({ teacher, onClose }: TeacherFormProps) {
               min="0"
               value={formData.annual_leave_quota}
               onChange={(e) => setFormData({ ...formData, annual_leave_quota: parseInt(e.target.value) || 0 })}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
               required
             />
           </div>
@@ -331,7 +331,7 @@ export function TeacherForm({ teacher, onClose }: TeacherFormProps) {
             <select
               value={formData.sp_level}
               onChange={(e) => setFormData({ ...formData, sp_level: e.target.value })}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
               required
             >
               <option value="Tidak ada">Tidak ada</option>
@@ -348,7 +348,7 @@ export function TeacherForm({ teacher, onClose }: TeacherFormProps) {
             <textarea
               value={formData.training_history}
               onChange={(e) => setFormData({ ...formData, training_history: e.target.value })}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
               rows={4}
               placeholder="Masukkan riwayat pelatihan/training yang pernah diikuti..."
             />
@@ -361,7 +361,7 @@ export function TeacherForm({ teacher, onClose }: TeacherFormProps) {
             <textarea
               value={formData.address}
               onChange={(e) => setFormData({ ...formData, address: e.target.value })}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
               rows={3}
               required
             />
@@ -378,7 +378,7 @@ export function TeacherForm({ teacher, onClose }: TeacherFormProps) {
             <button
               type="submit"
               disabled={loading}
-              className="px-6 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors disabled:bg-blue-300"
+              className="px-6 py-2 bg-primary text-white rounded-lg hover:bg-primary transition-colors disabled:bg-primary/40"
             >
               {loading ? 'Menyimpan...' : teacher ? 'Update' : 'Simpan'}
             </button>

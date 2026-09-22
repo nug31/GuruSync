@@ -5,15 +5,15 @@ export default {
   theme: {
     extend: {
       colors: {
-        // Modern, vibrant & cohesive palette
-        "primary": "#2563eb",
-        "primary-hover": "#1d4ed8",
-        "primary-container": "#3b82f6",
+        // Minimal Slate palette — near-monochrome, color used sparingly
+        "primary": "#475569",
+        "primary-hover": "#334155",
+        "primary-container": "#64748b",
         "on-primary": "#ffffff",
-        "primary-fixed": "#dbeafe",
-        "primary-fixed-dim": "#bfdbfe",
-        "on-primary-fixed": "#1e3a8a",
-        "on-primary-fixed-variant": "#1d4ed8",
+        "primary-fixed": "#e2e8f0",
+        "primary-fixed-dim": "#cbd5e1",
+        "on-primary-fixed": "#1e293b",
+        "on-primary-fixed-variant": "#334155",
 
         "secondary": "#475569",
         "secondary-container": "#f1f5f9",
@@ -24,14 +24,14 @@ export default {
         "on-secondary-fixed-variant": "#334155",
         "on-secondary-container": "#334155",
 
-        "tertiary": "#6366f1",
-        "tertiary-container": "#818cf8",
+        "tertiary": "#d97706",
+        "tertiary-container": "#f59e0b",
         "on-tertiary": "#ffffff",
-        "tertiary-fixed": "#ede9fe",
-        "tertiary-fixed-dim": "#ddd6fe",
-        "on-tertiary-fixed": "#312e81",
-        "on-tertiary-container": "#3730a3",
-        "on-tertiary-fixed-variant": "#4338ca",
+        "tertiary-fixed": "#fef3c7",
+        "tertiary-fixed-dim": "#fde68a",
+        "on-tertiary-fixed": "#78350f",
+        "on-tertiary-container": "#92400e",
+        "on-tertiary-fixed-variant": "#b45309",
 
         "background": "#f8fafc",
         "surface": "#ffffff",
@@ -43,7 +43,7 @@ export default {
         "surface-container": "#f1f5f9",
         "surface-container-high": "#e2e8f0",
         "surface-container-highest": "#cbd5e1",
-        "surface-tint": "#2563eb",
+        "surface-tint": "#475569",
 
         "on-background": "#0f172a",
         "on-surface": "#0f172a",

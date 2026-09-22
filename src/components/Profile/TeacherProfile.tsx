@@ -1,12 +1,7 @@
 import { useEffect, useState } from 'react';
 import { supabase } from '../../lib/supabase';
 import { useAuth } from '../../contexts/AuthContext';
-import { 
-  User, Mail, Phone, 
-  MapPin, GraduationCap, CalendarDays, 
-  Contact, Info, ShieldCheck, ChevronRight,
-  Award, ShieldAlert
-} from 'lucide-react';
+import { Info } from 'lucide-react';
 import { format, parseISO, differenceInDays } from 'date-fns';
 import { id } from 'date-fns/locale';
 import type { Teacher, Permission } from '../../types';

@@ -74,7 +74,7 @@ export function Statistics({ teachers, permissions }: StatisticsProps) {
       {/* Welcome Section */}
       <section className="pt-4 pb-8 lg:pt-6 lg:pb-8">
         <div className="max-w-4xl mb-8">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-50 text-primary text-xs font-semibold mb-3 border border-blue-100">
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary-fixed text-on-primary-fixed-variant text-xs font-semibold mb-3 border border-primary-fixed-dim">
             <span className="w-2 h-2 rounded-full bg-primary animate-pulse"></span>
             Portal Administrasi GuruSync
           </div>
@@ -91,7 +91,7 @@ export function Statistics({ teachers, permissions }: StatisticsProps) {
           {/* Card 1 */}
           <div className="p-6 rounded-2xl border border-slate-200/80 bg-white shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 flex flex-col justify-between">
             <div className="flex justify-between items-start mb-6">
-              <div className="w-12 h-12 rounded-xl bg-blue-50 text-primary flex items-center justify-center">
+              <div className="w-12 h-12 rounded-xl bg-primary-fixed text-primary flex items-center justify-center">
                 <span className="material-symbols-outlined text-2xl" data-icon="groups">groups</span>
               </div>
               <span className="text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded-full text-[11px] font-bold flex items-center gap-1">
@@ -122,7 +122,7 @@ export function Statistics({ teachers, permissions }: StatisticsProps) {
           {/* Card 3 */}
           <div className="p-6 rounded-2xl border border-slate-200/80 bg-white shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 flex flex-col justify-between">
             <div className="flex justify-between items-start mb-6">
-              <div className="w-12 h-12 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center">
+              <div className="w-12 h-12 rounded-xl bg-rose-50 text-rose-600 flex items-center justify-center">
                 <span className="material-symbols-outlined text-2xl" data-icon="pending_actions">pending_actions</span>
               </div>
               {stats.pendingPermissions > 0 ? (
@@ -197,7 +197,7 @@ export function Statistics({ teachers, permissions }: StatisticsProps) {
                     <tr key={permission.id} className="hover:bg-slate-50/80 transition-colors">
                       <td className="py-4">
                         <div className="flex items-center gap-3">
-                          <div className="w-9 h-9 rounded-full bg-blue-100 text-primary font-bold flex items-center justify-center text-xs">
+                          <div className="w-9 h-9 rounded-full bg-primary-fixed text-primary font-bold flex items-center justify-center text-xs">
                             {teacher?.name?.charAt(0).toUpperCase()}
                           </div>
                           <div>
@@ -244,7 +244,7 @@ export function Statistics({ teachers, permissions }: StatisticsProps) {
                   <XAxis dataKey="month" tick={{ fontSize: 10, fill: '#64748b' }} axisLine={false} tickLine={false} />
                   <YAxis tick={{ fontSize: 10, fill: '#64748b' }} axisLine={false} tickLine={false} />
                   <Tooltip contentStyle={{ backgroundColor: '#ffffff', borderRadius: '12px', border: '1px solid #e2e8f0', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.05)' }} />
-                  <Line type="monotone" dataKey="count" stroke="#2563eb" strokeWidth={3} dot={{ r: 4, fill: '#2563eb', strokeWidth: 2, stroke: '#ffffff' }} activeDot={{ r: 6 }} />
+                  <Line type="monotone" dataKey="count" stroke="#475569" strokeWidth={3} dot={{ r: 4, fill: '#475569', strokeWidth: 2, stroke: '#ffffff' }} activeDot={{ r: 6 }} />
                 </LineChart>
               </ResponsiveContainer>
              </div>
@@ -253,7 +253,7 @@ export function Statistics({ teachers, permissions }: StatisticsProps) {
           <div className="bg-white rounded-3xl border border-slate-200/80 p-6 shadow-sm">
              <div className="flex items-center justify-between mb-4">
                <h4 className="text-sm font-bold text-on-surface uppercase tracking-wider">Distribusi Status Izin</h4>
-               <span className="w-2 h-2 rounded-full bg-indigo-500"></span>
+               <span className="w-2 h-2 rounded-full bg-tertiary"></span>
              </div>
              <div className="h-56">
                <ResponsiveContainer width="100%" height="100%">
@@ -262,7 +262,7 @@ export function Statistics({ teachers, permissions }: StatisticsProps) {
                   <XAxis dataKey="status" tick={{ fontSize: 10, fill: '#64748b' }} axisLine={false} tickLine={false} />
                   <YAxis tick={{ fontSize: 10, fill: '#64748b' }} axisLine={false} tickLine={false} />
                   <Tooltip contentStyle={{ backgroundColor: '#ffffff', borderRadius: '12px', border: '1px solid #e2e8f0', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.05)' }} />
-                  <Bar dataKey="count" fill="#3b82f6" radius={[6, 6, 0, 0]} />
+                  <Bar dataKey="count" fill="#d97706" radius={[6, 6, 0, 0]} />
                 </BarChart>
               </ResponsiveContainer>
              </div>

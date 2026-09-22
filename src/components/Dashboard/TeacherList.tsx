@@ -1,7 +1,7 @@
 import { useState, useMemo, useRef } from 'react';
 import { QRCodeSVG } from 'qrcode.react';
 import { supabase } from '../../lib/supabase';
-import { differenceInDays, parseISO, format, parse, isValid } from 'date-fns';
+import { parseISO, format, parse, isValid } from 'date-fns';
 import { id, enUS } from 'date-fns/locale';
 import * as XLSX from 'xlsx';
 import JSZip from 'jszip';
@@ -50,17 +50,6 @@ export function TeacherList({ teachers, onEdit, onDelete, onRefresh }: TeacherLi
       return matchesSearch && matchesSubject && matchesWorkUnit;
     });
   }, [teachers, searchTerm, subjectFilter, workUnitFilter]);
-
-  const getWorkDuration = (joinDate: string) => {
-    const days = differenceInDays(new Date(), parseISO(joinDate));
-    const years = Math.floor(days / 365);
-    const months = Math.floor((days % 365) / 30);
-
-    if (years > 0) {
-      return `${years} tahun ${months} bulan`;
-    }
-    return `${months} bulan`;
-  };
 
   const handleDelete = async (teacher: Teacher) => {
     if (!confirm(`Apakah Anda yakin ingin menghapus data ${teacher.name}?`)) {

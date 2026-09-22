@@ -60,7 +60,7 @@ export function AdminManagement() {
   if (loading) {
     return (
       <div className="flex justify-center items-center py-12">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
       </div>
     );
   }
@@ -74,7 +74,7 @@ export function AdminManagement() {
             setEditingAdmin(null);
             setShowForm(true);
           }}
-          className="flex items-center space-x-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+          className="flex items-center space-x-2 px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary-hover transition-colors"
         >
           <Plus className="w-5 h-5" />
           <span>Tambah Admin</span>
@@ -111,11 +111,11 @@ export function AdminManagement() {
               <tr key={admin.id} className="hover:bg-gray-50">
                 <td className="px-6 py-4 whitespace-nowrap">
                   <div className="flex items-center">
-                    <div className="bg-blue-100 p-2 rounded-full mr-3">
+                    <div className="bg-primary-fixed-dim p-2 rounded-full mr-3">
                       {admin.avatar_url ? (
                         <img src={admin.avatar_url} alt="" className="w-8 h-8 rounded-full" />
                       ) : (
-                        <Shield className="w-5 h-5 text-blue-600" />
+                        <Shield className="w-5 h-5 text-primary" />
                       )}
                     </div>
                     <div>
@@ -135,7 +135,7 @@ export function AdminManagement() {
                   <div className="flex space-x-3">
                     <button
                       onClick={() => handleEdit(admin)}
-                      className="text-blue-600 hover:text-blue-900"
+                      className="text-primary hover:text-on-primary-fixed"
                     >
                       <Edit2 className="w-5 h-5" />
                     </button>

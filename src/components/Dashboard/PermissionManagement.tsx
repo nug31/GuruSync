@@ -384,7 +384,6 @@ export function PermissionManagement({ teachers, permissions, onUpdate, currentT
             const teacher = teachers.find(t => t.id === perm.teacher_id);
             const steps = getApprovalSteps(perm);
             const completedSteps = getCompletedSteps(perm.status);
-            const isPending = perm.status.startsWith('pending');
             const canEdit = perm.teacher_id === currentTeacherId && perm.status === 'pending_hod';
 
             return (
@@ -734,7 +733,7 @@ export function PermissionManagement({ teachers, permissions, onUpdate, currentT
 
                 {/* Approval hint */}
                 {formData.permission_type && (
-                  <div className="flex items-center gap-3 px-4 py-3 rounded-xl text-xs sm:text-sm bg-blue-50 text-blue-800 border border-blue-100">
+                  <div className="flex items-center gap-3 px-4 py-3 rounded-xl text-xs sm:text-sm bg-primary-fixed text-on-primary-fixed-variant border border-primary-fixed-dim">
                     <span className="material-symbols-outlined text-[18px] text-primary shrink-0">info</span>
                     <span>
                       Alur: Guru → HOD/MGMP → Wakasek
@@ -841,7 +840,7 @@ export function PermissionManagement({ teachers, permissions, onUpdate, currentT
                 <button
                   type="submit"
                   disabled={loading || !formData.permission_type || (!isAdmin && !currentTeacherId)}
-                  className="w-full sm:w-auto px-8 py-3 rounded-xl bg-primary text-white font-bold shadow-lg shadow-primary/25 hover:bg-blue-700 active:scale-[0.98] transition-all text-sm flex items-center justify-center gap-2 disabled:opacity-50"
+                  className="w-full sm:w-auto px-8 py-3 rounded-xl bg-primary text-white font-bold shadow-lg shadow-primary/25 hover:bg-primary-hover active:scale-[0.98] transition-all text-sm flex items-center justify-center gap-2 disabled:opacity-50"
                 >
                   <span className="material-symbols-outlined text-[18px]">check_circle</span>
                   {loading ? 'Menyimpan...' : 'Simpan Pengajuan'}

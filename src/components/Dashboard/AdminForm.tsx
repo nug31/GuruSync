@@ -136,7 +136,7 @@ export function AdminForm({ admin, onClose }: AdminFormProps) {
       <div className="bg-white rounded-xl shadow-xl max-w-md w-full">
         <div className="p-6 border-b flex justify-between items-center">
           <div className="flex items-center space-x-2">
-            <Shield className="w-6 h-6 text-blue-600" />
+            <Shield className="w-6 h-6 text-primary" />
             <h2 className="text-xl font-bold text-gray-800">
               {admin ? 'Edit Admin' : 'Tambah Admin Baru'}
             </h2>
@@ -157,9 +157,9 @@ export function AdminForm({ admin, onClose }: AdminFormProps) {
           )}
 
           {!admin && (
-            <div className="bg-blue-50 border border-blue-100 p-4 rounded-lg flex items-start space-x-3">
-              <Info className="w-5 h-5 text-blue-500 mt-0.5" />
-              <p className="text-sm text-blue-700">
+            <div className="bg-primary-fixed border border-primary-fixed-dim p-4 rounded-lg flex items-start space-x-3">
+              <Info className="w-5 h-5 text-primary mt-0.5" />
+              <p className="text-sm text-primary-hover">
                 Admin baru akan didaftarkan sebagai pengguna sistem. Silakan berikan Email dan Password kepada yang bersangkutan.
               </p>
             </div>
@@ -181,7 +181,7 @@ export function AdminForm({ admin, onClose }: AdminFormProps) {
               </div>
               <label className="cursor-pointer">
                 <input type="file" className="hidden" accept="image/*" onChange={handleAvatarUpload} disabled={uploading} />
-                <span className="text-xs font-medium text-blue-600 hover:text-blue-500">
+                <span className="text-xs font-medium text-primary hover:text-primary">
                   {formData.avatar_url ? 'Ubah Foto' : 'Pilih Foto (Maks 2MB)'}
                 </span>
               </label>
@@ -199,7 +199,7 @@ export function AdminForm({ admin, onClose }: AdminFormProps) {
                   type="text"
                   value={formData.name}
                   onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                  className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 text-sm"
+                  className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-primary focus:border-primary text-sm"
                   placeholder="Nama Admin"
                   required
                 />
@@ -218,7 +218,7 @@ export function AdminForm({ admin, onClose }: AdminFormProps) {
                   type="text"
                   value={formData.nik}
                   onChange={(e) => setFormData({ ...formData, nik: e.target.value })}
-                  className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 text-sm"
+                  className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-primary focus:border-primary text-sm"
                   placeholder="Nomor Induk Kependudukan"
                   required
                 />
@@ -237,7 +237,7 @@ export function AdminForm({ admin, onClose }: AdminFormProps) {
                   type="email"
                   value={formData.email}
                   onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                  className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 text-sm"
+                  className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-primary focus:border-primary text-sm"
                   placeholder="admin@sekolah.sch.id"
                   required
                 />
@@ -257,7 +257,7 @@ export function AdminForm({ admin, onClose }: AdminFormProps) {
                     type="password"
                     value={formData.password}
                     onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                    className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 text-sm"
+                    className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-primary focus:border-primary text-sm"
                     placeholder="Minimal 6 karakter"
                     required={!admin}
                     minLength={6}
@@ -278,7 +278,7 @@ export function AdminForm({ admin, onClose }: AdminFormProps) {
             <button
               type="submit"
               disabled={loading}
-              className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:bg-blue-300 text-sm font-medium"
+              className="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary-hover transition-colors disabled:bg-primary/40 text-sm font-medium"
             >
               {loading ? 'Memproses...' : admin ? 'Update Admin' : 'Simpan Admin'}
             </button>

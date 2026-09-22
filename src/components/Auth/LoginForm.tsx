@@ -1,7 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
-import { LogIn } from 'lucide-react';
 
 export function LoginForm() {
   const [email, setEmail] = useState('');
@@ -27,63 +26,93 @@ export function LoginForm() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-blue-100 flex items-center justify-center p-4">
-      <div className="bg-white rounded-2xl shadow-xl p-8 w-full max-w-md">
-        <div className="flex items-center justify-center mb-8">
-          <div className="bg-blue-500 p-3 rounded-full">
-            <LogIn className="w-8 h-8 text-white" />
+    <div className="min-h-screen bg-inverse-surface flex items-center justify-center p-4 relative overflow-hidden">
+      {/* Ambient background glow */}
+      <div className="absolute -top-32 -left-32 w-96 h-96 bg-primary/20 rounded-full blur-3xl pointer-events-none" />
+      <div className="absolute -bottom-32 -right-32 w-96 h-96 bg-tertiary/20 rounded-full blur-3xl pointer-events-none" />
+
+      <div className="relative w-full max-w-4xl grid lg:grid-cols-2 rounded-[2rem] overflow-hidden shadow-2xl">
+        {/* Brand panel */}
+        <div className="hidden lg:flex flex-col justify-between bg-gradient-to-br from-primary via-primary-hover to-slate-950 p-12 text-white relative overflow-hidden">
+          <div className="absolute inset-0 opacity-[0.07] flex items-center justify-center">
+            <span className="material-symbols-outlined text-[380px]">qr_code_2</span>
+          </div>
+          <div className="relative z-10 flex items-center gap-3">
+            <div className="w-11 h-11 rounded-xl bg-white/15 backdrop-blur flex items-center justify-center">
+              <span className="material-symbols-outlined text-[22px]">qr_code_2</span>
+            </div>
+            <span className="font-display text-xl font-extrabold tracking-tight">GuruSync</span>
+          </div>
+          <div className="relative z-10 space-y-3">
+            <p className="font-label text-[11px] uppercase tracking-[0.2em] text-tertiary-fixed-dim font-bold">Portal Kepegawaian Guru</p>
+            <h2 className="font-display text-3xl font-extrabold leading-tight">
+              Satu QR untuk<br />profil &amp; pengajuan izin guru.
+            </h2>
+            <p className="text-sm text-white/70 max-w-xs">
+              Kelola data diri, tugas luar, izin, sakit, terlambat, hingga cuti dalam satu portal terverifikasi.
+            </p>
           </div>
         </div>
 
-        <h1 className="text-3xl font-bold text-center text-gray-800 mb-2">
-          GuruSync
-        </h1>
-        <p className="text-center text-gray-600 mb-8">
-          Masuk untuk melanjutkan
-        </p>
-
-        <form onSubmit={handleSubmit} className="space-y-6">
-          {error && (
-            <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg">
-              {error}
+        {/* Form panel */}
+        <div className="bg-surface p-8 sm:p-12 flex flex-col justify-center">
+          <div className="lg:hidden flex items-center gap-3 mb-8">
+            <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-primary to-tertiary flex items-center justify-center text-white">
+              <span className="material-symbols-outlined text-[20px]">qr_code_2</span>
             </div>
-          )}
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              NIK, Email, atau Tanggal Lahir (6 digit)
-            </label>
-            <input
-              type="text"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              placeholder="NIK / Email / Tgl Lahir (DDMMYY)"
-              required
-            />
+            <span className="font-display text-xl font-extrabold text-on-surface">GuruSync</span>
           </div>
 
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Password
-            </label>
-            <input
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              required
-            />
-          </div>
+          <h1 className="text-2xl font-display font-extrabold text-on-surface mb-1">
+            Selamat Datang
+          </h1>
+          <p className="text-on-surface-variant text-sm mb-8">
+            Masuk untuk mengakses portal kepegawaian Anda.
+          </p>
 
-          <button
-            type="submit"
-            disabled={loading}
-            className="w-full bg-blue-500 text-white py-3 rounded-lg font-medium hover:bg-blue-600 transition-colors disabled:bg-blue-300"
-          >
-            {loading ? 'Memproses...' : 'Masuk'}
-          </button>
-        </form>
+          <form onSubmit={handleSubmit} className="space-y-5">
+            {error && (
+              <div className="bg-error-container text-on-error-container text-sm px-4 py-3 rounded-xl border border-error/20">
+                {error}
+              </div>
+            )}
+
+            <div>
+              <label className="block text-xs font-bold uppercase tracking-wider text-on-surface-variant mb-2">
+                NIK, Email, atau Tanggal Lahir
+              </label>
+              <input
+                type="text"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                className="w-full px-4 py-3 border border-outline-variant rounded-xl bg-surface-container-lowest focus:ring-2 focus:ring-primary/30 focus:border-primary outline-none transition-shadow text-sm"
+                placeholder="NIK / Email / Tgl Lahir (DDMMYY)"
+                required
+              />
+            </div>
+
+            <div>
+              <label className="block text-xs font-bold uppercase tracking-wider text-on-surface-variant mb-2">
+                Password
+              </label>
+              <input
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                className="w-full px-4 py-3 border border-outline-variant rounded-xl bg-surface-container-lowest focus:ring-2 focus:ring-primary/30 focus:border-primary outline-none transition-shadow text-sm"
+                required
+              />
+            </div>
+
+            <button
+              type="submit"
+              disabled={loading}
+              className="w-full bg-primary text-on-primary py-3.5 rounded-xl font-bold text-sm hover:bg-primary-hover transition-colors disabled:opacity-50 shadow-lg shadow-primary/25"
+            >
+              {loading ? 'Memproses...' : 'Masuk'}
+            </button>
+          </form>
+        </div>
       </div>
     </div>
   );
