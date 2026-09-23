@@ -14,6 +14,7 @@ export function TeacherForm({ teacher, onClose }: TeacherFormProps) {
     nik: '',
     subject: '',
     subject_category: 'normatif_adaptif' as 'jurusan' | 'normatif_adaptif',
+    campus: 'utama' as 'utama' | 'kampus_03',
     email: '',
     phone: '',
     join_date: '',
@@ -39,6 +40,7 @@ export function TeacherForm({ teacher, onClose }: TeacherFormProps) {
         nik: teacher.nik,
         subject: teacher.subject,
         subject_category: teacher.subject_category || 'normatif_adaptif',
+        campus: teacher.campus || 'utama',
         email: teacher.email,
         phone: teacher.phone,
         join_date: teacher.join_date,
@@ -210,6 +212,21 @@ export function TeacherForm({ teacher, onClose }: TeacherFormProps) {
             >
               <option value="normatif_adaptif">Normatif &amp; Adaptif — di-approve Koordinator MGMP</option>
               <option value="jurusan">Jurusan / Produktif — di-approve HOD</option>
+            </select>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Kampus
+            </label>
+            <select
+              value={formData.campus}
+              onChange={(e) => setFormData({ ...formData, campus: e.target.value as 'utama' | 'kampus_03' })}
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
+              required
+            >
+              <option value="utama">Kampus Utama (MM2100)</option>
+              <option value="kampus_03">Kampus 03</option>
             </select>
           </div>
 

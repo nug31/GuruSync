@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { supabase } from '../../lib/supabase';
 import { format, parseISO, differenceInDays } from 'date-fns';
 import { id } from 'date-fns/locale';
-import type { Teacher, Permission, PermissionType, PermissionStatus } from '../../types';
+import type { Teacher, Permission, PermissionType, PermissionStatus, Campus } from '../../types';
 import { useAuth } from '../../contexts/AuthContext';
 
 interface PermissionManagementProps {
@@ -13,7 +13,7 @@ interface PermissionManagementProps {
 }
 
 // Types that require time fields
-const TIME_BASED_TYPES: PermissionType[] = ['Terlambat', 'Izin Datang Terlambat', 'Pulang Cepat', 'Izin Keluar & Kembali'];
+const TIME_BASED_TYPES: PermissionType[] = ['Terlambat', 'Izin Datang Terlambat', 'Pulang Cepat', 'Izin Keluar & Kembali', 'Tugas Luar'];
 // Types that require Kepsek approval (full chain)
 const KEPSEK_REQUIRED_TYPES: PermissionType[] = ['Cuti'];
 
@@ -62,6 +62,7 @@ interface FormData {
   reason: string;
   attachment_url: string;
   status: PermissionStatus;
+  tugas_luar_kampus: Campus | '';
 }
 
 const emptyForm = (currentTeacherId: string | undefined, initialStatus: PermissionStatus = 'pending_hod'): FormData => ({
@@ -74,6 +75,7 @@ const emptyForm = (currentTeacherId: string | undefined, initialStatus: Permissi
   reason: '',
   attachment_url: '',
   status: initialStatus,
+  tugas_luar_kampus: '',
 });
 
 export function PermissionManagement({ teachers, permissions, onUpdate, currentTeacherId }: PermissionManagementProps) {
@@ -82,6 +84,7 @@ export function PermissionManagement({ teachers, permissions, onUpdate, currentT
   const role = profile?.role || 'teacher';
   const isAdmin = role === 'admin';
   const isManagement = ['hod', 'koordinator_hod', 'wakasek', 'kepsek', 'admin'].includes(role);
+  const myCampus: Campus = teachers.find(t => t.id === currentTeacherId)?.campus || 'utama';
 
   // Always start at pending_hod — the "Teachers can insert own permissions" RLS policy
   // requires status = 'pending_hod' on insert. A HOD approves their own pending_hod
@@ -124,11 +127,15 @@ export function PermissionManagement({ teachers, permissions, onUpdate, currentT
   const getApproverLabel = (teacherId: string) =>
     teachers.find(t => t.id === teacherId)?.subject_category === 'jurusan' ? 'HOD' : 'Koordinator MGMP';
 
+  // Tugas Luar yang ditandai dari Kampus 03 lewati HOD & Wakasek, langsung ke Kepsek Kampus 03
+  const isKampus03FastTrack = (permission: Permission) =>
+    permission.permission_type === 'Tugas Luar' && permission.tugas_luar_kampus === 'kampus_03';
+
   const getStatusLabel = (permission: Permission) => {
     switch (permission.status) {
       case 'pending_hod': return `Menunggu ${getApproverLabel(permission.teacher_id)}`;
       case 'pending_wakasek': return 'Menunggu Wakasek';
-      case 'pending_kepsek': return 'Menunggu Kepsek';
+      case 'pending_kepsek': return isKampus03FastTrack(permission) ? 'Menunggu Kepsek Kampus 03' : 'Menunggu Kepsek';
       case 'approved': return 'Disetujui';
       case 'rejected': return 'Ditolak';
     }
@@ -149,13 +156,20 @@ export function PermissionManagement({ teachers, permissions, onUpdate, currentT
       if (role === 'koordinator_hod') return category === 'normatif_adaptif';
       return false;
     }
+    if (permission.status === 'pending_kepsek') {
+      if (role !== 'kepsek') return false;
+      const requiredCampus: Campus = isKampus03FastTrack(permission) ? 'kampus_03' : 'utama';
+      return myCampus === requiredCampus;
+    }
     if (role === 'wakasek') return permission.status === 'pending_wakasek';
-    if (role === 'kepsek') return permission.status === 'pending_kepsek';
     return false;
   };
 
   const getApprovalSteps = (permission: Permission) => {
     const type = permission.permission_type;
+    if (isKampus03FastTrack(permission)) {
+      return ['Kepsek Kampus 03'];
+    }
     const firstStep = getApproverLabel(permission.teacher_id);
     if (KEPSEK_REQUIRED_TYPES.includes(type)) {
       return [firstStep, 'Wakasek', 'Kepsek'];
@@ -163,8 +177,16 @@ export function PermissionManagement({ teachers, permissions, onUpdate, currentT
     return [firstStep, 'Wakasek'];
   };
 
-  const getCompletedSteps = (status: PermissionStatus) => {
-    switch (status) {
+  const getCompletedSteps = (permission: Permission) => {
+    if (isKampus03FastTrack(permission)) {
+      switch (permission.status) {
+        case 'pending_kepsek': return 0;
+        case 'approved': return 99;
+        case 'rejected': return -1;
+        default: return 0;
+      }
+    }
+    switch (permission.status) {
       case 'pending_hod': return 0;
       case 'pending_wakasek': return 1;
       case 'pending_kepsek': return 2;
@@ -188,6 +210,7 @@ export function PermissionManagement({ teachers, permissions, onUpdate, currentT
         reason: permission.reason,
         attachment_url: permission.attachment_url || '',
         status: permission.status,
+        tugas_luar_kampus: permission.tugas_luar_kampus || '',
       });
     } else {
       setEditingPermission(null);
@@ -208,6 +231,9 @@ export function PermissionManagement({ teachers, permissions, onUpdate, currentT
         return;
       }
 
+      const isNewFastTrack = !editingPermission && !isAdmin
+        && formData.permission_type === 'Tugas Luar' && formData.tugas_luar_kampus === 'kampus_03';
+
       const payload = {
         teacher_id: teacherId,
         permission_type: formData.permission_type,
@@ -217,7 +243,8 @@ export function PermissionManagement({ teachers, permissions, onUpdate, currentT
         end_time: isTimeBased(formData.permission_type) && formData.end_time ? formData.end_time : null,
         reason: formData.reason,
         attachment_url: formData.attachment_url || null,
-        status: isAdmin ? formData.status : (editingPermission ? formData.status : initialStatus),
+        status: isAdmin ? formData.status : (editingPermission ? formData.status : (isNewFastTrack ? 'pending_kepsek' : initialStatus)),
+        tugas_luar_kampus: formData.permission_type === 'Tugas Luar' && formData.tugas_luar_kampus ? formData.tugas_luar_kampus : null,
       };
 
       if (editingPermission) {
@@ -250,7 +277,7 @@ export function PermissionManagement({ teachers, permissions, onUpdate, currentT
       nextStatus = 'pending_wakasek';
     } else if (role === 'wakasek' && permission.status === 'pending_wakasek') {
       nextStatus = needsKepsek(permission.permission_type) ? 'pending_kepsek' : 'approved';
-    } else if (role === 'kepsek' && permission.status === 'pending_kepsek') {
+    } else if (permission.status === 'pending_kepsek' && canApprove(permission)) {
       nextStatus = 'approved';
     } else {
       alert('Anda tidak memiliki wewenang untuk tahap ini.');
@@ -395,7 +422,7 @@ export function PermissionManagement({ teachers, permissions, onUpdate, currentT
           displayPermissions.map(perm => {
             const teacher = teachers.find(t => t.id === perm.teacher_id);
             const steps = getApprovalSteps(perm);
-            const completedSteps = getCompletedSteps(perm.status);
+            const completedSteps = getCompletedSteps(perm);
             const canEdit = perm.teacher_id === currentTeacherId && perm.status === 'pending_hod';
 
             return (
@@ -729,7 +756,7 @@ export function PermissionManagement({ teachers, permissions, onUpdate, currentT
                       <button
                         key={type}
                         type="button"
-                        onClick={() => setFormData({ ...formData, permission_type: type })}
+                        onClick={() => setFormData({ ...formData, permission_type: type, tugas_luar_kampus: type === 'Tugas Luar' ? formData.tugas_luar_kampus : '' })}
                         className={`flex flex-col items-center gap-1.5 p-3 rounded-xl border text-xs font-bold transition-all ${
                           formData.permission_type === type
                             ? 'bg-primary text-white border-primary shadow-sm'
@@ -743,13 +770,50 @@ export function PermissionManagement({ teachers, permissions, onUpdate, currentT
                   </div>
                 </div>
 
+                {/* Lokasi Tugas Luar (khusus tipe Tugas Luar) */}
+                {formData.permission_type === 'Tugas Luar' && (
+                  <div>
+                    <label className="text-[10px] font-label uppercase tracking-widest text-on-surface-variant/60 mb-2 font-bold block">Lokasi Tugas Luar</label>
+                    <div className="grid grid-cols-2 gap-2">
+                      <button
+                        type="button"
+                        onClick={() => setFormData({ ...formData, tugas_luar_kampus: 'utama' })}
+                        className={`px-4 py-3 rounded-xl border text-xs font-bold transition-all ${
+                          formData.tugas_luar_kampus === 'utama'
+                            ? 'bg-primary text-white border-primary shadow-sm'
+                            : 'bg-slate-50 border-slate-200 text-slate-600 hover:border-primary/40 hover:text-primary'
+                        }`}
+                      >
+                        Kampus Utama (MM2100)
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setFormData({ ...formData, tugas_luar_kampus: 'kampus_03' })}
+                        className={`px-4 py-3 rounded-xl border text-xs font-bold transition-all ${
+                          formData.tugas_luar_kampus === 'kampus_03'
+                            ? 'bg-primary text-white border-primary shadow-sm'
+                            : 'bg-slate-50 border-slate-200 text-slate-600 hover:border-primary/40 hover:text-primary'
+                        }`}
+                      >
+                        Kampus 03
+                      </button>
+                    </div>
+                  </div>
+                )}
+
                 {/* Approval hint */}
                 {formData.permission_type && (
                   <div className="flex items-center gap-3 px-4 py-3 rounded-xl text-xs sm:text-sm bg-primary-fixed text-on-primary-fixed-variant border border-primary-fixed-dim">
                     <span className="material-symbols-outlined text-[18px] text-primary shrink-0">info</span>
                     <span>
-                      Alur: Guru → {getApproverLabel(isAdmin ? formData.teacher_id : (currentTeacherId || ''))} → Wakasek
-                      {needsKepsek(formData.permission_type) ? ' → Kepala Sekolah' : ''}
+                      {formData.permission_type === 'Tugas Luar' && formData.tugas_luar_kampus === 'kampus_03' ? (
+                        'Alur: Guru → Kepala Sekolah Kampus 03 (langsung, tanpa HOD/Wakasek)'
+                      ) : (
+                        <>
+                          Alur: Guru → {getApproverLabel(isAdmin ? formData.teacher_id : (currentTeacherId || ''))} → Wakasek
+                          {needsKepsek(formData.permission_type) ? ' → Kepala Sekolah' : ''}
+                        </>
+                      )}
                     </span>
                   </div>
                 )}
@@ -783,7 +847,9 @@ export function PermissionManagement({ teachers, permissions, onUpdate, currentT
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div>
                       <label className="text-[10px] font-label uppercase tracking-widest text-on-surface-variant/60 mb-2 font-bold block">
-                        {formData.permission_type === 'Pulang Cepat' ? 'Jam Pulang' : 'Jam Masuk / Mulai'}
+                        {formData.permission_type === 'Pulang Cepat' ? 'Jam Pulang'
+                          : formData.permission_type === 'Tugas Luar' ? 'Jam Berangkat'
+                          : 'Jam Masuk / Mulai'}
                       </label>
                       <input
                         type="time"
@@ -796,6 +862,7 @@ export function PermissionManagement({ teachers, permissions, onUpdate, currentT
                       <label className="text-[10px] font-label uppercase tracking-widest text-on-surface-variant/60 mb-2 font-bold block">
                         {formData.permission_type === 'Terlambat' || formData.permission_type === 'Izin Datang Terlambat'
                           ? 'Jam Tiba'
+                          : formData.permission_type === 'Tugas Luar' ? 'Jam Kembali'
                           : 'Jam Kembali / Selesai'}
                       </label>
                       <input
@@ -851,7 +918,7 @@ export function PermissionManagement({ teachers, permissions, onUpdate, currentT
                 </button>
                 <button
                   type="submit"
-                  disabled={loading || !formData.permission_type || (!isAdmin && !currentTeacherId)}
+                  disabled={loading || !formData.permission_type || (!isAdmin && !currentTeacherId) || (formData.permission_type === 'Tugas Luar' && !formData.tugas_luar_kampus)}
                   className="w-full sm:w-auto px-8 py-3 rounded-xl bg-primary text-white font-bold shadow-lg shadow-primary/25 hover:bg-primary-hover active:scale-[0.98] transition-all text-sm flex items-center justify-center gap-2 disabled:opacity-50"
                 >
                   <span className="material-symbols-outlined text-[18px]">check_circle</span>

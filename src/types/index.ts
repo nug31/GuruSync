@@ -1,4 +1,5 @@
 export type SubjectCategory = 'jurusan' | 'normatif_adaptif';
+export type Campus = 'utama' | 'kampus_03';
 
 export interface Teacher {
   id: string;
@@ -7,6 +8,7 @@ export interface Teacher {
   nik: string;
   subject: string;
   subject_category: SubjectCategory;
+  campus: Campus;
   email: string;
   phone: string;
   join_date: string;
@@ -65,6 +67,7 @@ export interface Permission {
   attachment_url?: string;
   status: PermissionStatus;
   rejection_note?: string;
+  tugas_luar_kampus?: Campus;
   created_at: string;
   updated_at: string;
 }
