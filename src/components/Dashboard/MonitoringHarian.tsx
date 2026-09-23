@@ -236,6 +236,12 @@ export function MonitoringHarian({ teachers, permissions }: MonitoringHarianProp
                   <div className="min-w-0 flex-1">
                     <p className="font-bold text-sm text-on-surface truncate">{teacher?.name || 'Unknown'}</p>
                     <p className="text-xs text-on-surface-variant truncate">{p.tujuan_tugas_luar || teacher?.subject || '-'}</p>
+                    {(p.start_time || p.end_time) && (
+                      <p className="text-[11px] text-tertiary font-bold flex items-center gap-1 mt-0.5">
+                        <span className="material-symbols-outlined text-[13px]">schedule</span>
+                        {(p.start_time || '--:--').slice(0, 5)} - {(p.end_time || '--:--').slice(0, 5)}
+                      </p>
+                    )}
                   </div>
                   <span className="flex items-center gap-1 px-2.5 py-1 rounded-full bg-tertiary-fixed text-on-tertiary-fixed text-[10px] font-bold uppercase tracking-wide shrink-0">
                     <span className="material-symbols-outlined text-[13px]">work_history</span>
