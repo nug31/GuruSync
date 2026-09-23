@@ -68,6 +68,7 @@ export interface Permission {
   status: PermissionStatus;
   rejection_note?: string;
   tugas_luar_kampus?: Campus;
+  tujuan_tugas_luar?: string;
   created_at: string;
   updated_at: string;
 }

@@ -63,6 +63,7 @@ interface FormData {
   attachment_url: string;
   status: PermissionStatus;
   tugas_luar_kampus: Campus | '';
+  tujuan_tugas_luar: string;
 }
 
 const emptyForm = (currentTeacherId: string | undefined, initialStatus: PermissionStatus = 'pending_hod'): FormData => ({
@@ -76,6 +77,7 @@ const emptyForm = (currentTeacherId: string | undefined, initialStatus: Permissi
   attachment_url: '',
   status: initialStatus,
   tugas_luar_kampus: '',
+  tujuan_tugas_luar: '',
 });
 
 export function PermissionManagement({ teachers, permissions, onUpdate, currentTeacherId }: PermissionManagementProps) {
@@ -211,6 +213,7 @@ export function PermissionManagement({ teachers, permissions, onUpdate, currentT
         attachment_url: permission.attachment_url || '',
         status: permission.status,
         tugas_luar_kampus: permission.tugas_luar_kampus || '',
+        tujuan_tugas_luar: permission.tujuan_tugas_luar || '',
       });
     } else {
       setEditingPermission(null);
@@ -245,6 +248,7 @@ export function PermissionManagement({ teachers, permissions, onUpdate, currentT
         attachment_url: formData.attachment_url || null,
         status: isAdmin ? formData.status : (editingPermission ? formData.status : (isNewFastTrack ? 'pending_kepsek' : initialStatus)),
         tugas_luar_kampus: formData.permission_type === 'Tugas Luar' && formData.tugas_luar_kampus ? formData.tugas_luar_kampus : null,
+        tujuan_tugas_luar: formData.permission_type === 'Tugas Luar' && formData.tujuan_tugas_luar ? formData.tujuan_tugas_luar : null,
       };
 
       if (editingPermission) {
@@ -555,6 +559,12 @@ export function PermissionManagement({ teachers, permissions, onUpdate, currentT
                             </p>
                           </div>
                         </div>
+                        {perm.permission_type === 'Tugas Luar' && perm.tujuan_tugas_luar && (
+                          <div>
+                            <p className="text-[10px] font-label uppercase tracking-widest text-on-surface-variant/60 mb-2 font-bold">Tujuan Tugas Luar</p>
+                            <p className="text-sm text-on-surface bg-surface-container-low rounded-xl px-4 py-3 border border-outline-variant/20">{perm.tujuan_tugas_luar}</p>
+                          </div>
+                        )}
                         {perm.rejection_note && (
                           <div className="bg-error-container/30 rounded-xl p-4 border border-error/20">
                             <p className="text-[10px] font-label uppercase tracking-widest text-error/70 mb-1 font-bold">Catatan Penolakan</p>
@@ -756,7 +766,12 @@ export function PermissionManagement({ teachers, permissions, onUpdate, currentT
                       <button
                         key={type}
                         type="button"
-                        onClick={() => setFormData({ ...formData, permission_type: type, tugas_luar_kampus: type === 'Tugas Luar' ? formData.tugas_luar_kampus : '' })}
+                        onClick={() => setFormData({
+                          ...formData,
+                          permission_type: type,
+                          tugas_luar_kampus: type === 'Tugas Luar' ? formData.tugas_luar_kampus : '',
+                          tujuan_tugas_luar: type === 'Tugas Luar' ? formData.tujuan_tugas_luar : '',
+                        })}
                         className={`flex flex-col items-center gap-1.5 p-3 rounded-xl border text-xs font-bold transition-all ${
                           formData.permission_type === type
                             ? 'bg-primary text-white border-primary shadow-sm'
@@ -770,10 +785,12 @@ export function PermissionManagement({ teachers, permissions, onUpdate, currentT
                   </div>
                 </div>
 
-                {/* Lokasi Tugas Luar (khusus tipe Tugas Luar) */}
+                {/* Kampus Asal pengaju (khusus tipe Tugas Luar) -- menentukan Kepsek mana yang approve, BUKAN tujuan tugas */}
                 {formData.permission_type === 'Tugas Luar' && (
                   <div>
-                    <label className="text-[10px] font-label uppercase tracking-widest text-on-surface-variant/60 mb-2 font-bold block">Lokasi Tugas Luar</label>
+                    <label className="text-[10px] font-label uppercase tracking-widest text-on-surface-variant/60 mb-2 font-bold block">
+                      Kampus Asal Anda <span className="text-on-surface-variant/40 normal-case">(kampus tempat Anda bertugas sehari-hari, bukan tujuan tugas luar)</span>
+                    </label>
                     <div className="grid grid-cols-2 gap-2">
                       <button
                         type="button"
@@ -784,7 +801,7 @@ export function PermissionManagement({ teachers, permissions, onUpdate, currentT
                             : 'bg-slate-50 border-slate-200 text-slate-600 hover:border-primary/40 hover:text-primary'
                         }`}
                       >
-                        Kampus Utama (MM2100)
+                        Saya dari Kampus Utama (MM2100)
                       </button>
                       <button
                         type="button"
@@ -795,9 +812,24 @@ export function PermissionManagement({ teachers, permissions, onUpdate, currentT
                             : 'bg-slate-50 border-slate-200 text-slate-600 hover:border-primary/40 hover:text-primary'
                         }`}
                       >
-                        Kampus 03
+                        Saya dari Kampus 03
                       </button>
                     </div>
+                  </div>
+                )}
+
+                {/* Tujuan Tugas Luar (keterangan bebas, tidak memengaruhi alur approval) */}
+                {formData.permission_type === 'Tugas Luar' && (
+                  <div>
+                    <label className="text-[10px] font-label uppercase tracking-widest text-on-surface-variant/60 mb-2 font-bold block">Tujuan Tugas Luar</label>
+                    <textarea
+                      value={formData.tujuan_tugas_luar}
+                      onChange={e => setFormData({ ...formData, tujuan_tugas_luar: e.target.value })}
+                      rows={2}
+                      className="w-full px-4 py-3 bg-slate-50 rounded-xl border border-slate-200 focus:ring-2 focus:ring-primary/20 focus:border-primary text-on-surface leading-relaxed resize-none text-sm"
+                      placeholder="Contoh: Workshop di Kampus 03, rapat di Dinas Pendidikan, dsb."
+                      required
+                    />
                   </div>
                 )}
 
@@ -921,7 +953,7 @@ export function PermissionManagement({ teachers, permissions, onUpdate, currentT
                 </button>
                 <button
                   type="submit"
-                  disabled={loading || !formData.permission_type || (!isAdmin && !currentTeacherId) || (formData.permission_type === 'Tugas Luar' && !formData.tugas_luar_kampus)}
+                  disabled={loading || !formData.permission_type || (!isAdmin && !currentTeacherId) || (formData.permission_type === 'Tugas Luar' && (!formData.tugas_luar_kampus || !formData.tujuan_tugas_luar))}
                   className="w-full sm:w-auto px-8 py-3 rounded-xl bg-primary text-white font-bold shadow-lg shadow-primary/25 hover:bg-primary-hover active:scale-[0.98] transition-all text-sm flex items-center justify-center gap-2 disabled:opacity-50"
                 >
                   <span className="material-symbols-outlined text-[18px]">check_circle</span>
