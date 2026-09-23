@@ -45,11 +45,16 @@ export function MonitoringHarian({ teachers, permissions }: MonitoringHarianProp
   const totalGuru = teachers.length;
   const hadirCount = Math.max(totalGuru - approvedTeacherIds.size, 0);
 
+  // Tugas Luar dipisah dari kategori izin/tidak hadir lain -- guru yang tugas luar
+  // sedang bertugas (dinas), bukan sedang izin/absen dalam artian umum.
+  const tugasLuarToday = useMemo(() => approvedToday.filter(p => p.permission_type === 'Tugas Luar'), [approvedToday]);
+  const absenToday = useMemo(() => approvedToday.filter(p => p.permission_type !== 'Tugas Luar'), [approvedToday]);
+
   const typeBreakdown = useMemo(() => {
     const map: Record<string, number> = {};
-    approvedToday.forEach(p => { map[p.permission_type] = (map[p.permission_type] || 0) + 1; });
+    absenToday.forEach(p => { map[p.permission_type] = (map[p.permission_type] || 0) + 1; });
     return Object.entries(map).sort((a, b) => b[1] - a[1]);
-  }, [approvedToday]);
+  }, [absenToday]);
 
   const trend = useMemo(() => {
     const base = parseISO(selectedDate);
@@ -120,7 +125,7 @@ export function MonitoringHarian({ teachers, permissions }: MonitoringHarianProp
       <p className="text-sm font-bold text-on-surface-variant -mt-4 capitalize">{displayDateLabel}</p>
 
       {/* Summary cards */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
         <div className="bg-surface-container-lowest p-5 rounded-2xl border border-outline-variant/20 shadow-sm">
           <p className="text-on-surface-variant/60 font-label text-[10px] uppercase tracking-widest mb-3">Total Guru</p>
           <div className="flex items-end justify-between">
@@ -140,9 +145,18 @@ export function MonitoringHarian({ teachers, permissions }: MonitoringHarianProp
           </div>
         </div>
         <div className="bg-surface-container-lowest p-5 rounded-2xl border border-outline-variant/20 shadow-sm">
+          <p className="text-on-surface-variant/60 font-label text-[10px] uppercase tracking-widest mb-3">Tugas Luar</p>
+          <div className="flex items-end justify-between">
+            <span className="text-3xl font-headline font-bold text-tertiary">{String(tugasLuarToday.length).padStart(2, '0')}</span>
+            <div className="w-9 h-9 rounded-full bg-tertiary-fixed/40 flex items-center justify-center text-tertiary">
+              <span className="material-symbols-outlined text-[18px]">work_history</span>
+            </div>
+          </div>
+        </div>
+        <div className="bg-surface-container-lowest p-5 rounded-2xl border border-outline-variant/20 shadow-sm">
           <p className="text-on-surface-variant/60 font-label text-[10px] uppercase tracking-widest mb-3">Tidak Hadir (Izin)</p>
           <div className="flex items-end justify-between">
-            <span className="text-3xl font-headline font-bold text-error">{String(approvedTeacherIds.size).padStart(2, '0')}</span>
+            <span className="text-3xl font-headline font-bold text-error">{String(absenToday.length).padStart(2, '0')}</span>
             <div className="w-9 h-9 rounded-full bg-error-container/40 flex items-center justify-center text-error">
               <span className="material-symbols-outlined text-[18px]">event_busy</span>
             </div>
@@ -199,21 +213,56 @@ export function MonitoringHarian({ teachers, permissions }: MonitoringHarianProp
         </div>
       </div>
 
-      {/* Approved today list */}
+      {/* Tugas Luar today list -- dipisah, bukan "tidak hadir" dalam artian izin/absen */}
+      {tugasLuarToday.length > 0 && (
+        <div>
+          <h3 className="text-lg font-bold text-on-surface mb-3 flex items-center gap-2">
+            <span className="material-symbols-outlined text-tertiary">work_history</span>
+            Sedang Tugas Luar
+            <span className="text-sm font-normal text-on-surface-variant">({tugasLuarToday.length})</span>
+          </h3>
+          <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-3">
+            {tugasLuarToday.map(p => {
+              const teacher = getTeacher(p.teacher_id);
+              return (
+                <div key={p.id} className="flex items-center gap-3 p-4 bg-surface-container-lowest rounded-2xl border border-outline-variant/20 shadow-sm">
+                  {teacher?.avatar_url ? (
+                    <img src={teacher.avatar_url} alt="" className="w-11 h-11 rounded-full object-cover border-2 border-surface-container-high shrink-0" />
+                  ) : (
+                    <div className="w-11 h-11 rounded-full bg-surface-container flex items-center justify-center text-on-surface-variant shrink-0">
+                      <span className="material-symbols-outlined">person</span>
+                    </div>
+                  )}
+                  <div className="min-w-0 flex-1">
+                    <p className="font-bold text-sm text-on-surface truncate">{teacher?.name || 'Unknown'}</p>
+                    <p className="text-xs text-on-surface-variant truncate">{p.tujuan_tugas_luar || teacher?.subject || '-'}</p>
+                  </div>
+                  <span className="flex items-center gap-1 px-2.5 py-1 rounded-full bg-tertiary-fixed text-on-tertiary-fixed text-[10px] font-bold uppercase tracking-wide shrink-0">
+                    <span className="material-symbols-outlined text-[13px]">work_history</span>
+                    Tugas Luar
+                  </span>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
+      {/* Izin/Tidak Hadir today list -- Tugas Luar TIDAK termasuk di sini */}
       <div>
         <h3 className="text-lg font-bold text-on-surface mb-3 flex items-center gap-2">
           <span className="material-symbols-outlined text-error">event_busy</span>
           Sedang Izin / Tidak Hadir
-          <span className="text-sm font-normal text-on-surface-variant">({approvedToday.length})</span>
+          <span className="text-sm font-normal text-on-surface-variant">({absenToday.length})</span>
         </h3>
-        {approvedToday.length === 0 ? (
+        {absenToday.length === 0 ? (
           <div className="p-10 text-center text-on-surface-variant/60 bg-surface-container-lowest rounded-2xl border border-outline-variant/20">
             <span className="material-symbols-outlined text-4xl mb-2 block">celebration</span>
             <p className="font-serif italic">Semua guru hadir pada tanggal ini.</p>
           </div>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-3">
-            {approvedToday.map(p => {
+            {absenToday.map(p => {
               const teacher = getTeacher(p.teacher_id);
               return (
                 <div key={p.id} className="flex items-center gap-3 p-4 bg-surface-container-lowest rounded-2xl border border-outline-variant/20 shadow-sm">
