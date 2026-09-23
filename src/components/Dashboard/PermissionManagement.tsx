@@ -238,7 +238,7 @@ export function PermissionManagement({ teachers, permissions, onUpdate, currentT
         teacher_id: teacherId,
         permission_type: formData.permission_type,
         start_date: formData.start_date,
-        end_date: formData.end_date,
+        end_date: formData.end_date || formData.start_date,
         start_time: isTimeBased(formData.permission_type) && formData.start_time ? formData.start_time : null,
         end_time: isTimeBased(formData.permission_type) && formData.end_time ? formData.end_time : null,
         reason: formData.reason,
@@ -831,13 +831,15 @@ export function PermissionManagement({ teachers, permissions, onUpdate, currentT
                     />
                   </div>
                   <div>
-                    <label className="text-[10px] font-label uppercase tracking-widest text-on-surface-variant/60 mb-2 font-bold block">Tanggal Selesai</label>
+                    <label className="text-[10px] font-label uppercase tracking-widest text-on-surface-variant/60 mb-2 font-bold block">
+                      Tanggal Selesai <span className="text-on-surface-variant/40 normal-case">(opsional, default sama dengan tanggal mulai)</span>
+                    </label>
                     <input
                       type="date"
                       value={formData.end_date}
                       onChange={e => setFormData({ ...formData, end_date: e.target.value })}
+                      min={formData.start_date || undefined}
                       className="w-full bg-slate-50 px-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-primary/20 focus:border-primary text-on-surface text-sm"
-                      required
                     />
                   </div>
                 </div>
@@ -864,6 +866,7 @@ export function PermissionManagement({ teachers, permissions, onUpdate, currentT
                           ? 'Jam Tiba'
                           : formData.permission_type === 'Tugas Luar' ? 'Jam Kembali'
                           : 'Jam Kembali / Selesai'}
+                        <span className="text-on-surface-variant/40 normal-case"> (opsional)</span>
                       </label>
                       <input
                         type="time"
