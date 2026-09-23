@@ -1,9 +1,12 @@
+export type SubjectCategory = 'jurusan' | 'normatif_adaptif';
+
 export interface Teacher {
   id: string;
   user_id: string | null;
   name: string;
   nik: string;
   subject: string;
+  subject_category: SubjectCategory;
   email: string;
   phone: string;
   join_date: string;

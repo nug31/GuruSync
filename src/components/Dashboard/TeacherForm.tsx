@@ -13,6 +13,7 @@ export function TeacherForm({ teacher, onClose }: TeacherFormProps) {
     name: '',
     nik: '',
     subject: '',
+    subject_category: 'normatif_adaptif' as 'jurusan' | 'normatif_adaptif',
     email: '',
     phone: '',
     join_date: '',
@@ -37,6 +38,7 @@ export function TeacherForm({ teacher, onClose }: TeacherFormProps) {
         name: teacher.name,
         nik: teacher.nik,
         subject: teacher.subject,
+        subject_category: teacher.subject_category || 'normatif_adaptif',
         email: teacher.email,
         phone: teacher.phone,
         join_date: teacher.join_date,
@@ -194,6 +196,21 @@ export function TeacherForm({ teacher, onClose }: TeacherFormProps) {
               className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
               required
             />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Kategori Mapel
+            </label>
+            <select
+              value={formData.subject_category}
+              onChange={(e) => setFormData({ ...formData, subject_category: e.target.value as 'jurusan' | 'normatif_adaptif' })}
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
+              required
+            >
+              <option value="normatif_adaptif">Normatif &amp; Adaptif — di-approve Koordinator MGMP</option>
+              <option value="jurusan">Jurusan / Produktif — di-approve HOD</option>
+            </select>
           </div>
 
           <div>

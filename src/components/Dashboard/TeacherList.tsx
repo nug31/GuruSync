@@ -462,6 +462,13 @@ export function TeacherList({ teachers, onEdit, onDelete, onRefresh }: TeacherLi
                   <td className="px-6 py-6">
                     <p className="text-sm font-semibold text-primary">{teacher.subject}</p>
                     <p className="text-xs text-on-surface-variant mt-0.5">{teacher.work_unit || '-'}</p>
+                    <span className={`inline-block mt-1.5 text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider ${
+                      teacher.subject_category === 'jurusan'
+                        ? 'bg-tertiary-fixed text-on-tertiary-fixed'
+                        : 'bg-primary-fixed text-on-primary-fixed-variant'
+                    }`}>
+                      {teacher.subject_category === 'jurusan' ? 'Jurusan · HOD' : 'Normatif-Adaptif · MGMP'}
+                    </span>
                   </td>
                   <td className="px-6 py-6">
                     <div className="flex flex-wrap gap-2">

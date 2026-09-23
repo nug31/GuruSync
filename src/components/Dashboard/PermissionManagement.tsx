@@ -83,7 +83,10 @@ export function PermissionManagement({ teachers, permissions, onUpdate, currentT
   const isAdmin = role === 'admin';
   const isManagement = ['hod', 'koordinator_hod', 'wakasek', 'kepsek', 'admin'].includes(role);
 
-  const initialStatus: PermissionStatus = role === 'hod' ? 'pending_wakasek' : 'pending_hod';
+  // Always start at pending_hod — the "Teachers can insert own permissions" RLS policy
+  // requires status = 'pending_hod' on insert. A HOD approves their own pending_hod
+  // request like any other (canApprove has no self-exclusion), which advances it normally.
+  const initialStatus: PermissionStatus = 'pending_hod';
 
   const [activeTab, setActiveTab] = useState<FilterTab>('all');
   const [typeFilter, setTypeFilter] = useState<PermissionType | 'all'>('all');
@@ -118,9 +121,12 @@ export function PermissionManagement({ teachers, permissions, onUpdate, currentT
   const getDuration = (start: string, end: string) =>
     differenceInDays(parseISO(end), parseISO(start)) + 1;
 
-  const getStatusLabel = (status: PermissionStatus) => {
-    switch (status) {
-      case 'pending_hod': return 'Menunggu HOD';
+  const getApproverLabel = (teacherId: string) =>
+    teachers.find(t => t.id === teacherId)?.subject_category === 'jurusan' ? 'HOD' : 'Koordinator MGMP';
+
+  const getStatusLabel = (permission: Permission) => {
+    switch (permission.status) {
+      case 'pending_hod': return `Menunggu ${getApproverLabel(permission.teacher_id)}`;
       case 'pending_wakasek': return 'Menunggu Wakasek';
       case 'pending_kepsek': return 'Menunggu Kepsek';
       case 'approved': return 'Disetujui';
@@ -137,7 +143,12 @@ export function PermissionManagement({ teachers, permissions, onUpdate, currentT
 
   const canApprove = (permission: Permission): boolean => {
     if (isAdmin) return !['approved', 'rejected'].includes(permission.status);
-    if (role === 'hod' || role === 'koordinator_hod') return permission.status === 'pending_hod';
+    if (permission.status === 'pending_hod') {
+      const category = teachers.find(t => t.id === permission.teacher_id)?.subject_category;
+      if (role === 'hod') return category === 'jurusan';
+      if (role === 'koordinator_hod') return category === 'normatif_adaptif';
+      return false;
+    }
     if (role === 'wakasek') return permission.status === 'pending_wakasek';
     if (role === 'kepsek') return permission.status === 'pending_kepsek';
     return false;
@@ -145,10 +156,11 @@ export function PermissionManagement({ teachers, permissions, onUpdate, currentT
 
   const getApprovalSteps = (permission: Permission) => {
     const type = permission.permission_type;
+    const firstStep = getApproverLabel(permission.teacher_id);
     if (KEPSEK_REQUIRED_TYPES.includes(type)) {
-      return ['HOD/MGMP', 'Wakasek', 'Kepsek'];
+      return [firstStep, 'Wakasek', 'Kepsek'];
     }
-    return ['HOD/MGMP', 'Wakasek'];
+    return [firstStep, 'Wakasek'];
   };
 
   const getCompletedSteps = (status: PermissionStatus) => {
@@ -234,7 +246,7 @@ export function PermissionManagement({ teachers, permissions, onUpdate, currentT
     let nextStatus: PermissionStatus;
     if (isAdmin) {
       nextStatus = 'approved';
-    } else if ((role === 'hod' || role === 'koordinator_hod') && permission.status === 'pending_hod') {
+    } else if (permission.status === 'pending_hod' && canApprove(permission)) {
       nextStatus = 'pending_wakasek';
     } else if (role === 'wakasek' && permission.status === 'pending_wakasek') {
       nextStatus = needsKepsek(permission.permission_type) ? 'pending_kepsek' : 'approved';
@@ -453,7 +465,7 @@ export function PermissionManagement({ teachers, permissions, onUpdate, currentT
                   {/* Status */}
                   <div className="lg:col-span-2 flex items-center">
                     <span className={getStatusPillClasses(perm.status)}>
-                      {getStatusLabel(perm.status)}
+                      {getStatusLabel(perm)}
                     </span>
                   </div>
 
@@ -736,7 +748,7 @@ export function PermissionManagement({ teachers, permissions, onUpdate, currentT
                   <div className="flex items-center gap-3 px-4 py-3 rounded-xl text-xs sm:text-sm bg-primary-fixed text-on-primary-fixed-variant border border-primary-fixed-dim">
                     <span className="material-symbols-outlined text-[18px] text-primary shrink-0">info</span>
                     <span>
-                      Alur: Guru → HOD/MGMP → Wakasek
+                      Alur: Guru → {getApproverLabel(isAdmin ? formData.teacher_id : (currentTeacherId || ''))} → Wakasek
                       {needsKepsek(formData.permission_type) ? ' → Kepala Sekolah' : ''}
                     </span>
                   </div>

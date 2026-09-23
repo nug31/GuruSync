@@ -7,9 +7,10 @@ import { TeacherProfile } from '../Profile/TeacherProfile';
 import { Statistics } from './Statistics';
 import { AdminManagement } from './AdminManagement';
 import { PermissionManagement } from './PermissionManagement';
+import { MonitoringHarian } from './MonitoringHarian';
 import type { Teacher, Permission } from '../../types';
 
-type View = 'dashboard' | 'teachers' | 'permissions' | 'admins';
+type View = 'dashboard' | 'teachers' | 'permissions' | 'admins' | 'monitoring';
 
 export function Dashboard() {
   const { user, profile, loading: authLoading, signOut } = useAuth();
@@ -21,6 +22,7 @@ export function Dashboard() {
   const [editingTeacher, setEditingTeacher] = useState<Teacher | null>(null);
 
   const isAdmin = profile?.role === 'admin';
+  const isMonitoringAllowed = isAdmin || ['hod', 'koordinator_hod', 'wakasek', 'kepsek'].includes(profile?.role || '');
 
   const userName = isAdmin ? profile?.name : (teachers.find(t => t.user_id === user?.id)?.name || profile?.name);
   const userRole = isAdmin ? 'Admin' : 'Guru';
@@ -129,6 +131,20 @@ export function Dashboard() {
               <span className="material-symbols-outlined text-[20px]">assignment_late</span>
               <span>{isAdmin ? 'Manajemen Izin' : 'Pengajuan Izin'}</span>
             </button>
+
+            {isMonitoringAllowed && (
+              <button
+                onClick={() => setView('monitoring')}
+                className={`flex items-center gap-3.5 px-4 py-3 transition-all duration-200 text-left rounded-xl text-sm font-semibold ${
+                  view === 'monitoring'
+                    ? 'bg-primary text-white shadow-md shadow-primary/30'
+                    : 'text-inverse-on-surface/60 hover:text-white hover:bg-white/5'
+                }`}
+              >
+                <span className="material-symbols-outlined text-[20px]">calendar_month</span>
+                <span>Monitoring Harian</span>
+              </button>
+            )}
 
             {isAdmin && (
               <button
@@ -260,6 +276,12 @@ export function Dashboard() {
           </div>
         )}
 
+        {view === 'monitoring' && isMonitoringAllowed && (
+          <div className="py-8">
+            <MonitoringHarian teachers={teachers} permissions={permissions} />
+          </div>
+        )}
+
         {view === 'admins' && isAdmin && (
           <div className="py-8">
             <h2 className="text-3xl font-display text-on-surface mb-8">
@@ -293,6 +315,15 @@ export function Dashboard() {
           <span className="material-symbols-outlined text-[22px]">assignment_late</span>
           <span className="text-[10px] font-semibold mt-0.5">Izin</span>
         </button>
+        {isMonitoringAllowed && (
+          <button
+            onClick={() => setView('monitoring')}
+            className={`flex flex-col items-center justify-center py-1 transition-colors ${view === 'monitoring' ? 'text-primary font-bold' : 'text-on-surface-variant/60 hover:text-on-surface'}`}
+          >
+            <span className="material-symbols-outlined text-[22px]">calendar_month</span>
+            <span className="text-[10px] font-semibold mt-0.5">Monitor</span>
+          </button>
+        )}
         {isAdmin && (
           <button
             onClick={() => setView('admins')}
