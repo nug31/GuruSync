@@ -1,4 +1,4 @@
-import { BrowserRouter, Routes, Route, Navigate, useParams } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate, useParams, useLocation } from 'react-router-dom';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { LoginForm } from './components/Auth/LoginForm';
 import { Dashboard } from './components/Dashboard/Dashboard';
@@ -6,6 +6,7 @@ import { TeacherPublicProfile } from './components/Profile/TeacherPublicProfile'
 
 function PrivateRoute({ children }: { children: React.ReactNode }) {
   const { user, loading } = useAuth();
+  const location = useLocation();
 
   if (loading) {
     return (
@@ -18,7 +19,8 @@ function PrivateRoute({ children }: { children: React.ReactNode }) {
     );
   }
 
-  return user ? <>{children}</> : <Navigate to="/login" />;
+  // Simpan tujuan asli (mis. link notifikasi WA ?izin=...) supaya bisa kembali ke situ setelah login.
+  return user ? <>{children}</> : <Navigate to="/login" state={{ from: location.pathname + location.search }} />;
 }
 
 function TeacherProfileWrapper() {

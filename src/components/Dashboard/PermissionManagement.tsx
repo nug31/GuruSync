@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { supabase } from '../../lib/supabase';
 import { format, parseISO, differenceInDays } from 'date-fns';
 import { id } from 'date-fns/locale';
@@ -103,6 +103,16 @@ export function PermissionManagement({ teachers, permissions, onUpdate, currentT
   const [rejectionNote, setRejectionNote] = useState('');
   const [showRejectModal, setShowRejectModal] = useState<Permission | null>(null);
 
+  // Buka & sorot pengajuan tertentu kalau dibuka lewat link notifikasi WA (?izin=<id>)
+  useEffect(() => {
+    const targetId = new URLSearchParams(window.location.search).get('izin');
+    if (targetId) {
+      const match = permissions.find(p => p.id === targetId);
+      if (match) setSelectedPermission(match);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [permissions]);
+
   // Filtered display
   const displayPermissions = (isManagement
     ? permissions
@@ -165,6 +175,59 @@ export function PermissionManagement({ teachers, permissions, onUpdate, currentT
     }
     if (role === 'wakasek') return permission.status === 'pending_wakasek';
     return false;
+  };
+
+  // --- Notifikasi WhatsApp ke approver ---
+  const normalizePhone = (raw: string) => {
+    let p = raw.replace(/[^0-9+]/g, '');
+    if (p.startsWith('+')) p = p.slice(1);
+    if (p.startsWith('0')) p = '62' + p.slice(1);
+    else if (!p.startsWith('62')) p = '62' + p;
+    return p;
+  };
+
+  const getEligibleApprovers = (permission: Permission): Teacher[] => {
+    if (permission.status === 'pending_hod') {
+      const category = teachers.find(t => t.id === permission.teacher_id)?.subject_category;
+      const wantedRole = category === 'jurusan' ? 'hod' : 'koordinator_hod';
+      return teachers.filter(t => t.app_role === wantedRole && (t.wa_number || t.phone));
+    }
+    if (permission.status === 'pending_wakasek') {
+      return teachers.filter(t => t.app_role === 'wakasek' && (t.wa_number || t.phone));
+    }
+    if (permission.status === 'pending_kepsek') {
+      const requiredCampus: Campus = isKampus03FastTrack(permission) ? 'kampus_03' : 'utama';
+      return teachers.filter(t => t.app_role === 'kepsek' && t.campus === requiredCampus && (t.wa_number || t.phone));
+    }
+    return [];
+  };
+
+  const buildWaLink = (permission: Permission, approver: Teacher) => {
+    const teacher = teachers.find(t => t.id === permission.teacher_id);
+    const periode = permission.start_date === permission.end_date
+      ? format(parseISO(permission.start_date), 'd MMMM yyyy', { locale: id })
+      : `${format(parseISO(permission.start_date), 'd MMM yyyy', { locale: id })} - ${format(parseISO(permission.end_date), 'd MMM yyyy', { locale: id })}`;
+    const link = `${window.location.origin}/?izin=${permission.id}`;
+
+    const lines = [
+      `🔔 *PENGAJUAN IZIN BARU - GuruSync*`,
+      `--------------------------------`,
+      `Jenis Izin: *${permission.permission_type}*`,
+      `Pemohon: *${teacher?.name || '-'}*`,
+      `Mapel/Unit: *${teacher?.subject || '-'}*`,
+      `Tanggal: *${periode}*`,
+    ];
+    if (isTimeBased(permission.permission_type) && (permission.start_time || permission.end_time)) {
+      lines.push(`Jam: *${(permission.start_time || '--:--').slice(0, 5)} - ${(permission.end_time || '--:--').slice(0, 5)}*`);
+    }
+    lines.push(`Alasan: ${permission.reason}`);
+    if (permission.permission_type === 'Tugas Luar' && permission.tujuan_tugas_luar) {
+      lines.push(`Tujuan: ${permission.tujuan_tugas_luar}`);
+    }
+    lines.push('', `Mohon Bapak/Ibu ${approver.name} dapat meninjau dan memberikan persetujuan.`, '', `🔗 Buka & Tinjau di GuruSync:`, link);
+
+    const phone = normalizePhone(approver.wa_number || approver.phone);
+    return `https://wa.me/${phone}?text=${encodeURIComponent(lines.join('\n'))}`;
   };
 
   const getApprovalSteps = (permission: Permission) => {
@@ -571,6 +634,32 @@ export function PermissionManagement({ teachers, permissions, onUpdate, currentT
                             <p className="text-sm text-on-surface">{perm.rejection_note}</p>
                           </div>
                         )}
+                        {perm.status.startsWith('pending') && (perm.teacher_id === currentTeacherId || isAdmin) && (() => {
+                          const approvers = getEligibleApprovers(perm);
+                          if (approvers.length === 0) return null;
+                          return (
+                            <div>
+                              <p className="text-[10px] font-label uppercase tracking-widest text-on-surface-variant/60 mb-2 font-bold">Notifikasi WhatsApp</p>
+                              <div className="flex flex-col gap-2">
+                                {approvers.map(a => (
+                                  <a
+                                    key={a.id}
+                                    href={buildWaLink(perm, a)}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="flex items-center justify-between gap-3 px-4 py-3 rounded-xl bg-success/10 text-success border border-success/20 hover:bg-success/20 transition-colors font-bold text-sm"
+                                  >
+                                    <span className="flex items-center gap-2">
+                                      <span className="material-symbols-outlined text-[18px]">chat</span>
+                                      Kirim WA ke {a.name}
+                                    </span>
+                                    <span className="material-symbols-outlined text-[16px]">open_in_new</span>
+                                  </a>
+                                ))}
+                              </div>
+                            </div>
+                          );
+                        })()}
                         {perm.attachment_url && (
                           <div>
                             <p className="text-[10px] font-label uppercase tracking-widest text-on-surface-variant/60 mb-2 font-bold">Lampiran</p>

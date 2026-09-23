@@ -14,7 +14,9 @@ type View = 'dashboard' | 'teachers' | 'permissions' | 'admins' | 'monitoring';
 
 export function Dashboard() {
   const { user, profile, loading: authLoading, signOut } = useAuth();
-  const [view, setView] = useState<View>('dashboard');
+  const [view, setView] = useState<View>(() =>
+    new URLSearchParams(window.location.search).get('izin') ? 'permissions' : 'dashboard'
+  );
   const [teachers, setTeachers] = useState<Teacher[]>([]);
   const [permissions, setPermissions] = useState<Permission[]>([]);
   const [loading, setLoading] = useState(true);

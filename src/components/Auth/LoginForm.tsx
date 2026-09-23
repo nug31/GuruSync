@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 
 export function LoginForm() {
@@ -9,6 +9,7 @@ export function LoginForm() {
   const [error, setError] = useState('');
   const { signIn } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -17,7 +18,9 @@ export function LoginForm() {
 
     try {
       await signIn(email, password);
-      navigate('/'); // Redirect ke dashboard setelah login
+      // Kembali ke tujuan asli kalau login dipicu dari link notifikasi (mis. WA ?izin=...)
+      const from = (location.state as { from?: string } | null)?.from || '/';
+      navigate(from);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Gagal login');
     } finally {

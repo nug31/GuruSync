@@ -1,6 +1,8 @@
 export type SubjectCategory = 'jurusan' | 'normatif_adaptif';
 export type Campus = 'utama' | 'kampus_03';
 
+export type AppRole = 'admin' | 'teacher' | 'hod' | 'koordinator_hod' | 'wakasek' | 'kepsek';
+
 export interface Teacher {
   id: string;
   user_id: string | null;
@@ -9,6 +11,10 @@ export interface Teacher {
   subject: string;
   subject_category: SubjectCategory;
   campus: Campus;
+  app_role?: AppRole;
+  position?: string;
+  division?: string;
+  wa_number?: string;
   email: string;
   phone: string;
   join_date: string;
