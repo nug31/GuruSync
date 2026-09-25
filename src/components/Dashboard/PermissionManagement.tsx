@@ -136,16 +136,24 @@ export function PermissionManagement({ teachers, permissions, onUpdate, currentT
   const getDuration = (start: string, end: string) =>
     differenceInDays(parseISO(end), parseISO(start)) + 1;
 
-  const getApproverLabel = (teacherId: string) =>
-    teachers.find(t => t.id === teacherId)?.subject_category === 'jurusan' ? 'HOD' : 'Koordinator MGMP';
+  // Guru normatif-adaptif langsung ke Wakasek (tanpa tahap HOD/MGMP)
+  const isNormatif = (teacherId: string) =>
+    teachers.find(t => t.id === teacherId)?.subject_category === 'normatif_adaptif';
+
+  const getInitialStatus = (teacherId: string): PermissionStatus =>
+    isNormatif(teacherId) ? 'pending_wakasek' : 'pending_hod';
 
   // Tugas Luar yang ditandai dari Kampus 03 lewati HOD & Wakasek, langsung ke Kepsek Kampus 03
   const isKampus03FastTrack = (permission: Permission) =>
     permission.permission_type === 'Tugas Luar' && permission.tugas_luar_kampus === 'kampus_03';
 
+  // Status tahap pertama = satu-satunya status di mana guru masih boleh edit/hapus pengajuannya
+  const getFirstStageStatus = (permission: Permission): PermissionStatus | null =>
+    isKampus03FastTrack(permission) ? null : getInitialStatus(permission.teacher_id);
+
   const getStatusLabel = (permission: Permission) => {
     switch (permission.status) {
-      case 'pending_hod': return `Menunggu ${getApproverLabel(permission.teacher_id)}`;
+      case 'pending_hod': return 'Menunggu HOD';
       case 'pending_wakasek': return 'Menunggu Wakasek';
       case 'pending_kepsek': return isKampus03FastTrack(permission) ? 'Menunggu Kepsek Kampus 03' : 'Menunggu Kepsek';
       case 'approved': return 'Disetujui';
@@ -163,10 +171,7 @@ export function PermissionManagement({ teachers, permissions, onUpdate, currentT
   const canApprove = (permission: Permission): boolean => {
     if (isAdmin) return !['approved', 'rejected'].includes(permission.status);
     if (permission.status === 'pending_hod') {
-      const category = teachers.find(t => t.id === permission.teacher_id)?.subject_category;
-      if (role === 'hod') return category === 'jurusan';
-      if (role === 'koordinator_hod') return category === 'normatif_adaptif';
-      return false;
+      return role === 'hod' && !isNormatif(permission.teacher_id);
     }
     if (permission.status === 'pending_kepsek') {
       if (role !== 'kepsek') return false;
@@ -188,9 +193,7 @@ export function PermissionManagement({ teachers, permissions, onUpdate, currentT
 
   const getEligibleApprovers = (permission: Permission): Teacher[] => {
     if (permission.status === 'pending_hod') {
-      const category = teachers.find(t => t.id === permission.teacher_id)?.subject_category;
-      const wantedRole = category === 'jurusan' ? 'hod' : 'koordinator_hod';
-      return teachers.filter(t => t.app_role === wantedRole && (t.wa_number || t.phone));
+      return teachers.filter(t => t.app_role === 'hod' && (t.wa_number || t.phone));
     }
     if (permission.status === 'pending_wakasek') {
       return teachers.filter(t => t.app_role === 'wakasek' && (t.wa_number || t.phone));
@@ -235,17 +238,25 @@ export function PermissionManagement({ teachers, permissions, onUpdate, currentT
     if (isKampus03FastTrack(permission)) {
       return ['Kepsek Kampus 03'];
     }
-    const firstStep = getApproverLabel(permission.teacher_id);
-    if (KEPSEK_REQUIRED_TYPES.includes(type)) {
-      return [firstStep, 'Wakasek', 'Kepsek'];
+    const needsK = KEPSEK_REQUIRED_TYPES.includes(type);
+    if (isNormatif(permission.teacher_id)) {
+      return needsK ? ['Wakasek', 'Kepsek'] : ['Wakasek'];
     }
-    return [firstStep, 'Wakasek'];
+    return needsK ? ['HOD', 'Wakasek', 'Kepsek'] : ['HOD', 'Wakasek'];
   };
 
   const getCompletedSteps = (permission: Permission) => {
     if (isKampus03FastTrack(permission)) {
       switch (permission.status) {
         case 'pending_kepsek': return 0;
+        case 'approved': return 99;
+        case 'rejected': return -1;
+        default: return 0;
+      }
+    }
+    if (isNormatif(permission.teacher_id)) {
+      switch (permission.status) {
+        case 'pending_kepsek': return 1;
         case 'approved': return 99;
         case 'rejected': return -1;
         default: return 0;
@@ -309,7 +320,7 @@ export function PermissionManagement({ teachers, permissions, onUpdate, currentT
         end_time: isTimeBased(formData.permission_type) && formData.end_time ? formData.end_time : null,
         reason: formData.reason,
         attachment_url: formData.attachment_url || null,
-        status: isAdmin ? formData.status : (editingPermission ? formData.status : (isNewFastTrack ? 'pending_kepsek' : initialStatus)),
+        status: isAdmin ? (!editingPermission && formData.status === 'pending_hod' ? getInitialStatus(teacherId) : formData.status) : (editingPermission ? formData.status : (isNewFastTrack ? 'pending_kepsek' : getInitialStatus(teacherId))),
         tugas_luar_kampus: formData.permission_type === 'Tugas Luar' && formData.tugas_luar_kampus ? formData.tugas_luar_kampus : null,
         tujuan_tugas_luar: formData.permission_type === 'Tugas Luar' && formData.tujuan_tugas_luar ? formData.tujuan_tugas_luar : null,
       };
@@ -490,7 +501,7 @@ export function PermissionManagement({ teachers, permissions, onUpdate, currentT
             const teacher = teachers.find(t => t.id === perm.teacher_id);
             const steps = getApprovalSteps(perm);
             const completedSteps = getCompletedSteps(perm);
-            const canEdit = perm.teacher_id === currentTeacherId && perm.status === 'pending_hod';
+            const canEdit = perm.teacher_id === currentTeacherId && perm.status === getFirstStageStatus(perm);
 
             return (
               <div
@@ -931,7 +942,7 @@ export function PermissionManagement({ teachers, permissions, onUpdate, currentT
                         'Alur: Guru → Kepala Sekolah Kampus 03 (langsung, tanpa HOD/Wakasek)'
                       ) : (
                         <>
-                          Alur: Guru → {getApproverLabel(isAdmin ? formData.teacher_id : (currentTeacherId || ''))} → Wakasek
+                          Alur: Guru → {isNormatif(isAdmin ? formData.teacher_id : (currentTeacherId || '')) ? '' : 'HOD → '}Wakasek
                           {needsKepsek(formData.permission_type) ? ' → Kepala Sekolah' : ''}
                         </>
                       )}

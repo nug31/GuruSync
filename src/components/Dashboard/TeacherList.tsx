@@ -467,7 +467,7 @@ export function TeacherList({ teachers, onEdit, onDelete, onRefresh }: TeacherLi
                         ? 'bg-tertiary-fixed text-on-tertiary-fixed'
                         : 'bg-primary-fixed text-on-primary-fixed-variant'
                     }`}>
-                      {teacher.subject_category === 'jurusan' ? 'Jurusan · HOD' : 'Normatif-Adaptif · MGMP'}
+                      {teacher.subject_category === 'jurusan' ? 'Jurusan · HOD' : 'Normatif-Adaptif · Wakasek'}
                     </span>
                   </td>
                   <td className="px-6 py-6">

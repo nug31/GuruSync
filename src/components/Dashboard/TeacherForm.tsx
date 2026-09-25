@@ -210,7 +210,7 @@ export function TeacherForm({ teacher, onClose }: TeacherFormProps) {
               className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
               required
             >
-              <option value="normatif_adaptif">Normatif &amp; Adaptif — di-approve Koordinator MGMP</option>
+              <option value="normatif_adaptif">Normatif &amp; Adaptif — langsung ke Wakasek</option>
               <option value="jurusan">Jurusan / Produktif — di-approve HOD</option>
             </select>
           </div>
