@@ -51,7 +51,6 @@ export type PermissionType =
   | 'Izin Keluar & Kembali'
   | 'Tidak Masuk'
   | 'Terlambat'
-  | 'Izin Datang Terlambat'
   | 'Pulang Cepat';
 
 export type PermissionStatus =

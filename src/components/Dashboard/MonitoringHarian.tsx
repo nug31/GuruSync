@@ -16,7 +16,6 @@ const TYPE_ICONS: Record<PermissionType, string> = {
   'Izin Keluar & Kembali': 'transfer_within_a_station',
   'Tidak Masuk': 'person_off',
   'Terlambat': 'schedule',
-  'Izin Datang Terlambat': 'login',
   'Pulang Cepat': 'logout',
 };
 

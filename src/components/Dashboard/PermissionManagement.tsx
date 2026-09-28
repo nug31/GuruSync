@@ -13,7 +13,7 @@ interface PermissionManagementProps {
 }
 
 // Types that require time fields
-const TIME_BASED_TYPES: PermissionType[] = ['Terlambat', 'Izin Datang Terlambat', 'Pulang Cepat', 'Izin Keluar & Kembali', 'Tugas Luar'];
+const TIME_BASED_TYPES: PermissionType[] = ['Terlambat', 'Pulang Cepat', 'Izin Keluar & Kembali', 'Tugas Luar'];
 // Types that require Kepsek approval (full chain)
 const KEPSEK_REQUIRED_TYPES: PermissionType[] = ['Cuti'];
 
@@ -24,7 +24,6 @@ const PERMISSION_TYPES: PermissionType[] = [
   'Izin Keluar & Kembali',
   'Tidak Masuk',
   'Terlambat',
-  'Izin Datang Terlambat',
   'Pulang Cepat',
 ];
 
@@ -35,7 +34,6 @@ const TYPE_ICONS: Record<PermissionType, string> = {
   'Izin Keluar & Kembali': 'transfer_within_a_station',
   'Tidak Masuk': 'person_off',
   'Terlambat': 'schedule',
-  'Izin Datang Terlambat': 'login',
   'Pulang Cepat': 'logout',
 };
 
@@ -46,7 +44,6 @@ const TYPE_COLORS: Record<PermissionType, string> = {
   'Izin Keluar & Kembali': 'text-secondary',
   'Tidak Masuk': 'text-on-surface-variant',
   'Terlambat': 'text-error',
-  'Izin Datang Terlambat': 'text-tertiary',
   'Pulang Cepat': 'text-secondary',
 };
 
@@ -994,7 +991,7 @@ export function PermissionManagement({ teachers, permissions, onUpdate, currentT
                     </div>
                     <div>
                       <label className="text-[10px] font-label uppercase tracking-widest text-on-surface-variant/60 mb-2 font-bold block">
-                        {formData.permission_type === 'Terlambat' || formData.permission_type === 'Izin Datang Terlambat'
+                        {formData.permission_type === 'Terlambat'
                           ? 'Jam Tiba'
                           : formData.permission_type === 'Tugas Luar' ? 'Jam Kembali'
                           : 'Jam Kembali / Selesai'}
