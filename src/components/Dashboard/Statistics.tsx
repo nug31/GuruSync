@@ -12,7 +12,7 @@ interface StatisticsProps {
 }
 
 export function Statistics({ teachers, permissions }: StatisticsProps) {
-  const { profile } = useAuth();
+  const { user, profile } = useAuth();
   
   const stats = useMemo(() => {
     const totalTeachers = teachers.length;
@@ -67,7 +67,7 @@ export function Statistics({ teachers, permissions }: StatisticsProps) {
     ];
   }, [permissions]);
 
-  const userName = profile?.name || profile?.email || 'User';
+  const userName = teachers.find(t => t.user_id === user?.id)?.name || profile?.name || profile?.email || 'User';
 
   return (
     <>
