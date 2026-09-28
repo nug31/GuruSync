@@ -35,8 +35,26 @@ export function Dashboard() {
     }
   }, [authLoading, user?.id, profile?.role]);
 
-  const loadData = async () => {
-    setLoading(true);
+  // Live update: kalau ada guru lain mengajukan/approve/tolak izin, atau data guru berubah,
+  // muat ulang tanpa perlu refresh manual (tanpa memicu layar loading penuh).
+  useEffect(() => {
+    if (!user) return;
+    const channel = supabase
+      .channel('gurusync-live-updates')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'permissions' }, () => {
+        loadData(true);
+      })
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'teachers' }, () => {
+        loadData(true);
+      })
+      .subscribe();
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [user?.id]);
+
+  const loadData = async (silent = false) => {
+    if (!silent) setLoading(true);
     try {
       let teachersQuery = supabase.from('teachers').select('*');
       let permissionsQuery = supabase.from('permissions').select('*');
@@ -51,7 +69,7 @@ export function Dashboard() {
     } catch (error) {
       console.error('Error loading data:', error);
     } finally {
-      setLoading(false);
+      if (!silent) setLoading(false);
     }
   };
 
