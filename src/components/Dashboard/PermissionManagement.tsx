@@ -210,24 +210,30 @@ export function PermissionManagement({ teachers, permissions, onUpdate, currentT
     const link = `${window.location.origin}/?izin=${permission.id}`;
 
     const lines = [
-      `🔔 *PENGAJUAN IZIN BARU - GuruSync*`,
-      `--------------------------------`,
+      `*PENGAJUAN IZIN BARU - GuruSync*`,
+      ``,
       `Jenis Izin: *${permission.permission_type}*`,
       `Pemohon: *${teacher?.name || '-'}*`,
-      `Mapel/Unit: *${teacher?.subject || '-'}*`,
-      `Tanggal: *${periode}*`,
+      `Mapel/Unit: ${teacher?.subject || '-'}`,
+      `Tanggal: ${periode}`,
     ];
     if (isTimeBased(permission.permission_type) && (permission.start_time || permission.end_time)) {
-      lines.push(`Jam: *${(permission.start_time || '--:--').slice(0, 5)} - ${(permission.end_time || '--:--').slice(0, 5)}*`);
+      lines.push(`Jam: ${(permission.start_time || '--:--').slice(0, 5)} - ${(permission.end_time || '--:--').slice(0, 5)}`);
     }
     lines.push(`Alasan: ${permission.reason}`);
     if (permission.permission_type === 'Tugas Luar' && permission.tujuan_tugas_luar) {
       lines.push(`Tujuan: ${permission.tujuan_tugas_luar}`);
     }
-    lines.push('', `Mohon Bapak/Ibu ${approver.name} dapat meninjau dan memberikan persetujuan.`, '', `🔗 Buka & Tinjau di GuruSync:`, link);
+    lines.push(
+      ``,
+      `Mohon Bapak/Ibu ${approver.name} berkenan meninjau dan memberikan persetujuan melalui link berikut:`,
+      ``,
+      link,
+    );
 
     const phone = normalizePhone(approver.wa_number || approver.phone);
-    return `https://wa.me/${phone}?text=${encodeURIComponent(lines.join('\n'))}`;
+    // api.whatsapp.com lebih konsisten menjaga baris baru & format teks dibanding wa.me
+    return `https://api.whatsapp.com/send?phone=${phone}&text=${encodeURIComponent(lines.join('\n'))}`;
   };
 
   const getApprovalSteps = (permission: Permission) => {
