@@ -591,6 +591,25 @@ export function PermissionManagement({ teachers, permissions, onUpdate, currentT
                         </button>
                       </>
                     )}
+                    {perm.status.startsWith('pending') && (perm.teacher_id === currentTeacherId || isAdmin) && (() => {
+                      const approvers = getEligibleApprovers(perm);
+                      if (approvers.length === 0) return null;
+                      return (
+                        <button
+                          onClick={() => {
+                            if (approvers.length === 1) {
+                              window.open(buildWaLink(perm, approvers[0]), '_blank', 'noopener,noreferrer');
+                            } else {
+                              setSelectedPermission(perm);
+                            }
+                          }}
+                          className="w-9 h-9 rounded-xl bg-success/10 text-success flex items-center justify-center hover:bg-success/20 transition-all"
+                          title={approvers.length === 1 ? `Kirim WA ke ${approvers[0].name}` : 'Pilih approver untuk dikirimi WA'}
+                        >
+                          <span className="material-symbols-outlined text-[18px]">chat</span>
+                        </button>
+                      );
+                    })()}
                     {canEdit && (
                       <button
                         onClick={() => handleOpenForm(perm)}
