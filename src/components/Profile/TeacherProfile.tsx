@@ -138,7 +138,7 @@ export function TeacherProfile({ teacherId }: TeacherProfileProps) {
         {/* Left: Stats & Profile */}
         <div className="lg:col-span-8 flex flex-col gap-16">
           {/* Stats */}
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-8">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-8">
             <div className="p-8 bg-surface-container-low border border-outline-variant rounded">
               <p className="font-label text-[11px] uppercase tracking-[0.2em] text-on-surface-variant mb-6">Sisa Saldo Cuti</p>
               <div className="flex items-baseline gap-2">
@@ -156,14 +156,6 @@ export function TeacherProfile({ teacherId }: TeacherProfileProps) {
                 <span className="text-on-surface-variant">Hari</span>
               </div>
               <p className="text-[11px] text-on-surface-variant mt-4 italic">Tahun Ajaran {currentYear}</p>
-            </div>
-            <div className="p-8 bg-surface-container-low border border-outline-variant rounded">
-              <p className="font-label text-[11px] uppercase tracking-[0.2em] text-on-surface-variant mb-6">Sertifikasi</p>
-              <div className="flex items-baseline gap-2">
-                <span className="text-4xl font-serif font-bold">5</span>
-                <span className="text-on-surface-variant">Aktif</span>
-              </div>
-              <p className="text-[11px] text-on-surface-variant mt-4 italic">2 Dalam Proses</p>
             </div>
           </div>
 
@@ -305,14 +297,9 @@ export function TeacherProfile({ teacherId }: TeacherProfileProps) {
             </div>
           </div>
 
-          {/* Certifications */}
+          {/* Riwayat Pengembangan */}
           <div className="p-8 border border-outline-variant bg-surface-container-lowest">
-            <h3 className="text-xl font-serif font-bold mb-6 italic">Sertifikasi & Keahlian</h3>
-            <div className="flex flex-wrap gap-2 mb-8">
-              <span className="px-3 py-1 bg-primary/5 text-primary border border-primary/10 text-[10px] font-label uppercase tracking-wider">Pedagogi Digital</span>
-              <span className="px-3 py-1 bg-secondary/5 text-secondary border border-secondary/10 text-[10px] font-label uppercase tracking-wider">Analisis Data</span>
-              <span className="px-3 py-1 bg-tertiary/5 text-tertiary border border-tertiary/10 text-[10px] font-label uppercase tracking-wider">STEM</span>
-            </div>
+            <h3 className="text-xl font-serif font-bold mb-6 italic">Riwayat Pengembangan</h3>
             <div className="space-y-4">
               {teacher.training_history ? (
                 <div className="flex items-start gap-4 p-3 hover:bg-surface-container-low transition-colors group">
@@ -335,10 +322,6 @@ export function TeacherProfile({ teacherId }: TeacherProfileProps) {
                 </div>
               )}
             </div>
-            <button className="w-full mt-8 flex items-center justify-center gap-2 text-primary font-label text-[10px] uppercase tracking-widest group">
-              Portfolio Lengkap 
-              <span className="material-symbols-outlined text-[16px] group-hover:translate-x-1 transition-transform">arrow_forward</span>
-            </button>
           </div>
 
 
