@@ -950,7 +950,7 @@ export function PermissionManagement({ teachers, permissions, onUpdate, currentT
                 {/* Tanggal */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
-                    <label className="text-[10px] font-label uppercase tracking-widest text-on-surface-variant/60 mb-2 font-bold block">Tanggal Mulai</label>
+                    <label className="text-[10px] font-label uppercase tracking-widest text-on-surface-variant/60 mb-2 font-bold block min-h-[28px]">Tanggal Mulai</label>
                     <input
                       type="date"
                       value={formData.start_date}
@@ -960,7 +960,7 @@ export function PermissionManagement({ teachers, permissions, onUpdate, currentT
                     />
                   </div>
                   <div>
-                    <label className="text-[10px] font-label uppercase tracking-widest text-on-surface-variant/60 mb-2 font-bold block">
+                    <label className="text-[10px] font-label uppercase tracking-widest text-on-surface-variant/60 mb-2 font-bold block min-h-[28px]">
                       Tanggal Selesai <span className="text-on-surface-variant/40 normal-case">(opsional, default sama dengan tanggal mulai)</span>
                     </label>
                     <input
@@ -977,7 +977,7 @@ export function PermissionManagement({ teachers, permissions, onUpdate, currentT
                 {isTimeBased(formData.permission_type) && (
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div>
-                      <label className="text-[10px] font-label uppercase tracking-widest text-on-surface-variant/60 mb-2 font-bold block">
+                      <label className="text-[10px] font-label uppercase tracking-widest text-on-surface-variant/60 mb-2 font-bold block min-h-[28px]">
                         {formData.permission_type === 'Pulang Cepat' ? 'Jam Pulang'
                           : formData.permission_type === 'Tugas Luar' ? 'Jam Berangkat'
                           : 'Jam Masuk / Mulai'}
@@ -990,7 +990,7 @@ export function PermissionManagement({ teachers, permissions, onUpdate, currentT
                       />
                     </div>
                     <div>
-                      <label className="text-[10px] font-label uppercase tracking-widest text-on-surface-variant/60 mb-2 font-bold block">
+                      <label className="text-[10px] font-label uppercase tracking-widest text-on-surface-variant/60 mb-2 font-bold block min-h-[28px]">
                         {formData.permission_type === 'Terlambat'
                           ? 'Jam Tiba'
                           : formData.permission_type === 'Tugas Luar' ? 'Jam Kembali'
