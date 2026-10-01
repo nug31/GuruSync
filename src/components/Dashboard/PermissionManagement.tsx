@@ -426,6 +426,9 @@ export function PermissionManagement({ teachers, permissions, onUpdate, currentT
   const handlePrintCuti = (perm: Permission) => {
     const teacher = teachers.find(t => t.id === perm.teacher_id);
     const pengganti = perm.guru_pengganti_id ? teachers.find(t => t.id === perm.guru_pengganti_id) : null;
+    // Cuti selalu ke Kepsek kampus utama (tidak pernah fast-track seperti Tugas Luar Kampus 03)
+    const wakasek = teachers.find(t => t.app_role === 'wakasek');
+    const kepsek = teachers.find(t => t.app_role === 'kepsek' && t.campus === 'utama');
     const lama = differenceInDays(parseISO(perm.end_date), parseISO(perm.start_date)) + 1;
     const nomor = `SC-${format(parseISO(perm.created_at), 'yyyyMMdd')}-${perm.id.slice(0, 6).toUpperCase()}`;
 
@@ -468,8 +471,8 @@ export function PermissionManagement({ teachers, permissions, onUpdate, currentT
   <p>Surat ini menyatakan bahwa pengajuan cuti di atas telah disetujui melalui alur persetujuan berjenjang pada sistem GuruSync dan sah digunakan sebagai bukti administrasi kepegawaian.</p>
   <div class="ttd">
     <div><div class="line">Guru Pemohon<br/>${teacher?.name || ''}</div></div>
-    <div><div class="line">Wakasek</div></div>
-    <div><div class="line">Kepala Sekolah</div></div>
+    <div><div class="line">Wakasek<br/>${wakasek?.name || ''}</div></div>
+    <div><div class="line">Kepala Sekolah<br/>${kepsek?.name || ''}</div></div>
   </div>
 </body></html>`;
 
