@@ -234,9 +234,11 @@ export function PermissionManagement({ teachers, permissions, onUpdate, currentT
     if (permission.permission_type === 'Tugas Luar' && permission.tujuan_tugas_luar) {
       lines.push(`Tujuan: ${permission.tujuan_tugas_luar}`);
     }
+    const g = (approver.gender || '').toLowerCase();
+    const sapaan = g.startsWith('p') ? 'Ibu' : g.startsWith('l') ? 'Bapak' : 'Bapak/Ibu';
     lines.push(
       ``,
-      `Mohon Bapak/Ibu ${approver.name} berkenan meninjau dan memberikan persetujuan melalui link berikut:`,
+      `Mohon ${sapaan} ${approver.name} berkenan meninjau dan memberikan persetujuan melalui link berikut:`,
       ``,
       link,
     );
