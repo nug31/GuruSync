@@ -242,9 +242,10 @@ export function PermissionManagement({ teachers, permissions, onUpdate, currentT
     );
 
     const phone = normalizePhone(approver.wa_number || approver.phone);
-    // web.whatsapp.com dipaksa buka di browser (bukan di-handle app Desktop native via
-    // protocol handoff OS, yang terbukti sering menghilangkan baris baru %0A).
-    return `https://web.whatsapp.com/send?phone=${phone}&text=${encodeURIComponent(lines.join('\n'))}`;
+    // wa.me adalah format resmi WhatsApp untuk deep-link langsung ke chat nomor
+    // tertentu (web.whatsapp.com/send bukan endpoint resmi dan hanya membuka
+    // beranda WA Web tanpa membuka chat yang dituju).
+    return `https://wa.me/${phone}?text=${encodeURIComponent(lines.join('\n'))}`;
   };
 
   const getApprovalSteps = (permission: Permission) => {
