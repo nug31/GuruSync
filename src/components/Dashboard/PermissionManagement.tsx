@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '../../lib/supabase';
-import { format, parseISO, differenceInDays } from 'date-fns';
+import { format, parseISO, differenceInDays, addDays, startOfWeek, endOfWeek } from 'date-fns';
 import { id } from 'date-fns/locale';
+import * as XLSX from 'xlsx';
 import type { Teacher, Permission, PermissionType, PermissionStatus, Campus } from '../../types';
 import { useAuth } from '../../contexts/AuthContext';
 
@@ -405,6 +406,112 @@ export function PermissionManagement({ teachers, permissions, onUpdate, currentT
     }
   };
 
+  // --- Rekap Excel (Admin): harian, mingguan, bulanan, per jenis izin ---
+  const handleExportRekap = () => {
+    const approved = permissions.filter(p => p.status === 'approved');
+
+    // 1. Pecah tiap pengajuan ke setiap tanggal aktifnya -> hitung per hari per jenis
+    const dailyMap: Record<string, Partial<Record<PermissionType, number>>> = {};
+    approved.forEach(p => {
+      let d = parseISO(p.start_date);
+      const end = parseISO(p.end_date);
+      let guard = 0;
+      while (d <= end && guard < 366) {
+        const key = format(d, 'yyyy-MM-dd');
+        if (!dailyMap[key]) dailyMap[key] = {};
+        dailyMap[key][p.permission_type] = (dailyMap[key][p.permission_type] || 0) + 1;
+        d = addDays(d, 1);
+        guard++;
+      }
+    });
+    const dayKeys = Object.keys(dailyMap).sort();
+
+    const rowFor = (counts: Partial<Record<PermissionType, number>>) => {
+      const row: Record<string, string | number> = {};
+      let total = 0;
+      PERMISSION_TYPES.forEach(t => {
+        const c = counts[t] || 0;
+        row[t] = c;
+        total += c;
+      });
+      row['Total'] = total;
+      return row;
+    };
+
+    const dailyRows = dayKeys.map(key => ({
+      'Tanggal': format(parseISO(key), 'EEEE, d MMMM yyyy', { locale: id }),
+      ...rowFor(dailyMap[key]),
+    }));
+
+    // 2. Kelompokkan hari ke minggu (Senin - Minggu)
+    const weeklyMap: Record<string, { label: string; counts: Partial<Record<PermissionType, number>> }> = {};
+    dayKeys.forEach(key => {
+      const d = parseISO(key);
+      const wStart = startOfWeek(d, { weekStartsOn: 1 });
+      const wEnd = endOfWeek(d, { weekStartsOn: 1 });
+      const wKey = format(wStart, 'yyyy-MM-dd');
+      if (!weeklyMap[wKey]) {
+        weeklyMap[wKey] = {
+          label: `${format(wStart, 'd MMM', { locale: id })} - ${format(wEnd, 'd MMM yyyy', { locale: id })}`,
+          counts: {},
+        };
+      }
+      PERMISSION_TYPES.forEach(t => {
+        const c = dailyMap[key][t] || 0;
+        if (c) weeklyMap[wKey].counts[t] = (weeklyMap[wKey].counts[t] || 0) + c;
+      });
+    });
+    const weeklyRows = Object.keys(weeklyMap).sort().map(k => ({
+      'Minggu': weeklyMap[k].label,
+      ...rowFor(weeklyMap[k].counts),
+    }));
+
+    // 3. Kelompokkan hari ke bulan
+    const monthlyMap: Record<string, { label: string; counts: Partial<Record<PermissionType, number>> }> = {};
+    dayKeys.forEach(key => {
+      const d = parseISO(key);
+      const mKey = format(d, 'yyyy-MM');
+      if (!monthlyMap[mKey]) {
+        monthlyMap[mKey] = { label: format(d, 'MMMM yyyy', { locale: id }), counts: {} };
+      }
+      PERMISSION_TYPES.forEach(t => {
+        const c = dailyMap[key][t] || 0;
+        if (c) monthlyMap[mKey].counts[t] = (monthlyMap[mKey].counts[t] || 0) + c;
+      });
+    });
+    const monthlyRows = Object.keys(monthlyMap).sort().map(k => ({
+      'Bulan': monthlyMap[k].label,
+      ...rowFor(monthlyMap[k].counts),
+    }));
+
+    // 4. Data lengkap (semua status, untuk audit)
+    const rawRows = [...permissions]
+      .sort((a, b) => new Date(b.start_date).getTime() - new Date(a.start_date).getTime())
+      .map(p => {
+        const teacher = teachers.find(t => t.id === p.teacher_id);
+        return {
+          'Nama Guru': teacher?.name || 'Unknown',
+          'Mapel/Unit': teacher?.subject || '-',
+          'Jenis Izin': p.permission_type,
+          'Tanggal Mulai': p.start_date,
+          'Tanggal Selesai': p.end_date,
+          'Jumlah Hari': differenceInDays(parseISO(p.end_date), parseISO(p.start_date)) + 1,
+          'Jam Mulai': p.start_time || '',
+          'Jam Selesai': p.end_time || '',
+          'Status': p.status === 'approved' ? 'Disetujui' : p.status === 'rejected' ? 'Ditolak' : getStatusLabel(p),
+          'Alasan': p.reason,
+          'Diajukan': p.created_at ? format(parseISO(p.created_at), 'd MMM yyyy HH:mm', { locale: id }) : '',
+        };
+      });
+
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(dailyRows), 'Rekap Harian');
+    XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(weeklyRows), 'Rekap Mingguan');
+    XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(monthlyRows), 'Rekap Bulanan');
+    XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(rawRows), 'Data Lengkap');
+    XLSX.writeFile(wb, `rekap-izin-gurusync-${format(new Date(), 'yyyy-MM-dd')}.xlsx`);
+  };
+
   const pendingCount = displayPermissions.filter(p => p.status.startsWith('pending')).length;
   const approvedCount = displayPermissions.filter(p => p.status === 'approved').length;
   const rejectedCount = displayPermissions.filter(p => p.status === 'rejected').length;
@@ -427,13 +534,25 @@ export function PermissionManagement({ teachers, permissions, onUpdate, currentT
             Kelola pengajuan izin, tugas luar, dan ketidakhadiran dengan alur persetujuan berlevel.
           </p>
         </div>
-        <button
-          onClick={() => handleOpenForm()}
-          className="flex items-center gap-2 px-6 py-3 bg-primary rounded-xl font-bold text-on-primary hover:brightness-95 transition-all text-sm shadow-sm shrink-0"
-        >
-          <span className="material-symbols-outlined text-[20px]">add</span>
-          {isManagement && !isAdmin ? 'Ajukan Izin Pribadi' : isAdmin ? 'Tambah Izin' : 'Ajukan Izin'}
-        </button>
+        <div className="flex items-center gap-3 shrink-0">
+          {isAdmin && (
+            <button
+              onClick={handleExportRekap}
+              className="flex items-center gap-2 px-5 py-3 rounded-xl font-bold text-on-surface bg-surface-container-low border border-outline-variant hover:bg-surface-container transition-all text-sm"
+              title="Unduh rekap harian, mingguan, dan bulanan dalam Excel"
+            >
+              <span className="material-symbols-outlined text-[20px]">download</span>
+              Rekap Excel
+            </button>
+          )}
+          <button
+            onClick={() => handleOpenForm()}
+            className="flex items-center gap-2 px-6 py-3 bg-primary rounded-xl font-bold text-on-primary hover:brightness-95 transition-all text-sm shadow-sm"
+          >
+            <span className="material-symbols-outlined text-[20px]">add</span>
+            {isManagement && !isAdmin ? 'Ajukan Izin Pribadi' : isAdmin ? 'Tambah Izin' : 'Ajukan Izin'}
+          </button>
+        </div>
       </div>
 
       {/* Stats Bento */}
