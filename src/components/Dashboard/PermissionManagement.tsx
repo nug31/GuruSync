@@ -343,6 +343,10 @@ export function PermissionManagement({ teachers, permissions, onUpdate, currentT
         tugas_luar_kampus: formData.permission_type === 'Tugas Luar' && formData.tugas_luar_kampus ? formData.tugas_luar_kampus : null,
         tujuan_tugas_luar: formData.permission_type === 'Tugas Luar' && formData.tujuan_tugas_luar ? formData.tujuan_tugas_luar : null,
         guru_pengganti_id: formData.permission_type === 'Cuti' && formData.guru_pengganti_id ? formData.guru_pengganti_id : null,
+        // Guru edit sendiri -> approval direset, jadi stempel approver sebelumnya tidak berlaku lagi
+        ...(!isAdmin && editingPermission
+          ? { hod_approved_by: null, wakasek_approved_by: null, kepsek_approved_by: null }
+          : {}),
       };
 
       if (editingPermission) {
@@ -369,14 +373,20 @@ export function PermissionManagement({ teachers, permissions, onUpdate, currentT
     if (!confirm(`Setujui izin ${permission.permission_type} ini?`)) return;
 
     let nextStatus: PermissionStatus;
+    // Catat siapa yang approve di tiap tahap (dipakai di Cetak Surat Cuti), supaya
+    // nama yang tercetak adalah yang benar-benar approve, bukan tebakan dari role.
+    const stamp: Record<string, string | null> = {};
     if (isAdmin) {
       nextStatus = 'approved';
     } else if (permission.status === 'pending_hod' && canApprove(permission)) {
       nextStatus = 'pending_wakasek';
+      stamp.hod_approved_by = currentTeacherId || null;
     } else if (permission.status === 'pending_wakasek' && canApprove(permission)) {
       nextStatus = needsKepsek(permission.permission_type) ? 'pending_kepsek' : 'approved';
+      stamp.wakasek_approved_by = currentTeacherId || null;
     } else if (permission.status === 'pending_kepsek' && canApprove(permission)) {
       nextStatus = 'approved';
+      stamp.kepsek_approved_by = currentTeacherId || null;
     } else {
       alert('Anda tidak memiliki wewenang untuk tahap ini.');
       return;
@@ -384,7 +394,7 @@ export function PermissionManagement({ teachers, permissions, onUpdate, currentT
 
     try {
       const { error } = await (supabase.from('permissions') as any)
-        .update({ status: nextStatus, rejection_note: null })
+        .update({ status: nextStatus, rejection_note: null, ...stamp })
         .eq('id', permission.id);
       if (error) throw error;
       setSelectedPermission(null);
@@ -426,9 +436,12 @@ export function PermissionManagement({ teachers, permissions, onUpdate, currentT
   const handlePrintCuti = (perm: Permission) => {
     const teacher = teachers.find(t => t.id === perm.teacher_id);
     const pengganti = perm.guru_pengganti_id ? teachers.find(t => t.id === perm.guru_pengganti_id) : null;
-    // Cuti selalu ke Kepsek kampus utama (tidak pernah fast-track seperti Tugas Luar Kampus 03)
-    const wakasek = teachers.find(t => t.app_role === 'wakasek');
-    const kepsek = teachers.find(t => t.app_role === 'kepsek' && t.campus === 'utama');
+    // Pakai nama Wakasek/Kepsek yang BENAR-BENAR approve pengajuan ini (dicatat saat approve).
+    // Fallback ke tebakan dari role hanya untuk data lama sebelum stempel approver ada.
+    const wakasek = (perm.wakasek_approved_by && teachers.find(t => t.id === perm.wakasek_approved_by))
+      || teachers.find(t => t.app_role === 'wakasek');
+    const kepsek = (perm.kepsek_approved_by && teachers.find(t => t.id === perm.kepsek_approved_by))
+      || teachers.find(t => t.app_role === 'kepsek' && t.campus === 'utama');
     const lama = differenceInDays(parseISO(perm.end_date), parseISO(perm.start_date)) + 1;
     const nomor = `SC-${format(parseISO(perm.created_at), 'yyyyMMdd')}-${perm.id.slice(0, 6).toUpperCase()}`;
 
@@ -436,7 +449,7 @@ export function PermissionManagement({ teachers, permissions, onUpdate, currentT
 <html lang="id"><head><meta charset="utf-8"><title>Surat Izin Cuti - ${teacher?.name || ''}</title>
 <style>
   * { box-sizing: border-box; }
-  body { font-family: 'Times New Roman', Times, serif; color: #0f172a; max-width: 720px; margin: 40px auto; line-height: 1.6; }
+  body { font-family: 'Times New Roman', Times, serif; color: #0f172a; max-width: 860px; margin: 40px auto; line-height: 1.6; }
   .kop { text-align: center; border-bottom: 3px solid #0f172a; padding-bottom: 12px; margin-bottom: 24px; }
   .kop h1 { margin: 0; font-size: 20px; letter-spacing: 1px; }
   .kop p { margin: 2px 0; font-size: 13px; }
@@ -445,9 +458,10 @@ export function PermissionManagement({ teachers, permissions, onUpdate, currentT
   table.data { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
   table.data td { padding: 4px 8px; vertical-align: top; font-size: 14px; }
   table.data td:first-child { width: 180px; }
-  .ttd { display: flex; justify-content: space-between; margin-top: 60px; text-align: center; font-size: 14px; }
-  .ttd div { width: 30%; }
-  .ttd .line { margin-top: 70px; border-top: 1px solid #0f172a; padding-top: 4px; }
+  .ttd { display: flex; justify-content: space-between; gap: 20px; margin-top: 64px; text-align: center; }
+  .ttd div { flex: 1; min-width: 0; font-size: 13px; }
+  .ttd .line { margin-top: 72px; border-top: 1px solid #0f172a; padding-top: 6px; white-space: nowrap; }
+  .ttd .line b { display: block; margin-top: 4px; font-size: 13px; }
   @media print { body { margin: 0 24px; } }
 </style></head>
 <body>
@@ -470,9 +484,9 @@ export function PermissionManagement({ teachers, permissions, onUpdate, currentT
   </table>
   <p>Surat ini menyatakan bahwa pengajuan cuti di atas telah disetujui melalui alur persetujuan berjenjang pada sistem GuruSync dan sah digunakan sebagai bukti administrasi kepegawaian.</p>
   <div class="ttd">
-    <div><div class="line">Guru Pemohon<br/>${teacher?.name || ''}</div></div>
-    <div><div class="line">Wakasek<br/>${wakasek?.name || ''}</div></div>
-    <div><div class="line">Kepala Sekolah<br/>${kepsek?.name || ''}</div></div>
+    <div><div class="line">Guru Pemohon<b>${teacher?.name || ''}</b></div></div>
+    <div><div class="line">Wakasek<b>${wakasek?.name || ''}</b></div></div>
+    <div><div class="line">Kepala Sekolah<b>${kepsek?.name || ''}</b></div></div>
   </div>
 </body></html>`;
 

@@ -76,6 +76,9 @@ export interface Permission {
   tugas_luar_kampus?: Campus;
   tujuan_tugas_luar?: string;
   guru_pengganti_id?: string;
+  hod_approved_by?: string;
+  wakasek_approved_by?: string;
+  kepsek_approved_by?: string;
   created_at: string;
   updated_at: string;
 }
