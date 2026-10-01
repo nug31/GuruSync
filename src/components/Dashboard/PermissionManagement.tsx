@@ -62,6 +62,7 @@ interface FormData {
   status: PermissionStatus;
   tugas_luar_kampus: Campus | '';
   tujuan_tugas_luar: string;
+  guru_pengganti_id: string;
 }
 
 const emptyForm = (currentTeacherId: string | undefined, initialStatus: PermissionStatus = 'pending_hod'): FormData => ({
@@ -76,6 +77,7 @@ const emptyForm = (currentTeacherId: string | undefined, initialStatus: Permissi
   status: initialStatus,
   tugas_luar_kampus: '',
   tujuan_tugas_luar: '',
+  guru_pengganti_id: '',
 });
 
 export function PermissionManagement({ teachers, permissions, onUpdate, currentTeacherId }: PermissionManagementProps) {
@@ -85,6 +87,7 @@ export function PermissionManagement({ teachers, permissions, onUpdate, currentT
   const isAdmin = role === 'admin';
   const isManagement = ['hod', 'koordinator_hod', 'wakasek', 'kepsek', 'admin'].includes(role);
   const myCampus: Campus = teachers.find(t => t.id === currentTeacherId)?.campus || 'utama';
+  const isTugasLuarApprover = teachers.find(t => t.id === currentTeacherId)?.tugas_luar_approver === true;
 
   // Always start at pending_hod — the "Teachers can insert own permissions" RLS policy
   // requires status = 'pending_hod' on insert. A HOD approves their own pending_hod
@@ -176,7 +179,10 @@ export function PermissionManagement({ teachers, permissions, onUpdate, currentT
       const requiredCampus: Campus = isKampus03FastTrack(permission) ? 'kampus_03' : 'utama';
       return myCampus === requiredCampus;
     }
-    if (role === 'wakasek') return permission.status === 'pending_wakasek';
+    if (role === 'wakasek' && permission.status === 'pending_wakasek') {
+      if (permission.permission_type === 'Tugas Luar') return isTugasLuarApprover;
+      return true;
+    }
     return false;
   };
 
@@ -194,7 +200,10 @@ export function PermissionManagement({ teachers, permissions, onUpdate, currentT
       return teachers.filter(t => t.app_role === 'hod' && (t.wa_number || t.phone));
     }
     if (permission.status === 'pending_wakasek') {
-      return teachers.filter(t => t.app_role === 'wakasek' && (t.wa_number || t.phone));
+      return teachers.filter(t =>
+        t.app_role === 'wakasek' && (t.wa_number || t.phone) &&
+        (permission.permission_type !== 'Tugas Luar' || t.tugas_luar_approver === true)
+      );
     }
     if (permission.status === 'pending_kepsek') {
       const requiredCampus: Campus = isKampus03FastTrack(permission) ? 'kampus_03' : 'utama';
@@ -233,8 +242,9 @@ export function PermissionManagement({ teachers, permissions, onUpdate, currentT
     );
 
     const phone = normalizePhone(approver.wa_number || approver.phone);
-    // api.whatsapp.com lebih konsisten menjaga baris baru & format teks dibanding wa.me
-    return `https://api.whatsapp.com/send?phone=${phone}&text=${encodeURIComponent(lines.join('\n'))}`;
+    // web.whatsapp.com dipaksa buka di browser (bukan di-handle app Desktop native via
+    // protocol handoff OS, yang terbukti sering menghilangkan baris baru %0A).
+    return `https://web.whatsapp.com/send?phone=${phone}&text=${encodeURIComponent(lines.join('\n'))}`;
   };
 
   const getApprovalSteps = (permission: Permission) => {
@@ -292,6 +302,7 @@ export function PermissionManagement({ teachers, permissions, onUpdate, currentT
         status: permission.status,
         tugas_luar_kampus: permission.tugas_luar_kampus || '',
         tujuan_tugas_luar: permission.tujuan_tugas_luar || '',
+        guru_pengganti_id: permission.guru_pengganti_id || '',
       });
     } else {
       setEditingPermission(null);
@@ -327,6 +338,7 @@ export function PermissionManagement({ teachers, permissions, onUpdate, currentT
         status: isAdmin ? (!editingPermission && formData.status === 'pending_hod' ? getInitialStatus(teacherId) : formData.status) : (editingPermission ? formData.status : (isNewFastTrack ? 'pending_kepsek' : getInitialStatus(teacherId))),
         tugas_luar_kampus: formData.permission_type === 'Tugas Luar' && formData.tugas_luar_kampus ? formData.tugas_luar_kampus : null,
         tujuan_tugas_luar: formData.permission_type === 'Tugas Luar' && formData.tujuan_tugas_luar ? formData.tujuan_tugas_luar : null,
+        guru_pengganti_id: formData.permission_type === 'Cuti' && formData.guru_pengganti_id ? formData.guru_pengganti_id : null,
       };
 
       if (editingPermission) {
@@ -357,7 +369,7 @@ export function PermissionManagement({ teachers, permissions, onUpdate, currentT
       nextStatus = 'approved';
     } else if (permission.status === 'pending_hod' && canApprove(permission)) {
       nextStatus = 'pending_wakasek';
-    } else if (role === 'wakasek' && permission.status === 'pending_wakasek') {
+    } else if (permission.status === 'pending_wakasek' && canApprove(permission)) {
       nextStatus = needsKepsek(permission.permission_type) ? 'pending_kepsek' : 'approved';
     } else if (permission.status === 'pending_kepsek' && canApprove(permission)) {
       nextStatus = 'approved';
@@ -404,6 +416,68 @@ export function PermissionManagement({ teachers, permissions, onUpdate, currentT
     } catch (error: any) {
       alert(`Gagal menghapus: ${error?.message}`);
     }
+  };
+
+  // --- Cetak Surat Cuti (hanya untuk Cuti yang sudah Disetujui) ---
+  const handlePrintCuti = (perm: Permission) => {
+    const teacher = teachers.find(t => t.id === perm.teacher_id);
+    const pengganti = perm.guru_pengganti_id ? teachers.find(t => t.id === perm.guru_pengganti_id) : null;
+    const lama = differenceInDays(parseISO(perm.end_date), parseISO(perm.start_date)) + 1;
+    const nomor = `SC-${format(parseISO(perm.created_at), 'yyyyMMdd')}-${perm.id.slice(0, 6).toUpperCase()}`;
+
+    const html = `<!doctype html>
+<html lang="id"><head><meta charset="utf-8"><title>Surat Izin Cuti - ${teacher?.name || ''}</title>
+<style>
+  * { box-sizing: border-box; }
+  body { font-family: 'Times New Roman', Times, serif; color: #0f172a; max-width: 720px; margin: 40px auto; line-height: 1.6; }
+  .kop { text-align: center; border-bottom: 3px solid #0f172a; padding-bottom: 12px; margin-bottom: 24px; }
+  .kop h1 { margin: 0; font-size: 20px; letter-spacing: 1px; }
+  .kop p { margin: 2px 0; font-size: 13px; }
+  h2 { text-align: center; text-decoration: underline; margin: 24px 0 4px; font-size: 16px; }
+  .nomor { text-align: center; font-size: 13px; margin-bottom: 24px; }
+  table.data { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
+  table.data td { padding: 4px 8px; vertical-align: top; font-size: 14px; }
+  table.data td:first-child { width: 180px; }
+  .ttd { display: flex; justify-content: space-between; margin-top: 60px; text-align: center; font-size: 14px; }
+  .ttd div { width: 30%; }
+  .ttd .line { margin-top: 70px; border-top: 1px solid #0f172a; padding-top: 4px; }
+  @media print { body { margin: 0 24px; } }
+</style></head>
+<body>
+  <div class="kop">
+    <h1>SMK MITRA INDUSTRI</h1>
+    <p>Portal Kepegawaian &amp; Administrasi Guru — GuruSync</p>
+  </div>
+  <h2>SURAT IZIN CUTI</h2>
+  <p class="nomor">Nomor: ${nomor}</p>
+  <table class="data">
+    <tr><td>Nama</td><td>: ${teacher?.name || '-'}</td></tr>
+    <tr><td>NIK</td><td>: ${teacher?.nik || '-'}</td></tr>
+    <tr><td>Mapel / Unit</td><td>: ${teacher?.subject || '-'}</td></tr>
+    <tr><td>Unit Kerja</td><td>: ${teacher?.work_unit || '-'}</td></tr>
+    <tr><td>Jenis Izin</td><td>: Cuti</td></tr>
+    <tr><td>Tanggal Cuti</td><td>: ${format(parseISO(perm.start_date), 'd MMMM yyyy', { locale: id })} s.d. ${format(parseISO(perm.end_date), 'd MMMM yyyy', { locale: id })} (${lama} hari)</td></tr>
+    <tr><td>Alasan</td><td>: ${perm.reason}</td></tr>
+    <tr><td>Guru Pengganti</td><td>: ${pengganti ? `${pengganti.name} (${pengganti.subject})` : '-'}</td></tr>
+    <tr><td>Status</td><td>: Disetujui</td></tr>
+  </table>
+  <p>Surat ini menyatakan bahwa pengajuan cuti di atas telah disetujui melalui alur persetujuan berjenjang pada sistem GuruSync dan sah digunakan sebagai bukti administrasi kepegawaian.</p>
+  <div class="ttd">
+    <div><div class="line">Guru Pemohon<br/>${teacher?.name || ''}</div></div>
+    <div><div class="line">Wakasek</div></div>
+    <div><div class="line">Kepala Sekolah</div></div>
+  </div>
+</body></html>`;
+
+    const printWindow = window.open('', '_blank');
+    if (!printWindow) {
+      alert('Gagal membuka jendela cetak. Pastikan pop-up tidak diblokir browser.');
+      return;
+    }
+    printWindow.document.write(html);
+    printWindow.document.close();
+    printWindow.focus();
+    setTimeout(() => printWindow.print(), 300);
   };
 
   // --- Rekap Excel (Admin): harian, mingguan, bulanan, per jenis izin ---
@@ -780,6 +854,23 @@ export function PermissionManagement({ teachers, permissions, onUpdate, currentT
                             <p className="text-sm text-on-surface bg-surface-container-low rounded-xl px-4 py-3 border border-outline-variant/20">{perm.tujuan_tugas_luar}</p>
                           </div>
                         )}
+                        {perm.permission_type === 'Cuti' && perm.guru_pengganti_id && (
+                          <div>
+                            <p className="text-[10px] font-label uppercase tracking-widest text-on-surface-variant/60 mb-2 font-bold">Guru Pengganti</p>
+                            <p className="text-sm text-on-surface bg-surface-container-low rounded-xl px-4 py-3 border border-outline-variant/20">
+                              {getTeacherName(perm.guru_pengganti_id)}
+                            </p>
+                          </div>
+                        )}
+                        {perm.permission_type === 'Cuti' && perm.status === 'approved' && (
+                          <button
+                            onClick={() => handlePrintCuti(perm)}
+                            className="w-full flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-primary text-on-primary font-bold text-sm hover:bg-primary-hover transition-colors"
+                          >
+                            <span className="material-symbols-outlined text-[18px]">print</span>
+                            Cetak Surat Cuti
+                          </button>
+                        )}
                         {perm.rejection_note && (
                           <div className="bg-error-container/30 rounded-xl p-4 border border-error/20">
                             <p className="text-[10px] font-label uppercase tracking-widest text-error/70 mb-1 font-bold">Catatan Penolakan</p>
@@ -1012,6 +1103,7 @@ export function PermissionManagement({ teachers, permissions, onUpdate, currentT
                           permission_type: type,
                           tugas_luar_kampus: type === 'Tugas Luar' ? formData.tugas_luar_kampus : '',
                           tujuan_tugas_luar: type === 'Tugas Luar' ? formData.tujuan_tugas_luar : '',
+                          guru_pengganti_id: type === 'Cuti' ? formData.guru_pengganti_id : '',
                         })}
                         className={`flex flex-col items-center gap-1.5 p-3 rounded-xl border text-xs font-bold transition-all ${
                           formData.permission_type === type
@@ -1071,6 +1163,28 @@ export function PermissionManagement({ teachers, permissions, onUpdate, currentT
                       placeholder="Contoh: Workshop di Kampus 03, rapat di Dinas Pendidikan, dsb."
                       required
                     />
+                  </div>
+                )}
+
+                {/* Guru Pengganti (khusus Cuti) */}
+                {formData.permission_type === 'Cuti' && (
+                  <div>
+                    <label className="text-[10px] font-label uppercase tracking-widest text-on-surface-variant/60 mb-2 font-bold block">
+                      Guru Pengganti <span className="text-on-surface-variant/40 normal-case">(opsional)</span>
+                    </label>
+                    <select
+                      value={formData.guru_pengganti_id}
+                      onChange={e => setFormData({ ...formData, guru_pengganti_id: e.target.value })}
+                      className="w-full bg-slate-50 px-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-primary/20 focus:border-primary text-on-surface text-sm"
+                    >
+                      <option value="">Belum ditentukan</option>
+                      {teachers
+                        .filter(t => t.id !== (isAdmin ? formData.teacher_id : currentTeacherId))
+                        .sort((a, b) => a.name.localeCompare(b.name))
+                        .map(t => (
+                          <option key={t.id} value={t.id}>{t.name} — {t.subject}</option>
+                        ))}
+                    </select>
                   </div>
                 )}
 

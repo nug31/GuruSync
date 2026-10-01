@@ -29,9 +29,9 @@ export function TeacherProfile({ teacherId }: TeacherProfileProps) {
       const file = event.target.files?.[0];
       if (!file) return;
 
-      const maxSize = 2 * 1024 * 1024;
+      const maxSize = 200 * 1024;
       if (file.size > maxSize) {
-        alert('Ukuran file terlalu besar. Maksimal 2MB.');
+        alert('Ukuran file terlalu besar. Maksimal 200KB.');
         return;
       }
 

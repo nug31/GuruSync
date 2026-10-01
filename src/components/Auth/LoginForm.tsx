@@ -82,14 +82,14 @@ export function LoginForm() {
 
             <div>
               <label className="block text-xs font-bold uppercase tracking-wider text-on-surface-variant mb-2">
-                NIK, Email, atau Tanggal Lahir
+                NIK (atau Tanggal Lahir jika belum ada NIK)
               </label>
               <input
                 type="text"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 className="w-full px-4 py-3 border border-outline-variant rounded-xl bg-surface-container-lowest focus:ring-2 focus:ring-primary/30 focus:border-primary outline-none transition-shadow text-sm"
-                placeholder="NIK / Email / Tgl Lahir (DDMMYY)"
+                placeholder="Contoh: 180598 atau 150690 (DDMMYY)"
                 required
               />
             </div>

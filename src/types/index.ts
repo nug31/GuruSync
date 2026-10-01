@@ -15,6 +15,7 @@ export interface Teacher {
   position?: string;
   division?: string;
   wa_number?: string;
+  tugas_luar_approver?: boolean;
   email: string;
   phone: string;
   join_date: string;
@@ -74,6 +75,7 @@ export interface Permission {
   rejection_note?: string;
   tugas_luar_kampus?: Campus;
   tujuan_tugas_luar?: string;
+  guru_pengganti_id?: string;
   created_at: string;
   updated_at: string;
 }

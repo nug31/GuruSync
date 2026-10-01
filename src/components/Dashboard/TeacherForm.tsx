@@ -15,6 +15,7 @@ export function TeacherForm({ teacher, onClose }: TeacherFormProps) {
     subject: '',
     subject_category: 'normatif_adaptif' as 'jurusan' | 'normatif_adaptif',
     campus: 'utama' as 'utama' | 'kampus_03',
+    tugas_luar_approver: false,
     email: '',
     phone: '',
     join_date: '',
@@ -41,6 +42,7 @@ export function TeacherForm({ teacher, onClose }: TeacherFormProps) {
         subject: teacher.subject,
         subject_category: teacher.subject_category || 'normatif_adaptif',
         campus: teacher.campus || 'utama',
+        tugas_luar_approver: teacher.tugas_luar_approver === true,
         email: teacher.email,
         phone: teacher.phone,
         join_date: teacher.join_date,
@@ -61,9 +63,9 @@ export function TeacherForm({ teacher, onClose }: TeacherFormProps) {
   const handleAvatarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      const maxSize = 2 * 1024 * 1024; // 2MB
+      const maxSize = 200 * 1024; // 200KB
       if (file.size > maxSize) {
-        setError('Ukuran foto terlalu besar. Maksimal 2MB.');
+        setError('Ukuran foto terlalu besar. Maksimal 200KB.');
         return;
       }
       setAvatarFile(file);
@@ -228,6 +230,19 @@ export function TeacherForm({ teacher, onClose }: TeacherFormProps) {
               <option value="utama">Kampus Utama (MM2100)</option>
               <option value="kampus_03">Kampus 03</option>
             </select>
+          </div>
+
+          <div className="flex items-center gap-2 bg-amber-50 border border-amber-200 rounded-lg px-4 py-3">
+            <input
+              type="checkbox"
+              id="tugas_luar_approver"
+              checked={formData.tugas_luar_approver}
+              onChange={(e) => setFormData({ ...formData, tugas_luar_approver: e.target.checked })}
+              className="w-4 h-4 accent-primary"
+            />
+            <label htmlFor="tugas_luar_approver" className="text-sm text-gray-700">
+              Penyetuju khusus <strong>Tugas Luar</strong> (hanya berlaku untuk role Wakasek — satu orang saja yang boleh dicentang)
+            </label>
           </div>
 
           <div>
