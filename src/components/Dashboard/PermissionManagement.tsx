@@ -148,10 +148,6 @@ export function PermissionManagement({ teachers, permissions, onUpdate, currentT
   const isKampus03FastTrack = (permission: Permission) =>
     permission.permission_type === 'Tugas Luar' && permission.tugas_luar_kampus === 'kampus_03';
 
-  // Status tahap pertama = satu-satunya status di mana guru masih boleh edit/hapus pengajuannya
-  const getFirstStageStatus = (permission: Permission): PermissionStatus | null =>
-    isKampus03FastTrack(permission) ? null : getInitialStatus(permission.teacher_id);
-
   const getStatusLabel = (permission: Permission) => {
     switch (permission.status) {
       case 'pending_hod': return 'Menunggu HOD';
@@ -326,7 +322,10 @@ export function PermissionManagement({ teachers, permissions, onUpdate, currentT
         return;
       }
 
-      const isNewFastTrack = !editingPermission && !isAdmin
+      // Guru (non-admin): Tugas Luar Kampus 03 langsung ke Kepsek, jenis lain ke tahap
+      // pertama sesuai subject_category. Berlaku juga saat EDIT, supaya pengajuan yang
+      // sudah lanjut ke Wakasek/Kepsek balik direview ulang dari awal setelah diubah.
+      const isFastTrack = !isAdmin
         && formData.permission_type === 'Tugas Luar' && formData.tugas_luar_kampus === 'kampus_03';
 
       const payload = {
@@ -338,7 +337,9 @@ export function PermissionManagement({ teachers, permissions, onUpdate, currentT
         end_time: isTimeBased(formData.permission_type) && formData.end_time ? formData.end_time : null,
         reason: formData.reason,
         attachment_url: formData.attachment_url || null,
-        status: isAdmin ? (!editingPermission && formData.status === 'pending_hod' ? getInitialStatus(teacherId) : formData.status) : (editingPermission ? formData.status : (isNewFastTrack ? 'pending_kepsek' : getInitialStatus(teacherId))),
+        status: isAdmin
+          ? (!editingPermission && formData.status === 'pending_hod' ? getInitialStatus(teacherId) : formData.status)
+          : (isFastTrack ? 'pending_kepsek' : getInitialStatus(teacherId)),
         tugas_luar_kampus: formData.permission_type === 'Tugas Luar' && formData.tugas_luar_kampus ? formData.tugas_luar_kampus : null,
         tujuan_tugas_luar: formData.permission_type === 'Tugas Luar' && formData.tujuan_tugas_luar ? formData.tujuan_tugas_luar : null,
         guru_pengganti_id: formData.permission_type === 'Cuti' && formData.guru_pengganti_id ? formData.guru_pengganti_id : null,
@@ -700,7 +701,7 @@ export function PermissionManagement({ teachers, permissions, onUpdate, currentT
             const teacher = teachers.find(t => t.id === perm.teacher_id);
             const steps = getApprovalSteps(perm);
             const completedSteps = getCompletedSteps(perm);
-            const canEdit = perm.teacher_id === currentTeacherId && perm.status === getFirstStageStatus(perm);
+            const canEdit = perm.teacher_id === currentTeacherId && perm.status.startsWith('pending');
 
             return (
               <div
@@ -1058,6 +1059,15 @@ export function PermissionManagement({ teachers, permissions, onUpdate, currentT
                 <p className="text-xs sm:text-sm text-on-surface-variant mt-1">
                   Isi formulir dengan lengkap dan benar
                 </p>
+                {!isAdmin && editingPermission && editingPermission.status !== (
+                  formData.permission_type === 'Tugas Luar' && formData.tugas_luar_kampus === 'kampus_03'
+                    ? 'pending_kepsek'
+                    : getInitialStatus(editingPermission.teacher_id)
+                ) && (
+                  <p className="text-xs sm:text-sm text-amber-600 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2 mt-3">
+                    Perubahan ini akan mengulang proses persetujuan dari tahap awal.
+                  </p>
+                )}
               </div>
               <button
                 type="button"
