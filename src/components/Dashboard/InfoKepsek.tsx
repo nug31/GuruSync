@@ -118,7 +118,7 @@ export function InfoKepsek({ teachers, permissions, isAdmin }: InfoKepsekProps) 
       </div>
 
       {total === 0 ? (
-        <p className="py-8 text-center text-sm text-on-surface-variant italic">
+        <p className="py-3 text-center text-sm text-on-surface-variant italic">
           Tidak ada tugas luar atau izin pada periode ini.
         </p>
       ) : (
