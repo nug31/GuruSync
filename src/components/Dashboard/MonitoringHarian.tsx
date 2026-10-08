@@ -1,7 +1,6 @@
 import { useMemo, useState } from 'react';
 import { format, parseISO, addDays } from 'date-fns';
 import { id as localeId } from 'date-fns/locale';
-import { BarChart, Bar, XAxis, Tooltip, ResponsiveContainer, Cell } from 'recharts';
 import type { Teacher, Permission, PermissionType } from '../../types';
 
 interface MonitoringHarianProps {
@@ -54,18 +53,6 @@ export function MonitoringHarian({ teachers, permissions }: MonitoringHarianProp
     absenToday.forEach(p => { map[p.permission_type] = (map[p.permission_type] || 0) + 1; });
     return Object.entries(map).sort((a, b) => b[1] - a[1]);
   }, [absenToday]);
-
-  const trend = useMemo(() => {
-    const base = parseISO(selectedDate);
-    return Array.from({ length: 14 }, (_, i) => {
-      const d = addDays(base, i - 13);
-      const ds = toDateStr(d);
-      const count = new Set(
-        permissions.filter(p => p.status === 'approved' && isActiveOn(p, ds)).map(p => p.teacher_id)
-      ).size;
-      return { date: ds, label: format(d, 'd/M'), count };
-    });
-  }, [permissions, selectedDate]);
 
   const getTeacher = (teacherId: string) => teachers.find(t => t.id === teacherId);
   const displayDateLabel = format(parseISO(selectedDate), 'EEEE, d MMMM yyyy', { locale: localeId });
@@ -183,34 +170,6 @@ export function MonitoringHarian({ teachers, permissions }: MonitoringHarianProp
           ))}
         </div>
       )}
-
-      {/* Trend chart */}
-      <div className="bg-surface-container-lowest rounded-3xl border border-outline-variant/20 p-6 shadow-sm">
-        <div className="flex items-center justify-between mb-4">
-          <div>
-            <h4 className="text-sm font-bold text-on-surface uppercase tracking-wider">Tren 14 Hari Terakhir</h4>
-            <p className="text-xs text-on-surface-variant mt-0.5">Klik salah satu batang untuk lompat ke tanggal itu</p>
-          </div>
-        </div>
-        <div className="h-48">
-          <ResponsiveContainer width="100%" height="100%">
-            <BarChart data={trend} onClick={(e: any) => { if (e?.activeLabel) { const p = trend.find(t => t.label === e.activeLabel); if (p) setSelectedDate(p.date); } }}>
-              <XAxis dataKey="label" tick={{ fontSize: 10, fill: '#64748b' }} axisLine={false} tickLine={false} />
-              <Tooltip
-                cursor={{ fill: '#47556910' }}
-                contentStyle={{ backgroundColor: '#ffffff', borderRadius: '12px', border: '1px solid #e2e8f0', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.05)' }}
-                labelFormatter={(label) => `Tanggal ${label}`}
-                formatter={(value) => [`${value} guru`, 'Izin']}
-              />
-              <Bar dataKey="count" radius={[6, 6, 0, 0]} cursor="pointer">
-                {trend.map(t => (
-                  <Cell key={t.date} fill={t.date === selectedDate ? '#B45309' : '#475569'} />
-                ))}
-              </Bar>
-            </BarChart>
-          </ResponsiveContainer>
-        </div>
-      </div>
 
       {/* Tugas Luar today list -- dipisah, bukan "tidak hadir" dalam artian izin/absen */}
       {tugasLuarToday.length > 0 && (

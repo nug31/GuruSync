@@ -5,6 +5,7 @@ import type { Teacher, Permission } from '../../types';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line } from 'recharts';
 import { format } from 'date-fns';
 import { id } from 'date-fns/locale';
+import { InfoKepsek } from './InfoKepsek';
 
 interface StatisticsProps {
   teachers: Teacher[];
@@ -156,7 +157,10 @@ export function Statistics({ teachers, permissions }: StatisticsProps) {
         </div>
       </section>
 
-      {/* Content Sections */}
+      {(profile?.role === 'kepsek' || profile?.role === 'admin') && (
+        <InfoKepsek teachers={teachers} permissions={permissions} isAdmin={profile.role === 'admin'} />
+      )}
+
       {/* Content Sections */}
       <div className="grid grid-cols-1 xl:grid-cols-3 gap-8 mt-2">
         {/* Table Section */}

@@ -5,6 +5,7 @@ import { id } from 'date-fns/locale';
 import * as XLSX from 'xlsx';
 import type { Teacher, Permission, PermissionType, PermissionStatus, Campus } from '../../types';
 import { useAuth } from '../../contexts/AuthContext';
+import { getSapaan, buildWaUrl } from '../../lib/whatsapp';
 
 interface PermissionManagementProps {
   teachers: Teacher[];
@@ -183,14 +184,6 @@ export function PermissionManagement({ teachers, permissions, onUpdate, currentT
   };
 
   // --- Notifikasi WhatsApp ke approver ---
-  const normalizePhone = (raw: string) => {
-    let p = raw.replace(/[^0-9+]/g, '');
-    if (p.startsWith('+')) p = p.slice(1);
-    if (p.startsWith('0')) p = '62' + p.slice(1);
-    else if (!p.startsWith('62')) p = '62' + p;
-    return p;
-  };
-
   const getEligibleApprovers = (permission: Permission): Teacher[] => {
     if (permission.status === 'pending_hod') {
       return teachers.filter(t => t.app_role === 'hod' && (t.wa_number || t.phone));
@@ -230,20 +223,17 @@ export function PermissionManagement({ teachers, permissions, onUpdate, currentT
     if (permission.permission_type === 'Tugas Luar' && permission.tujuan_tugas_luar) {
       lines.push(`Tujuan: ${permission.tujuan_tugas_luar}`);
     }
-    const g = (approver.gender || '').toLowerCase();
-    const sapaan = g.startsWith('p') ? 'Ibu' : g.startsWith('l') ? 'Bapak' : 'Bapak/Ibu';
     lines.push(
       ``,
-      `Mohon ${sapaan} ${approver.name} berkenan meninjau dan memberikan persetujuan melalui link berikut:`,
+      `Mohon ${getSapaan(approver)} ${approver.name} berkenan meninjau dan memberikan persetujuan melalui link berikut:`,
       ``,
       link,
     );
 
-    const phone = normalizePhone(approver.wa_number || approver.phone);
     // wa.me adalah format resmi WhatsApp untuk deep-link langsung ke chat nomor
     // tertentu (web.whatsapp.com/send bukan endpoint resmi dan hanya membuka
     // beranda WA Web tanpa membuka chat yang dituju).
-    return `https://wa.me/${phone}?text=${encodeURIComponent(lines.join('\n'))}`;
+    return buildWaUrl(approver.wa_number || approver.phone, lines);
   };
 
   const getApprovalSteps = (permission: Permission) => {
