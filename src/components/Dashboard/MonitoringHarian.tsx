@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react';
 import { format, parseISO, addDays } from 'date-fns';
 import { id as localeId } from 'date-fns/locale';
 import type { Teacher, Permission } from '../../types';
+import { Avatar } from './Avatar';
 
 interface MonitoringHarianProps {
   teachers: Teacher[];
@@ -58,9 +59,12 @@ export function MonitoringHarian({ teachers, permissions }: MonitoringHarianProp
             const teacher = getTeacher(p.teacher_id);
             return (
               <li key={p.id} className="flex items-center justify-between gap-4 py-3">
-                <div className="min-w-0">
-                  <p className="text-sm font-bold text-on-surface truncate">{teacher?.name || 'Unknown'}</p>
-                  <p className="text-xs text-on-surface-variant truncate">{detail(p)}</p>
+                <div className="flex items-center gap-3 min-w-0">
+                  <Avatar teacher={teacher} />
+                  <div className="min-w-0">
+                    <p className="text-sm font-bold text-on-surface truncate">{teacher?.name || 'Unknown'}</p>
+                    <p className="text-xs text-on-surface-variant truncate">{detail(p)}</p>
+                  </div>
                 </div>
                 <span className={`px-2.5 py-1 rounded-full border text-[11px] font-bold whitespace-nowrap ${
                   pending ? 'bg-amber-50 text-amber-700 border-amber-200' : 'bg-slate-50 text-slate-700 border-slate-200'

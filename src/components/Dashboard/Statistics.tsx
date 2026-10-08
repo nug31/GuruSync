@@ -4,6 +4,7 @@ import type { Teacher, Permission } from '../../types';
 import { format } from 'date-fns';
 import { id } from 'date-fns/locale';
 import { InfoKepsek } from './InfoKepsek';
+import { Avatar } from './Avatar';
 
 interface StatisticsProps {
   teachers: Teacher[];
@@ -80,12 +81,15 @@ export function Statistics({ teachers, permissions }: StatisticsProps) {
               const badge = STATUS_BADGES[p.status] || { label: p.status, cls: 'bg-slate-100 text-slate-600 border-slate-200' };
               return (
                 <li key={p.id} className="flex items-center justify-between gap-4 py-3">
-                  <div className="min-w-0">
-                    <p className="text-sm font-bold text-on-surface truncate">{teacher?.name || 'Guru'}</p>
-                    <p className="text-xs text-on-surface-variant truncate">
-                      {p.permission_type} · {format(new Date(p.start_date), 'd MMM', { locale: id })}
-                      {p.end_date !== p.start_date && ` - ${format(new Date(p.end_date), 'd MMM yyyy', { locale: id })}`}
-                    </p>
+                  <div className="flex items-center gap-3 min-w-0">
+                    <Avatar teacher={teacher} />
+                    <div className="min-w-0">
+                      <p className="text-sm font-bold text-on-surface truncate">{teacher?.name || 'Guru'}</p>
+                      <p className="text-xs text-on-surface-variant truncate">
+                        {p.permission_type} · {format(new Date(p.start_date), 'd MMM', { locale: id })}
+                        {p.end_date !== p.start_date && ` - ${format(new Date(p.end_date), 'd MMM yyyy', { locale: id })}`}
+                      </p>
+                    </div>
                   </div>
                   <span className={`px-2.5 py-1 text-[11px] font-bold rounded-full border whitespace-nowrap ${badge.cls}`}>
                     {badge.label}

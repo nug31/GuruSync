@@ -3,6 +3,7 @@ import { format, parseISO, addDays } from 'date-fns';
 import { id } from 'date-fns/locale';
 import type { Teacher, Permission } from '../../types';
 import { getSapaan, buildWaUrl } from '../../lib/whatsapp';
+import { Avatar } from './Avatar';
 
 interface InfoKepsekProps {
   teachers: Teacher[];
@@ -72,9 +73,7 @@ export function InfoKepsek({ teachers, permissions, isAdmin }: InfoKepsekProps) 
 
   const renderRow = (p: Permission) => (
     <li key={p.id} className="flex items-start gap-3 py-3">
-      <span className={`material-symbols-outlined text-[20px] mt-0.5 ${p.permission_type === 'Tugas Luar' ? 'text-tertiary' : 'text-error'}`}>
-        {p.permission_type === 'Tugas Luar' ? 'work_history' : 'event_busy'}
-      </span>
+      <Avatar teacher={teachers.find(t => t.id === p.teacher_id)} />
       <div className="min-w-0 flex-1">
         <p className="text-sm font-bold text-on-surface truncate">{teacherName(p)}</p>
         <p className="text-xs text-on-surface-variant truncate">
@@ -107,7 +106,7 @@ export function InfoKepsek({ teachers, permissions, isAdmin }: InfoKepsekProps) 
               className="flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-success/10 text-success border border-success/20 hover:bg-success/20 transition-colors font-bold text-sm shrink-0"
             >
               <span className="material-symbols-outlined text-[18px]">chat</span>
-              Kirim Info ke {kepsek?.name.split(',')[0]}
+              Kirim Info ke Kepala Sekolah
             </a>
           ) : (
             <span className="text-xs text-on-surface-variant/70 italic shrink-0">
