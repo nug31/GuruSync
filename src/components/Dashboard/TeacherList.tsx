@@ -416,8 +416,8 @@ export function TeacherList({ teachers, onEdit, onDelete, onRefresh }: TeacherLi
               <tr className="border-b border-slate-100 text-xs font-semibold text-on-surface-variant">
                 <th className="px-5 py-3">Guru</th>
                 <th className="px-5 py-3">Jabatan / Dept</th>
-                <th className="px-5 py-3">Pelatihan</th>
-                <th className="px-5 py-3">Status SP</th>
+                <th className="px-5 py-3 hidden md:table-cell">Pelatihan</th>
+                <th className="px-5 py-3 hidden md:table-cell">Status SP</th>
                 <th className="px-5 py-3 text-right">Aksi</th>
               </tr>
             </thead>
@@ -450,7 +450,7 @@ export function TeacherList({ teachers, onEdit, onDelete, onRefresh }: TeacherLi
                       {teacher.subject_category === 'jurusan' ? 'Jurusan · HOD' : 'Normatif-Adaptif · Wakasek'}
                     </span>
                   </td>
-                  <td className="px-5 py-4">
+                  <td className="px-5 py-4 hidden md:table-cell">
                     <div className="flex flex-wrap gap-2">
                       {teacher.training_history ? (
                         teacher.training_history.split(',').slice(0, 2).map((training, i) => (
@@ -463,7 +463,7 @@ export function TeacherList({ teachers, onEdit, onDelete, onRefresh }: TeacherLi
                       )}
                     </div>
                   </td>
-                  <td className="px-5 py-4">
+                  <td className="px-5 py-4 hidden md:table-cell">
                     {(!teacher.sp_level || teacher.sp_level === 'Tidak ada') ? (
                       <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200 whitespace-nowrap">Clean Record</span>
                     ) : (

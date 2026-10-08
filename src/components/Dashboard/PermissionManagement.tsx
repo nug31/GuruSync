@@ -619,10 +619,10 @@ export function PermissionManagement({ teachers, permissions, onUpdate, currentT
           { label: 'Disetujui', value: approvedCount, icon: 'task_alt', color: 'text-primary', bg: 'bg-primary-fixed/20' },
           { label: 'Ditolak', value: rejectedCount, icon: 'cancel', color: 'text-error', bg: 'bg-error-container/30' },
         ].map(stat => (
-          <div key={stat.label} className="p-5 rounded-2xl border border-slate-200/80 bg-white">
+          <div key={stat.label} className="p-4 sm:p-5 rounded-2xl border border-slate-200/80 bg-white">
             <p className="text-xs font-semibold text-on-surface-variant mb-2">{stat.label}</p>
             <div className="flex items-end justify-between">
-              <span className="text-3xl font-extrabold text-on-surface">
+              <span className="text-2xl sm:text-3xl font-extrabold text-on-surface">
                 {stat.value}
               </span>
               <div className={`w-9 h-9 rounded-full ${stat.bg} flex items-center justify-center ${stat.color}`}>

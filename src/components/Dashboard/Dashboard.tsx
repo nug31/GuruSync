@@ -198,9 +198,9 @@ export function Dashboard() {
       </aside>
 
       {/* TopAppBar Component */}
-      <header className="fixed top-0 right-0 w-full lg:w-[calc(100%-18rem)] z-40 bg-white/80 backdrop-blur-md border-b border-outline-variant flex justify-between items-center px-6 lg:px-10 h-20">
+      <header className="fixed top-0 right-0 w-full lg:w-[calc(100%-18rem)] z-40 bg-white/80 backdrop-blur-md border-b border-outline-variant flex justify-between items-center px-4 lg:px-10 h-14 lg:h-20">
         <div className="flex items-center gap-3 lg:hidden">
-          <div className="w-8 h-8 rounded-lg bg-gradient-to-tr from-primary to-tertiary flex items-center justify-center text-white shadow-sm">
+          <div className="w-7 h-7 lg:w-8 lg:h-8 rounded-lg bg-gradient-to-tr from-primary to-tertiary flex items-center justify-center text-white shadow-sm">
             <span className="material-symbols-outlined text-[18px]">qr_code_2</span>
           </div>
           <span className="font-display text-xl font-extrabold text-primary">GuruSync</span>
@@ -219,7 +219,7 @@ export function Dashboard() {
               </span>
             </div>
             <div className="relative">
-              <div className="w-10 h-10 rounded-full bg-gradient-to-br from-primary to-primary-hover text-white flex items-center justify-center font-bold text-sm shadow-sm">
+              <div className="w-8 h-8 lg:w-10 lg:h-10 rounded-full bg-gradient-to-br from-primary to-primary-hover text-white flex items-center justify-center font-bold text-sm shadow-sm">
                 {userName?.charAt(0).toUpperCase() || profile?.email?.charAt(0).toUpperCase()}
               </div>
               <span className="w-3 h-3 rounded-full bg-success border-2 border-white absolute bottom-0 right-0"></span>
@@ -229,11 +229,11 @@ export function Dashboard() {
       </header>
 
       {/* Main Content Canvas */}
-      <main className="lg:ml-72 pt-20 min-h-screen px-4 lg:px-12 pb-24">
+      <main className="lg:ml-72 pt-14 lg:pt-20 min-h-screen px-4 lg:px-12 pb-24">
         {view === 'dashboard' && <Statistics teachers={teachers} permissions={permissions} />}
 
         {view === 'teachers' && (
-          <div className="py-8">
+          <div className="py-3 lg:py-8">
             {isAdmin ? (
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6 max-w-5xl">
                 <h2 className="text-2xl lg:text-3xl font-extrabold text-on-surface tracking-tight">Data Guru</h2>
@@ -270,7 +270,7 @@ export function Dashboard() {
         )}
 
         {view === 'permissions' && (
-          <div className="py-8">
+          <div className="py-3 lg:py-8">
             <PermissionManagement
               teachers={teachers}
               permissions={permissions}
@@ -281,13 +281,13 @@ export function Dashboard() {
         )}
 
         {view === 'monitoring' && isMonitoringAllowed && (
-          <div className="py-8">
+          <div className="py-3 lg:py-8">
             <MonitoringHarian teachers={teachers} permissions={permissions} />
           </div>
         )}
 
         {view === 'admins' && isAdmin && (
-          <div className="py-8">
+          <div className="py-3 lg:py-8">
             <h2 className="text-3xl font-display text-on-surface mb-8">
                 Manajemen Admin
             </h2>

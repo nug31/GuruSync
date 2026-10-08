@@ -48,7 +48,7 @@ export function Statistics({ teachers, permissions }: StatisticsProps) {
   ];
 
   return (
-    <div className="py-6 lg:py-8 space-y-8 max-w-5xl">
+    <div className="py-3 lg:py-8 space-y-5 lg:space-y-8 max-w-5xl">
       <div>
         <h1 className="text-2xl lg:text-3xl font-extrabold text-on-surface tracking-tight">
           Selamat Datang, {userName}
@@ -58,11 +58,11 @@ export function Statistics({ teachers, permissions }: StatisticsProps) {
         </p>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+      <div className="grid grid-cols-3 gap-2 sm:gap-4">
         {cards.map(c => (
-          <div key={c.label} className="p-5 rounded-2xl border border-slate-200/80 bg-white">
-            <p className="text-xs font-semibold text-on-surface-variant">{c.label}</p>
-            <p className={`text-3xl font-extrabold mt-2 ${c.highlight ? 'text-amber-600' : 'text-on-surface'}`}>{c.value}</p>
+          <div key={c.label} className="p-3 sm:p-5 rounded-2xl border border-slate-200/80 bg-white">
+            <p className="text-[11px] sm:text-xs font-semibold text-on-surface-variant leading-tight">{c.label}</p>
+            <p className={`text-2xl sm:text-3xl font-extrabold mt-1.5 sm:mt-2 ${c.highlight ? 'text-amber-600' : 'text-on-surface'}`}>{c.value}</p>
           </div>
         ))}
       </div>

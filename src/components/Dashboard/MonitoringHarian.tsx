@@ -128,9 +128,9 @@ export function MonitoringHarian({ teachers, permissions }: MonitoringHarianProp
 
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         {cards.map(c => (
-          <div key={c.label} className="p-5 rounded-2xl border border-slate-200/80 bg-white">
+          <div key={c.label} className="p-4 sm:p-5 rounded-2xl border border-slate-200/80 bg-white">
             <p className="text-xs font-semibold text-on-surface-variant">{c.label}</p>
-            <p className={`text-3xl font-extrabold mt-2 ${c.cls}`}>{c.value}</p>
+            <p className={`text-2xl sm:text-3xl font-extrabold mt-1.5 sm:mt-2 ${c.cls}`}>{c.value}</p>
             <p className="text-[11px] text-on-surface-variant/70 mt-0.5">{c.hint}</p>
           </div>
         ))}
