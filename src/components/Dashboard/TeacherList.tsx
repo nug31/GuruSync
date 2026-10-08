@@ -345,122 +345,102 @@ export function TeacherList({ teachers, onEdit, onDelete, onRefresh }: TeacherLi
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 max-w-5xl">
       {/* Filters */}
-      <section className="grid grid-cols-1 md:grid-cols-5 gap-4 mb-8">
-        <div className="md:col-span-2 bg-surface-container-lowest border border-outline-variant p-2 flex items-center gap-3">
-          <div className="px-2 text-on-surface-variant flex items-center justify-center">
-            <span className="material-symbols-outlined">search</span>
-          </div>
+      <section className="flex flex-col lg:flex-row gap-3">
+        <div className="flex-1 bg-white border border-slate-200/80 rounded-xl px-3 py-2 flex items-center gap-2">
+          <span className="material-symbols-outlined text-on-surface-variant">search</span>
           <input
             type="text"
             placeholder="Cari nama, NIK, atau email..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="flex-1 bg-transparent border-none focus:ring-0 text-sm text-on-surface placeholder:text-on-surface-variant/40"
+            className="flex-1 bg-transparent border-none focus:ring-0 text-sm text-on-surface placeholder:text-on-surface-variant/50"
           />
         </div>
-        
-        <div className="bg-surface-container-lowest border border-outline-variant px-4 py-2 flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <span className="material-symbols-outlined text-sm text-on-surface-variant">filter_list</span>
-            <span className="font-label text-[10px] text-on-surface-variant">Departemen</span>
-          </div>
-          <select
-            value={subjectFilter}
-            onChange={(e) => setSubjectFilter(e.target.value)}
-            className="bg-transparent border-none focus:ring-0 text-sm font-bold text-primary cursor-pointer w-full text-right"
-          >
-            <option value="">Semua Dept</option>
-            {subjects.map((subject) => (
-              <option key={subject} value={subject}>
-                {subject}
-              </option>
-            ))}
-          </select>
-        </div>
 
-        <div className="bg-surface-container-lowest border border-outline-variant px-4 py-2 flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <span className="material-symbols-outlined text-sm text-on-surface-variant">location_city</span>
-            <span className="font-label text-[10px] text-on-surface-variant">Bertugas</span>
-          </div>
-          <select
-            value={workUnitFilter}
-            onChange={(e) => setWorkUnitFilter(e.target.value)}
-            className="bg-transparent border-none focus:ring-0 text-sm font-bold text-primary cursor-pointer w-full text-right"
-          >
-            <option value="">Semua Sekolah</option>
-            {workUnits.map((unit) => (
-              <option key={unit} value={unit}>
-                {unit}
-              </option>
-            ))}
-          </select>
-        </div>
+        <select
+          value={subjectFilter}
+          onChange={(e) => setSubjectFilter(e.target.value)}
+          className="bg-white border border-slate-200/80 rounded-xl px-3 py-2.5 text-sm text-on-surface focus:ring-0 cursor-pointer"
+        >
+          <option value="">Semua Departemen</option>
+          {subjects.map((subject) => (
+            <option key={subject} value={subject}>{subject}</option>
+          ))}
+        </select>
 
-        <div className="bg-surface-container-lowest border border-outline-variant px-4 py-2 flex items-center justify-between gap-2">
-           <input type="file" ref={fileInputRef} onChange={handleImportExcel} accept=".xlsx, .xls" className="hidden" />
-           {onRefresh && (
-             <>
-               <button onClick={handleDownloadTemplate} className="flex-1 flex items-center justify-center gap-1 bg-surface-container-low text-on-surface-variant hover:text-primary hover:bg-surface-container transition-colors text-xs font-bold py-1 px-1 rounded-sm" title="Template Excel">
-                 <span className="material-symbols-outlined text-sm">description</span> Tmpl
-               </button>
-               <button onClick={() => fileInputRef.current?.click()} disabled={importing} className="flex-1 flex items-center justify-center gap-1 bg-surface-container-low text-on-surface-variant hover:text-primary hover:bg-surface-container transition-colors text-xs font-bold py-1 px-1 rounded-sm" title="Import Data">
-                 <span className="material-symbols-outlined text-sm">upload</span> Imp
-               </button>
-             </>
-           )}
-           <button onClick={handleExportExcel} className="flex-1 flex items-center justify-center gap-1 bg-surface-container-low text-on-surface-variant hover:text-primary hover:bg-surface-container transition-colors text-xs font-bold py-1 px-1 rounded-sm" title="Export Data">
-             <span className="material-symbols-outlined text-sm">download</span> Exp
-           </button>
-           <button 
-             onClick={handleDownloadAllQR} 
-             disabled={downloadingAll}
-             className={`flex-1 flex items-center justify-center gap-1 bg-surface-container-low text-on-surface-variant hover:text-primary hover:bg-surface-container transition-colors text-xs font-bold py-1 px-1 rounded-sm ${downloadingAll ? 'animate-pulse' : ''}`} 
-             title="Download All QR"
-           >
-             <span className="material-symbols-outlined text-sm">{downloadingAll ? 'sync' : 'qr_code_2'}</span> 
-             {downloadingAll ? '...' : 'QR All'}
-           </button>
-        </div>
+        <select
+          value={workUnitFilter}
+          onChange={(e) => setWorkUnitFilter(e.target.value)}
+          className="bg-white border border-slate-200/80 rounded-xl px-3 py-2.5 text-sm text-on-surface focus:ring-0 cursor-pointer"
+        >
+          <option value="">Semua Sekolah</option>
+          {workUnits.map((unit) => (
+            <option key={unit} value={unit}>{unit}</option>
+          ))}
+        </select>
       </section>
 
+      <div className="flex flex-wrap items-center gap-2">
+        <input type="file" ref={fileInputRef} onChange={handleImportExcel} accept=".xlsx, .xls" className="hidden" />
+        {onRefresh && (
+          <>
+            <button onClick={handleDownloadTemplate} className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-white border border-slate-200/80 text-on-surface-variant hover:text-primary hover:bg-surface-container transition-colors text-xs font-bold" title="Template Excel">
+              <span className="material-symbols-outlined text-[18px]">description</span> Template
+            </button>
+            <button onClick={() => fileInputRef.current?.click()} disabled={importing} className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-white border border-slate-200/80 text-on-surface-variant hover:text-primary hover:bg-surface-container transition-colors text-xs font-bold" title="Import Data">
+              <span className="material-symbols-outlined text-[18px]">upload</span> Import
+            </button>
+          </>
+        )}
+        <button onClick={handleExportExcel} className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-white border border-slate-200/80 text-on-surface-variant hover:text-primary hover:bg-surface-container transition-colors text-xs font-bold" title="Export Data">
+          <span className="material-symbols-outlined text-[18px]">download</span> Export
+        </button>
+        <button
+          onClick={handleDownloadAllQR}
+          disabled={downloadingAll}
+          className={`flex items-center gap-1.5 px-3 py-2 rounded-xl bg-white border border-slate-200/80 text-on-surface-variant hover:text-primary hover:bg-surface-container transition-colors text-xs font-bold ${downloadingAll ? 'animate-pulse' : ''}`}
+          title="Download All QR"
+        >
+          <span className="material-symbols-outlined text-[18px]">{downloadingAll ? 'sync' : 'qr_code_2'}</span>
+          {downloadingAll ? 'Memproses...' : 'Semua QR'}
+        </button>
+      </div>
+
       {/* Table */}
-      <div className="bg-surface-container-lowest border border-outline-variant overflow-hidden">
+      <div className="bg-white border border-slate-200/80 rounded-2xl overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-left border-collapse">
             <thead>
-              <tr className="bg-surface-container-low border-b border-outline-variant">
-                <th className="px-6 py-4 font-label text-[10px] text-on-surface-variant">Profil Guru</th>
-                <th className="px-6 py-4 font-label text-[10px] text-on-surface-variant">Jabatan / Dept</th>
-                <th className="px-6 py-4 font-label text-[10px] text-on-surface-variant">Riwayat Pelatihan</th>
-                <th className="px-6 py-4 font-label text-[10px] text-on-surface-variant">Status SP</th>
-                <th className="px-6 py-4 font-label text-[10px] text-on-surface-variant text-right">Actions</th>
+              <tr className="border-b border-slate-100 text-xs font-semibold text-on-surface-variant">
+                <th className="px-5 py-3">Guru</th>
+                <th className="px-5 py-3">Jabatan / Dept</th>
+                <th className="px-5 py-3">Pelatihan</th>
+                <th className="px-5 py-3">Status SP</th>
+                <th className="px-5 py-3 text-right">Aksi</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-outline-variant/30">
+            <tbody className="divide-y divide-slate-100">
               {filteredTeachers.map((teacher) => (
-                <tr key={teacher.id} className="group hover:bg-surface-container-low transition-colors">
-                  <td className="px-6 py-6">
-                    <div className="flex items-center gap-4">
-                      <div className="relative">
-                        {teacher.avatar_url ? (
-                          <img alt={teacher.name} className="w-12 h-12 rounded-sm object-cover border border-outline-variant transition-all duration-500" src={teacher.avatar_url} />
-                        ) : (
-                          <div className="w-12 h-12 rounded-sm bg-surface-container flex items-center justify-center border border-outline-variant">
-                            <span className="material-symbols-outlined text-on-surface-variant">person</span>
-                          </div>
-                        )}
-                      </div>
+                <tr key={teacher.id} className="group hover:bg-slate-50/80 transition-colors">
+                  <td className="px-5 py-4">
+                    <div className="flex items-center gap-3">
+                      {teacher.avatar_url ? (
+                        <img alt={teacher.name} className="w-10 h-10 rounded-full object-cover border border-slate-200 shrink-0" src={teacher.avatar_url} />
+                      ) : (
+                        <div className="w-10 h-10 rounded-full bg-slate-100 text-slate-500 flex items-center justify-center text-sm font-bold shrink-0">
+                          {teacher.name?.charAt(0).toUpperCase()}
+                        </div>
+                      )}
                       <div>
-                        <p className="font-serif text-base font-bold text-on-surface">{teacher.name}</p>
+                        <p className="text-sm font-bold text-on-surface">{teacher.name}</p>
                         <p className="text-xs text-on-surface-variant mt-0.5">NIK: {teacher.nik}</p>
                       </div>
                     </div>
                   </td>
-                  <td className="px-6 py-6">
-                    <p className="text-sm font-semibold text-primary">{teacher.subject}</p>
+                  <td className="px-5 py-4">
+                    <p className="text-sm font-semibold text-on-surface">{teacher.subject}</p>
                     <p className="text-xs text-on-surface-variant mt-0.5">{teacher.work_unit || '-'}</p>
                     <span className={`inline-block mt-1.5 text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider ${
                       teacher.subject_category === 'jurusan'
@@ -470,11 +450,11 @@ export function TeacherList({ teachers, onEdit, onDelete, onRefresh }: TeacherLi
                       {teacher.subject_category === 'jurusan' ? 'Jurusan · HOD' : 'Normatif-Adaptif · Wakasek'}
                     </span>
                   </td>
-                  <td className="px-6 py-6">
+                  <td className="px-5 py-4">
                     <div className="flex flex-wrap gap-2">
                       {teacher.training_history ? (
                         teacher.training_history.split(',').slice(0, 2).map((training, i) => (
-                          <span key={i} className="px-2 py-0.5 bg-secondary-container text-on-secondary-container text-[9px] font-bold uppercase tracking-wider rounded-sm">
+                          <span key={i} className="px-2 py-0.5 bg-secondary-container text-on-secondary-container text-[10px] font-bold rounded-full">
                             {training.trim()}
                           </span>
                         ))
@@ -483,32 +463,32 @@ export function TeacherList({ teachers, onEdit, onDelete, onRefresh }: TeacherLi
                       )}
                     </div>
                   </td>
-                  <td className="px-6 py-6">
+                  <td className="px-5 py-4">
                     {(!teacher.sp_level || teacher.sp_level === 'Tidak ada') ? (
-                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">Clean Record</span>
+                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200 whitespace-nowrap">Clean Record</span>
                     ) : (
-                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-amber-50 text-amber-700 border border-amber-200">{teacher.sp_level}</span>
+                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-amber-50 text-amber-700 border border-amber-200 whitespace-nowrap">{teacher.sp_level}</span>
                     )}
                   </td>
-                  <td className="px-6 py-6 text-right">
-                    <div className="flex items-center justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                      <a href={`/profile/${teacher.id}`} target="_blank" rel="noopener noreferrer" className="p-2 hover:bg-primary/5 text-on-surface-variant hover:text-primary rounded-sm transition-colors flex items-center justify-center" title="View Detail">
-                        <span className="material-symbols-outlined text-lg">visibility</span>
+                  <td className="px-5 py-4 text-right">
+                    <div className="flex items-center justify-end gap-1">
+                      <a href={`/profile/${teacher.id}`} target="_blank" rel="noopener noreferrer" className="p-2 hover:bg-primary/5 text-on-surface-variant hover:text-primary rounded-lg transition-colors flex items-center justify-center" title="Lihat Detail">
+                        <span className="material-symbols-outlined text-[20px]">visibility</span>
                       </a>
-                      <button onClick={() => setShowPrintModal(teacher)} className="p-2 hover:bg-primary/5 text-on-surface-variant hover:text-primary rounded-sm transition-colors flex items-center justify-center" title="Print ID Card">
-                        <span className="material-symbols-outlined text-lg">badge</span>
+                      <button onClick={() => setShowPrintModal(teacher)} className="p-2 hover:bg-primary/5 text-on-surface-variant hover:text-primary rounded-lg transition-colors flex items-center justify-center" title="Cetak ID Card">
+                        <span className="material-symbols-outlined text-[20px]">badge</span>
                       </button>
-                      <button onClick={() => setShowQRModal(teacher)} className="p-2 hover:bg-primary/5 text-on-surface-variant hover:text-primary rounded-sm transition-colors flex items-center justify-center" title="QR Code">
-                        <span className="material-symbols-outlined text-lg">qr_code_2</span>
+                      <button onClick={() => setShowQRModal(teacher)} className="p-2 hover:bg-primary/5 text-on-surface-variant hover:text-primary rounded-lg transition-colors flex items-center justify-center" title="QR Code">
+                        <span className="material-symbols-outlined text-[20px]">qr_code_2</span>
                       </button>
                       {onEdit && (
-                        <button onClick={() => onEdit(teacher)} className="p-2 hover:bg-primary/5 text-on-surface-variant hover:text-primary rounded-sm transition-colors flex items-center justify-center" title="Edit Data">
-                          <span className="material-symbols-outlined text-lg">edit</span>
+                        <button onClick={() => onEdit(teacher)} className="p-2 hover:bg-primary/5 text-on-surface-variant hover:text-primary rounded-lg transition-colors flex items-center justify-center" title="Edit Data">
+                          <span className="material-symbols-outlined text-[20px]">edit</span>
                         </button>
                       )}
                       {onDelete && (
-                        <button onClick={() => handleDelete(teacher)} className="p-2 hover:bg-error/5 text-on-surface-variant hover:text-error rounded-sm transition-colors flex items-center justify-center" title="Delete">
-                          <span className="material-symbols-outlined text-lg">delete</span>
+                        <button onClick={() => handleDelete(teacher)} className="p-2 hover:bg-error/5 text-on-surface-variant hover:text-error rounded-lg transition-colors flex items-center justify-center" title="Hapus">
+                          <span className="material-symbols-outlined text-[20px]">delete</span>
                         </button>
                       )}
                     </div>
@@ -525,11 +505,10 @@ export function TeacherList({ teachers, onEdit, onDelete, onRefresh }: TeacherLi
             </tbody>
           </table>
         </div>
-        
-        {/* Pagination summary */}
-        <div className="px-8 py-6 bg-surface-container-low border-t border-outline-variant flex flex-col sm:flex-row items-center justify-between gap-6">
-          <p className="text-sm text-on-surface-variant italic font-serif">
-            Menampilkan <span className="font-bold text-on-surface">{filteredTeachers.length}</span> dari <span className="font-bold text-on-surface">{teachers.length}</span> Guru dalam Registry
+
+        <div className="px-5 py-3 border-t border-slate-100">
+          <p className="text-xs text-on-surface-variant">
+            Menampilkan <span className="font-bold text-on-surface">{filteredTeachers.length}</span> dari <span className="font-bold text-on-surface">{teachers.length}</span> guru
           </p>
         </div>
       </div>

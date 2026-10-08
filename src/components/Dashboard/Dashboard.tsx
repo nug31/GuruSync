@@ -235,32 +235,16 @@ export function Dashboard() {
         {view === 'teachers' && (
           <div className="py-8">
             {isAdmin ? (
-              <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-12 border-b border-outline-variant pb-8">
-                <div>
-                  <nav className="flex items-center gap-2 text-on-surface-variant/70 font-label text-[10px] mb-4">
-                    <span>Management</span>
-                    <span className="material-symbols-outlined text-[10px]">chevron_right</span>
-                    <span className="text-primary font-bold">Teachers Registry</span>
-                  </nav>
-                  <h2 className="font-display text-4xl text-on-surface font-bold tracking-tight mb-4">Manajemen Data Guru</h2>
-                  <p className="font-serif italic text-lg text-on-surface-variant/80 max-w-3xl">Kelola informasi profil, status kepegawaian, dan riwayat pelatihan staf pengajar dalam satu dashboard terintegrasi.</p>
-                </div>
-                <button onClick={handleAddTeacher} className="flex items-center justify-center gap-3 bg-primary text-on-primary px-8 py-3 rounded-sm font-bold text-sm hover:bg-primary/90 transition-all shadow-sm">
-                  <span className="material-symbols-outlined text-lg">person_add</span>
-                  Tambah Guru Baru
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6 max-w-5xl">
+                <h2 className="text-2xl lg:text-3xl font-extrabold text-on-surface tracking-tight">Data Guru</h2>
+                <button onClick={handleAddTeacher} className="flex items-center justify-center gap-2 bg-primary text-on-primary px-4 py-2.5 rounded-xl font-bold text-sm hover:bg-primary/90 transition-all">
+                  <span className="material-symbols-outlined text-[20px]">person_add</span>
+                  Tambah Guru
                 </button>
               </div>
             ) : (
-              <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-4 border-b border-outline-variant pb-4">
-                <div>
-                  <nav className="flex items-center gap-2 text-on-surface-variant/70 font-label text-[10px] mb-4">
-                    <span>Personal</span>
-                    <span className="material-symbols-outlined text-[10px]">chevron_right</span>
-                    <span className="text-primary font-bold">Profile</span>
-                  </nav>
-                  <h2 className="font-display text-4xl text-on-surface font-bold tracking-tight mb-4">Profil Saya</h2>
-                  <p className="font-serif italic text-lg text-on-surface-variant/80 max-w-3xl">Kelola informasi profil dan riwayat akademik Anda.</p>
-                </div>
+              <div className="mb-6 max-w-5xl">
+                <h2 className="text-2xl lg:text-3xl font-extrabold text-on-surface tracking-tight">Profil Saya</h2>
               </div>
             )}
 
