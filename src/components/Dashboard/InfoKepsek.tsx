@@ -4,6 +4,7 @@ import { id } from 'date-fns/locale';
 import type { Teacher, Permission } from '../../types';
 import { getSapaan, buildWaUrl } from '../../lib/whatsapp';
 import { Avatar } from './Avatar';
+import { TYPE_ICONS, TYPE_COLORS } from '../../lib/permissionTypes';
 
 interface InfoKepsekProps {
   teachers: Teacher[];
@@ -76,7 +77,8 @@ export function InfoKepsek({ teachers, permissions, isAdmin }: InfoKepsekProps) 
       <Avatar teacher={teachers.find(t => t.id === p.teacher_id)} />
       <div className="min-w-0 flex-1">
         <p className="text-sm font-bold text-on-surface truncate">{teacherName(p)}</p>
-        <p className="text-xs text-on-surface-variant truncate">
+        <p className="text-xs text-on-surface-variant truncate flex items-center gap-1">
+          <span className={`material-symbols-outlined text-[15px] ${TYPE_COLORS[p.permission_type]}`}>{TYPE_ICONS[p.permission_type]}</span>
           {p.permission_type} · {formatPeriode(p)}{formatJam(p) ? ` · ${formatJam(p)}` : ''}
         </p>
         {(p.permission_type === 'Tugas Luar' ? p.tujuan_tugas_luar : p.reason) && (

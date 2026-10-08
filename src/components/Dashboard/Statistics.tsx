@@ -5,6 +5,7 @@ import { format } from 'date-fns';
 import { id } from 'date-fns/locale';
 import { InfoKepsek } from './InfoKepsek';
 import { Avatar } from './Avatar';
+import { TYPE_ICONS, TYPE_COLORS } from '../../lib/permissionTypes';
 
 interface StatisticsProps {
   teachers: Teacher[];
@@ -85,7 +86,8 @@ export function Statistics({ teachers, permissions }: StatisticsProps) {
                     <Avatar teacher={teacher} />
                     <div className="min-w-0">
                       <p className="text-sm font-bold text-on-surface truncate">{teacher?.name || 'Guru'}</p>
-                      <p className="text-xs text-on-surface-variant truncate">
+                      <p className="text-xs text-on-surface-variant truncate flex items-center gap-1">
+                        <span className={`material-symbols-outlined text-[15px] ${TYPE_COLORS[p.permission_type]}`}>{TYPE_ICONS[p.permission_type]}</span>
                         {p.permission_type} · {format(new Date(p.start_date), 'd MMM', { locale: id })}
                         {p.end_date !== p.start_date && ` - ${format(new Date(p.end_date), 'd MMM yyyy', { locale: id })}`}
                       </p>

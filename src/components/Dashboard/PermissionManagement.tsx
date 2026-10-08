@@ -6,6 +6,7 @@ import * as XLSX from 'xlsx';
 import type { Teacher, Permission, PermissionType, PermissionStatus, Campus } from '../../types';
 import { useAuth } from '../../contexts/AuthContext';
 import { getSapaan, buildWaUrl } from '../../lib/whatsapp';
+import { TYPE_ICONS, TYPE_COLORS } from '../../lib/permissionTypes';
 
 interface PermissionManagementProps {
   teachers: Teacher[];
@@ -28,26 +29,6 @@ const PERMISSION_TYPES: PermissionType[] = [
   'Terlambat',
   'Pulang Cepat',
 ];
-
-const TYPE_ICONS: Record<PermissionType, string> = {
-  'Sakit': 'medical_services',
-  'Cuti': 'flight_takeoff',
-  'Tugas Luar': 'work_history',
-  'Izin Keluar & Kembali': 'transfer_within_a_station',
-  'Tidak Masuk': 'person_off',
-  'Terlambat': 'schedule',
-  'Pulang Cepat': 'logout',
-};
-
-const TYPE_COLORS: Record<PermissionType, string> = {
-  'Sakit': 'text-error',
-  'Cuti': 'text-primary',
-  'Tugas Luar': 'text-tertiary',
-  'Izin Keluar & Kembali': 'text-secondary',
-  'Tidak Masuk': 'text-on-surface-variant',
-  'Terlambat': 'text-error',
-  'Pulang Cepat': 'text-secondary',
-};
 
 type FilterTab = 'all' | 'pending' | 'approved' | 'rejected';
 
@@ -603,27 +584,17 @@ export function PermissionManagement({ teachers, permissions, onUpdate, currentT
 
   // --- Render ---
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 max-w-5xl">
       {/* Header */}
-      <div className="flex flex-col md:flex-row md:items-end justify-between mb-10 gap-6 border-b border-outline-variant/30 pb-8">
-        <div>
-          <nav className="flex items-center gap-2 text-on-surface-variant/70 font-label text-[10px] mb-4">
-            <span>Guru</span>
-            <span className="material-symbols-outlined text-[10px]">chevron_right</span>
-            <span className="text-primary font-bold">Izin & Ketidakhadiran</span>
-          </nav>
-          <h1 className="text-4xl font-headline font-bold text-on-surface mb-3 tracking-tight">
-            {isManagement ? 'Manajemen Pengajuan Izin' : 'Pengajuan Izin'}
-          </h1>
-          <p className="text-lg text-on-surface-variant/80 italic font-headline">
-            Kelola pengajuan izin, tugas luar, dan ketidakhadiran dengan alur persetujuan berlevel.
-          </p>
-        </div>
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <h1 className="text-2xl lg:text-3xl font-extrabold text-on-surface tracking-tight">
+          {isManagement ? 'Manajemen Izin' : 'Pengajuan Izin'}
+        </h1>
         <div className="flex items-center gap-3 shrink-0">
           {isAdmin && (
             <button
               onClick={handleExportRekap}
-              className="flex items-center gap-2 px-5 py-3 rounded-xl font-bold text-on-surface bg-surface-container-low border border-outline-variant hover:bg-surface-container transition-all text-sm"
+              className="flex items-center gap-2 px-4 py-2.5 rounded-xl font-bold text-on-surface bg-white border border-slate-200/80 hover:bg-surface-container transition-all text-sm"
               title="Unduh rekap harian, mingguan, dan bulanan dalam Excel"
             >
               <span className="material-symbols-outlined text-[20px]">download</span>
@@ -632,7 +603,7 @@ export function PermissionManagement({ teachers, permissions, onUpdate, currentT
           )}
           <button
             onClick={() => handleOpenForm()}
-            className="flex items-center gap-2 px-6 py-3 bg-primary rounded-xl font-bold text-on-primary hover:brightness-95 transition-all text-sm shadow-sm"
+            className="flex items-center gap-2 px-4 py-2.5 bg-primary rounded-xl font-bold text-on-primary hover:brightness-95 transition-all text-sm"
           >
             <span className="material-symbols-outlined text-[20px]">add</span>
             {isManagement && !isAdmin ? 'Ajukan Izin Pribadi' : isAdmin ? 'Tambah Izin' : 'Ajukan Izin'}
@@ -641,18 +612,18 @@ export function PermissionManagement({ teachers, permissions, onUpdate, currentT
       </div>
 
       {/* Stats Bento */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-10">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         {[
           { label: 'Total', value: permissions.filter(p => isManagement || p.teacher_id === currentTeacherId).length, icon: 'assignment', color: 'text-on-surface', bg: 'bg-surface-container' },
           { label: 'Menunggu', value: pendingCount, icon: 'pending_actions', color: 'text-tertiary', bg: 'bg-tertiary-fixed/20' },
           { label: 'Disetujui', value: approvedCount, icon: 'task_alt', color: 'text-primary', bg: 'bg-primary-fixed/20' },
           { label: 'Ditolak', value: rejectedCount, icon: 'cancel', color: 'text-error', bg: 'bg-error-container/30' },
         ].map(stat => (
-          <div key={stat.label} className="bg-surface-container-lowest p-5 rounded-2xl border border-outline-variant/20 shadow-sm hover:border-primary/30 transition-all">
-            <p className="text-on-surface-variant/60 font-label text-[10px] uppercase tracking-widest mb-3">{stat.label}</p>
+          <div key={stat.label} className="p-5 rounded-2xl border border-slate-200/80 bg-white">
+            <p className="text-xs font-semibold text-on-surface-variant mb-2">{stat.label}</p>
             <div className="flex items-end justify-between">
-              <span className="text-3xl font-headline font-bold text-on-surface">
-                {String(stat.value).padStart(2, '0')}
+              <span className="text-3xl font-extrabold text-on-surface">
+                {stat.value}
               </span>
               <div className={`w-9 h-9 rounded-full ${stat.bg} flex items-center justify-center ${stat.color}`}>
                 <span className="material-symbols-outlined text-[18px]">{stat.icon}</span>
@@ -663,7 +634,7 @@ export function PermissionManagement({ teachers, permissions, onUpdate, currentT
       </div>
 
       {/* Filter Tabs + Type Filter */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6 border-b border-outline-variant/30 pb-4">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div className="flex items-center gap-1 overflow-x-auto pb-1 max-w-full">
           {([
             { key: 'all', label: 'Semua' },

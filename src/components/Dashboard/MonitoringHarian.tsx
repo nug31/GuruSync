@@ -3,6 +3,7 @@ import { format, parseISO, addDays } from 'date-fns';
 import { id as localeId } from 'date-fns/locale';
 import type { Teacher, Permission } from '../../types';
 import { Avatar } from './Avatar';
+import { TYPE_ICONS, TYPE_COLORS } from '../../lib/permissionTypes';
 
 interface MonitoringHarianProps {
   teachers: Teacher[];
@@ -66,9 +67,12 @@ export function MonitoringHarian({ teachers, permissions }: MonitoringHarianProp
                     <p className="text-xs text-on-surface-variant truncate">{detail(p)}</p>
                   </div>
                 </div>
-                <span className={`px-2.5 py-1 rounded-full border text-[11px] font-bold whitespace-nowrap ${
+                <span className={`flex items-center gap-1 px-2.5 py-1 rounded-full border text-[11px] font-bold whitespace-nowrap ${
                   pending ? 'bg-amber-50 text-amber-700 border-amber-200' : 'bg-slate-50 text-slate-700 border-slate-200'
                 }`}>
+                  <span className={`material-symbols-outlined text-[14px] ${pending ? '' : TYPE_COLORS[p.permission_type]}`}>
+                    {pending ? 'pending_actions' : TYPE_ICONS[p.permission_type]}
+                  </span>
                   {pending ? 'Menunggu' : p.permission_type}
                 </span>
               </li>
