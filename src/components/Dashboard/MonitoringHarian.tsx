@@ -3,6 +3,7 @@ import { format, parseISO, addDays } from 'date-fns';
 import { id as localeId } from 'date-fns/locale';
 import type { Teacher, Permission } from '../../types';
 import { Avatar } from './Avatar';
+import { CampusFilter, type CampusFilterValue } from './CampusFilter';
 import { TYPE_ICONS, TYPE_COLORS } from '../../lib/permissionTypes';
 
 interface MonitoringHarianProps {
@@ -21,20 +22,31 @@ export function MonitoringHarian({ teachers, permissions }: MonitoringHarianProp
     setSelectedDate(toDateStr(addDays(parseISO(selectedDate), delta)));
   };
 
+  const [campus, setCampus] = useState<CampusFilterValue>('semua');
+  const scopedTeachers = useMemo(
+    () => (campus === 'semua' ? teachers : teachers.filter(t => t.campus === campus)),
+    [teachers, campus]
+  );
+  const scopedPermissions = useMemo(() => {
+    if (campus === 'semua') return permissions;
+    const ids = new Set(scopedTeachers.map(t => t.id));
+    return permissions.filter(p => ids.has(p.teacher_id));
+  }, [permissions, scopedTeachers, campus]);
+
   const approvedToday = useMemo(
-    () => permissions.filter(p => p.status === 'approved' && isActiveOn(p, selectedDate)),
-    [permissions, selectedDate]
+    () => scopedPermissions.filter(p => p.status === 'approved' && isActiveOn(p, selectedDate)),
+    [scopedPermissions, selectedDate]
   );
   const pendingToday = useMemo(
-    () => permissions.filter(p => p.status.startsWith('pending') && isActiveOn(p, selectedDate)),
-    [permissions, selectedDate]
+    () => scopedPermissions.filter(p => p.status.startsWith('pending') && isActiveOn(p, selectedDate)),
+    [scopedPermissions, selectedDate]
   );
 
   // Tugas Luar dipisah dari izin/tidak hadir: guru tugas luar sedang bertugas (dinas), bukan absen.
   const tugasLuarToday = useMemo(() => approvedToday.filter(p => p.permission_type === 'Tugas Luar'), [approvedToday]);
   const absenToday = useMemo(() => approvedToday.filter(p => p.permission_type !== 'Tugas Luar'), [approvedToday]);
 
-  const totalGuru = teachers.length;
+  const totalGuru = scopedTeachers.length;
   const hadirCount = Math.max(totalGuru - new Set(approvedToday.map(p => p.teacher_id)).size, 0);
 
   const getTeacher = (teacherId: string) => teachers.find(t => t.id === teacherId);
@@ -125,6 +137,8 @@ export function MonitoringHarian({ teachers, permissions }: MonitoringHarianProp
           )}
         </div>
       </div>
+
+      <CampusFilter value={campus} onChange={setCampus} />
 
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         {cards.map(c => (

@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '../../lib/supabase';
 import { X } from 'lucide-react';
-import type { Teacher } from '../../types';
+import type { Teacher, Campus } from '../../types';
+import { CAMPUS_OPTIONS } from '../../lib/campuses';
 
 interface TeacherFormProps {
   teacher: Teacher | null;
@@ -14,7 +15,7 @@ export function TeacherForm({ teacher, onClose }: TeacherFormProps) {
     nik: '',
     subject: '',
     subject_category: 'normatif_adaptif' as 'jurusan' | 'normatif_adaptif',
-    campus: 'utama' as 'utama' | 'kampus_03',
+    campus: 'utama' as Campus,
     tugas_luar_approver: false,
     email: '',
     phone: '',
@@ -223,12 +224,13 @@ export function TeacherForm({ teacher, onClose }: TeacherFormProps) {
             </label>
             <select
               value={formData.campus}
-              onChange={(e) => setFormData({ ...formData, campus: e.target.value as 'utama' | 'kampus_03' })}
+              onChange={(e) => setFormData({ ...formData, campus: e.target.value as Campus })}
               className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
               required
             >
-              <option value="utama">Kampus Utama (MM2100)</option>
-              <option value="kampus_03">Kampus 03</option>
+              {CAMPUS_OPTIONS.map(o => (
+                <option key={o.value} value={o.value}>{o.label}</option>
+              ))}
             </select>
           </div>
 

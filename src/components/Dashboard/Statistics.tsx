@@ -1,10 +1,11 @@
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
 import type { Teacher, Permission } from '../../types';
 import { format } from 'date-fns';
 import { id } from 'date-fns/locale';
 import { InfoKepsek } from './InfoKepsek';
 import { Avatar } from './Avatar';
+import { CampusFilter, type CampusFilterValue } from './CampusFilter';
 import { TYPE_ICONS, TYPE_COLORS } from '../../lib/permissionTypes';
 
 interface StatisticsProps {
@@ -23,18 +24,31 @@ const STATUS_BADGES: Record<string, { label: string; cls: string }> = {
 export function Statistics({ teachers, permissions }: StatisticsProps) {
   const { user, profile } = useAuth();
 
+  const [campus, setCampus] = useState<CampusFilterValue>('semua');
+  const canFilterCampus = ['admin', 'hod', 'koordinator_hod', 'wakasek', 'kepsek'].includes(profile?.role || '');
+
+  const scopedTeachers = useMemo(
+    () => (campus === 'semua' ? teachers : teachers.filter(t => t.campus === campus)),
+    [teachers, campus]
+  );
+  const scopedPermissions = useMemo(() => {
+    if (campus === 'semua') return permissions;
+    const ids = new Set(scopedTeachers.map(t => t.id));
+    return permissions.filter(p => ids.has(p.teacher_id));
+  }, [permissions, scopedTeachers, campus]);
+
   const stats = useMemo(() => {
     const today = format(new Date(), 'yyyy-MM-dd');
     return {
-      totalTeachers: teachers.length,
-      activeToday: permissions.filter(p => p.status === 'approved' && p.start_date <= today && p.end_date >= today).length,
-      pending: permissions.filter(p => p.status.startsWith('pending')).length,
+      totalTeachers: scopedTeachers.length,
+      activeToday: scopedPermissions.filter(p => p.status === 'approved' && p.start_date <= today && p.end_date >= today).length,
+      pending: scopedPermissions.filter(p => p.status.startsWith('pending')).length,
     };
-  }, [teachers, permissions]);
+  }, [scopedTeachers, scopedPermissions]);
 
   const recentPermissions = useMemo(
-    () => [...permissions].sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()).slice(0, 6),
-    [permissions]
+    () => [...scopedPermissions].sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()).slice(0, 6),
+    [scopedPermissions]
   );
 
   const userName = profile?.role === 'admin'
@@ -58,6 +72,8 @@ export function Statistics({ teachers, permissions }: StatisticsProps) {
         </p>
       </div>
 
+      {canFilterCampus && <CampusFilter value={campus} onChange={setCampus} />}
+
       <div className="grid grid-cols-3 gap-2 sm:gap-4">
         {cards.map(c => (
           <div key={c.label} className="p-3 sm:p-5 rounded-2xl border border-slate-200/80 bg-white">
@@ -68,7 +84,7 @@ export function Statistics({ teachers, permissions }: StatisticsProps) {
       </div>
 
       {(profile?.role === 'kepsek' || profile?.role === 'admin') && (
-        <InfoKepsek teachers={teachers} permissions={permissions} isAdmin={profile.role === 'admin'} />
+        <InfoKepsek teachers={teachers} permissions={scopedPermissions} isAdmin={profile.role === 'admin'} />
       )}
 
       <section className="bg-white rounded-2xl border border-slate-200/80 p-5 sm:p-6">

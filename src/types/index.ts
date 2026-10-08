@@ -1,5 +1,5 @@
 export type SubjectCategory = 'jurusan' | 'normatif_adaptif';
-export type Campus = 'utama' | 'kampus_03';
+export type Campus = 'utama' | 'kampus_02' | 'kampus_03' | 'asysyarif';
 
 export type AppRole = 'admin' | 'teacher' | 'hod' | 'koordinator_hod' | 'wakasek' | 'kepsek';
 
